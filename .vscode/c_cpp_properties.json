@@ -1,0 +1,32 @@
+{
+    "configurations": [
+        {
+            "name": "stm32 F4",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/Core/Inc",
+                "${workspaceFolder}/Middlewares/Third_Party/FreeRTOS/Source/include",
+                "${workspaceFolder}/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F"
+            ],
+
+            "defines": [
+                "_DEGUG",
+                "UNICODE",
+                "_UNICODE",
+                // z Makefile C_DEFS
+                "USE_HAL_DRIVER",
+                "STM32F429xx"
+            ],
+            "intelliSenseMode": "gcc-arm",
+            "compilerPath": "${env:ARMGCC_DIR}/arm-none-eabi-gcc.exe",
+            // z Makefile "CFLAGS"
+            "compilerArgs": [
+                "-mcpu=cortex-m4",
+                "-mthumb"
+            ],
+            "cStandard": "c11",
+            "cppStandard": "c++17"
+        }
+    ],
+    "version": 4
+}
