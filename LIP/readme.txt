@@ -36,21 +36,36 @@
 
     Counter mode: up
 
+##########################################################
+# AS5600 magnetic encoder
+##########################################################
+    https://www.reddit.com/r/embedded/comments/sebcb5/c_driver_for_ams_as5600_magnetic_position_sensor/
+    https://github.com/raulgotor/ams_as5600
+
+    for arduino (c++)
+    https://github.com/RobTillaart/AS5600/tree/master
+
+    PB8 for i2c1 scl (alias I2C1_SCL) 
+    PB9 for i2c1 sda (alias I2C1_SDA)
+    
+    I2C speed mode : Standard mode
+    I2C clock speed : 100_000
+
 
 ##########################################################
 # Board view
 ########################################################## 
     built in button: PC13
 
-                            ________________________________________________________________
-                                                                                    [ ][ ] |
-                                                                                    [ ][ ] |
-                            ---------------------------------------------------------------- arduino shield starts here                                    
+                            ________________________________________________________________ arduino shield 1 starts here (with grove connectors)
+                                                                                    [ ][ ] |   PB8 I2C1_SCL
+                                                                                    [ ][ ] |   PB9 I2C1_SDA
+                            ---------------------------------------------------------------- arduino shield 2 starts here                                    
                             | [ ][ ]                                                [ ][ ] |
                             | [ ][ ]                                                [ ][ ] |
                             | [ ][ ]                                                [ ][ ] |
-               3.3V         | [x][ ]                                                [ ][x] |    PA6 (pwm tim3 ch1)
-                 5V         | [x][ ]                                                [ ][x] |    PA7 (pwm tim3 ch2)
+               3.3V         | [x][ ]                                                [ ][x] |   PA6 (pwm tim3 ch1)
+                 5V         | [x][ ]                                                [ ][x] |   PA7 (pwm tim3 ch2)
                 GND         | [x][ ]                                                [ ][ ] |
                             | [][]                                                  [ ][ ] |
                             | [][]                                                  [ ][ ] |
@@ -63,7 +78,7 @@
                             | [ ][ ]                                                [ ][ ] |
                             | [ ][ ]                                                [ ][ ] |
                             | [ ][ ]                                                [ ][ ] |
-                            ---------------------------------------------------------------- arduino shield ends here
+                            ---------------------------------------------------------------- arduino shield 1&2 ends here
                             | [ ][ ]                                                [ ][ ] |
                             | [ ][ ]                         PD13 (enc tim4 ch2)    [x][ ] |
                             | [ ][ ]                         PD12 (enc tim4 ch1)    [x][ ] |

@@ -1,10 +1,8 @@
-// #include "usart.h"
+#include "usart.h"
 
-#ifndef _EPOST
-#define _EPOST
+#ifndef COM_DRIVER
+#define COM_DRIVER
 
-extern char tx_buff[128];
+void com_send(char* message);
 
-void com_send_test(void);
-
-#endif /* _EPOST */
+#endif /* _COMDRIVER */

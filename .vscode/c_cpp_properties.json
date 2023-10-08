@@ -18,7 +18,7 @@
                 "STM32F429xx"
             ],
             "intelliSenseMode": "gcc-arm",
-            "compilerPath": "${env:ARMGCC_DIR}/arm-none-eabi-gcc.exe",
+            "compilerPath": "C:/adamadam/stm/arm_gcc_toolchain/bin/arm-none-eabi-gcc.exe",
             // z Makefile "CFLAGS"
             "compilerArgs": [
                 "-mcpu=cortex-m4",

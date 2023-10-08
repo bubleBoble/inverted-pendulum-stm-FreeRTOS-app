@@ -20,7 +20,7 @@
  */
 
 // #include "tim.h" // IDE AUTO GENERATED CODE
-#include "encoder_driver.h"
+#include "dcm_encoder_driver.h"
 
 float enc_read_deg;
 float enc_read_rad;

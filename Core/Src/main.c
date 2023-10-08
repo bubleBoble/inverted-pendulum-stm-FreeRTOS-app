@@ -20,6 +20,7 @@
 #include "main.h"
 //#include "cmsis_os.h"
 #include "adc.h"
+#include "i2c.h"
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
@@ -94,6 +95,7 @@ int main(void)
   MX_ADC3_Init();
   MX_TIM3_Init();
   MX_TIM4_Init();
+  MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
 
   // ======================================================================================
@@ -107,10 +109,10 @@ int main(void)
   /* USER CODE END 2 */
 
   /* Call init function for freertos objects (in freertos.c) */
-//  MX_FREERTOS_Init();
+  // MX_FREERTOS_Init();
 
   /* Start scheduler */
-//  osKernelStart();
+  // osKernelStart();
 
   /* We should never get here as control is now taken by the scheduler */
   /* Infinite loop */

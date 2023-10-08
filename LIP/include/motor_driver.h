@@ -19,8 +19,8 @@
  *
  */
 
-#ifndef _DCM_DRIVER
-#define _DCM_DRIVER
+#ifndef DCM_DRIVER
+#define DCM_DRIVER
 
 #include "tim.h"
 
@@ -45,4 +45,4 @@ float dcm_get_output_voltage(void);
 void dcm_set_ch1_dutycycle(uint16_t dtc);
 void dcm_set_ch2_dutycycle(uint16_t dtc);
 
-#endif /* _DCM_DRIVER */
+#endif /* DCM_DRIVER */

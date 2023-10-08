@@ -19,8 +19,8 @@
  *
  */
 
-#ifndef _ENC_DRIVER
-#define _ENC_DRIVER
+#ifndef DCM_ENC_DRIVER
+#define DCM_ENC_DRIVER
 
 #include "tim.h" // IDE AUTO GENERATED CODE
 
@@ -45,4 +45,4 @@ float enc_get_deg(void);
 /* Return: encoder timer count converted to radians */
 float enc_get_rad(void);
 
-#endif /* _ENC_DRIVER */
+#endif /* DCM_ENC_DRIVER */
