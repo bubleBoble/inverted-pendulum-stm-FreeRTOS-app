@@ -6,8 +6,8 @@
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/Core/Inc",
                 "${workspaceFolder}/FreeRTOS/Source/include",
-                "${workspaceFolder}/FreeRTOS/Source/portable/GCC/ARM_CM4F",
-                "${workspaceFolder}/FreeRTOS-CLI"
+                "${workspaceFolder}/FreeRTOS/Source/portable/GCC/ARM_CM4F"
+                // "${workspaceFolder}/FreeRTOS-CLI"
             ],
 
             "defines": [

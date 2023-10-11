@@ -74,6 +74,11 @@ and one on TCP/IP).  This is done to prevent an output buffer being defined by
 each implementation - which would waste RAM.  In this case, there is only one
 command interpreter running. */
 #define configCOMMAND_INT_MAX_OUTPUT_SIZE 2096
+// #define configCOMMAND_INT_MAX_OUTPUT_SIZE 1 // z tutoriala
+
+// DEBUG use only for debugging
+#define configUSE_STATS_FORMATTING_FUNCTIONS 1 
+#define configUSE_TRACE_FACILITY 1
 
 /* Cortex-M specific definitions. */
 #ifdef __NVIC_PRIO_BITS

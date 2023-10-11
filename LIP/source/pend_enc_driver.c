@@ -39,15 +39,15 @@ uint8_t pend_enc_init(void)
         return 1;
     }
 
-    as5600_set_start_position(&gs_handle, (uint16_t)0);
-    uint16_t start_pos; 
-    as5600_get_start_position(&gs_handle, &start_pos);
-    as5600_interface_debug_print("start position: %u\n", start_pos);
+    // as5600_set_start_position(&gs_handle, (uint16_t)0);
+    // uint16_t start_pos; 
+    // as5600_get_start_position(&gs_handle, &start_pos);
+    // as5600_interface_debug_print("start position: %u\n", start_pos);
 
-    as5600_set_stop_position(&gs_handle, (uint16_t)4094);
-    uint16_t stop_pos; 
-    as5600_get_stop_position(&gs_handle, &stop_pos);
-    as5600_interface_debug_print("stop position: %u\n", stop_pos);
+    // as5600_set_stop_position(&gs_handle, (uint16_t)4094);
+    // uint16_t stop_pos; 
+    // as5600_get_stop_position(&gs_handle, &stop_pos);
+    // as5600_interface_debug_print("stop position: %u\n", stop_pos);
     return 0;
 }
 
