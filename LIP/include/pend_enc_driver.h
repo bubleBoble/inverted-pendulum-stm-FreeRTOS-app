@@ -25,4 +25,6 @@ uint8_t pend_enc_read_angle_rad(float *angle);
 
 uint8_t pend_enc_deinit(void);
 
+int32_t pend_enc_get_cumulative_count(void);
+
 #endif // PEND_ENC_DRIVER

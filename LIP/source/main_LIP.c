@@ -34,10 +34,19 @@ StaticTask_t startTask_TASKBUFFER_TCB;
 #define MAX_INPUT_LENGTH    50
 #define MAX_OUTPUT_LENGTH   100
 #define CONSOLE_STACKDEPTH  4000
-TaskHandle_t consoleTaskID;
+TaskHandle_t consoleTaskHandle;
 void vCommandConsoleTask( void *pvParameters );
 StackType_t console_STACKBUFFER [ CONSOLE_STACKDEPTH ];
 StaticTask_t console_TASKBUFFER_TCB;
+TickType_t time_at_which_consoleMutex_was_taken;
+SemaphoreHandle_t xConsoleWriteMutex; // mutex for console writing
+
+/* Magnetic encoder task */
+#define MAGENC_TASK_STACKDEPTH 500
+TaskHandle_t magEncTaskHandle = NULL;
+void magEncTask( void *pvParameters );
+StackType_t magEncTask_STACKBUFFER [ MAGENC_TASK_STACKDEPTH ];
+StaticTask_t magEncTask_TASKBUFFER_TCB;
 
 /* ========================================================================
  * LIP INIT & RUN
@@ -45,9 +54,13 @@ StaticTask_t console_TASKBUFFER_TCB;
  */
 void main_LIP_init(void)
 {
-    dcm_init_output_voltage();  // Initialize PWM timer and zero its PWM output    
-    enc_init();                 // Initialize encoder timer
-    pend_enc_init();            // Initialize AS5600 encoder 
+	SCB->CPACR |= ((3 << 10*2)|(3 << 11*2)); // FPU initialization
+                                             // FPU must be enabled before any FPU
+                                             // instruction is executed, otherwise 
+                                             // hardware exception will be raised.
+    dcm_init_output_voltage();               // Initialize PWM timer and zero its PWM output    
+    enc_init();                              // Initialize encoder timer
+    pend_enc_init();                         // Initialize AS5600 encoder 
 }
 void main_LIP_run(void)
 {
@@ -63,7 +76,7 @@ void main_LIP_run(void)
  */
 uint8_t ZERO_POSITION_REACHED = 0;  // 1 only if left limit switch activated 
 uint8_t MAX_POSITION_REACHED = 0;   // 1 only if right limit switch activated
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+void HAL_GPIO_EXTI_Callback( uint16_t GPIO_Pin )
 {
     if (GPIO_Pin == limitSW_left_Pin) // limit switch left
     {
@@ -81,12 +94,12 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
     {
         if (ZERO_POSITION_REACHED)              // go to the max position if trolley on the zero 
         {
-            dcm_set_output_volatage(2.0f); 
+            dcm_set_output_volatage(2.0f);
         } else if (MAX_POSITION_REACHED)        // go to the zero position if trolley on the max 
         { 
             dcm_set_output_volatage(-2.0f);
         } else {
-            dcm_set_output_volatage(-2.0f);     // if trolley not on max or zero, go to the zero position  
+            dcm_set_output_volatage(-2.0f);     // if trolley not on max or zero, go to the zero position
         }
     }
     else
@@ -96,7 +109,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 }
 
 /* Uart receive interrupt */
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+void HAL_UART_RxCpltCallback( UART_HandleTypeDef *huart )
 {
 }
 
@@ -133,27 +146,36 @@ void vApplicationGetIdleTaskMemory( StaticTask_t **ppxIdleTaskTCBBuffer,
  */
 void LIPcreateTasks()
 {
-    startTaskHandle = xTaskCreateStatic(startTask,
-                                        "enctask mag", 
-                                        STARTTASK_STACKDEPTH, 
-                                        (void *)0, 
-                                        tskIDLE_PRIORITY+2, 
-                                        startTask_STACKBUFFER,
-                                        &startTask_TASKBUFFER_TCB);
+    // startTaskHandle = xTaskCreateStatic( startTask,
+    //                                      (const char*) "enctask mag", 
+    //                                      STARTTASK_STACKDEPTH, 
+    //                                      (void *) 0, 
+    //                                      tskIDLE_PRIORITY+1, 
+    //                                      startTask_STACKBUFFER,
+    //                                      &startTask_TASKBUFFER_TCB );
 
-    consoleTaskID = xTaskCreateStatic(vCommandConsoleTask,
-                                      (const char*)"Console",
-                                      CONSOLE_STACKDEPTH,
-                                      (void *)0, 
-                                      tskIDLE_PRIORITY+2, 
-                                      console_STACKBUFFER,
-                                      &console_TASKBUFFER_TCB);
+    // consoleTaskHandle = xTaskCreateStatic( vCommandConsoleTask,
+    //                                        (const char*) "Console",
+    //                                        CONSOLE_STACKDEPTH,
+    //                                        (void *) 0, 
+    //                                        tskIDLE_PRIORITY+1, 
+    //                                        console_STACKBUFFER,
+    //                                        &console_TASKBUFFER_TCB );
+
+    magEncTaskHandle = xTaskCreateStatic( magEncTask,
+                                          (const char*) "magnetic encoder task",
+                                          MAGENC_TASK_STACKDEPTH,
+                                          (void *) 0,
+                                          tskIDLE_PRIORITY+2,
+                                          magEncTask_STACKBUFFER,
+                                          &magEncTask_TASKBUFFER_TCB );
 }
 
 /* ========================================================================
  * TASKS
  * ========================================================================
  */
+// START TASK
 void startTask(void * pvParameters)
 {
     // float deg;
@@ -176,6 +198,33 @@ void startTask(void * pvParameters)
     }
 }
 
+void magEncTask( void *pvParameters )
+{
+    /*
+        poll the pnedulum encoder at least 3 times per full revolution
+    */
+
+    // last_cnts[0] : encoder count [t]     // present
+    // last_cnts[1] : encoder count [t - 1] // previous
+    float angle[2];
+    TickType_t xLastWakeTime = xTaskGetTickCount();
+    uint8_t dt = 10; // 10 tics = 10 ms (Freertos scheduler tickrate=1000Hz)
+
+    angle[0] = 0;
+    angle[1] = 0;
+
+    for (;;)
+    {
+        angle[1] = angle[0]; // count[t-1] = count[t]
+        angle[0] = (float) pend_enc_get_cumulative_count() / 4096.0f * 360.0f;
+        
+        printf( "%f\r\n", angle[0] );
+        fflush( stdout );
+
+        vTaskDelayUntil( &xLastWakeTime, dt );
+    }
+}
+
 // Source: https://www.freertos.org/FreeRTOS-Plus/FreeRTOS_Plus_CLI/FreeRTOS_Plus_CLI_IO_Interfacing_and_Task.html
 void vCommandConsoleTask( void *pvParameters )
 {
@@ -186,17 +235,16 @@ void vCommandConsoleTask( void *pvParameters )
 
     vRegisterCLICommands();
 
-    printf("%c%c", '\033'); // clear screen
-    printf("============ FreeRTOS CLI ============ \r\n");
+    printf( "============ FreeRTOS CLI ============ \r\n" );
 
     for( ;; )
     {
-        if (cRxedChar != 0x00) // better to use notification here
+        if ( cRxedChar != 0x00 ) // better to use notification here
         {
-            if( cRxedChar == '\n' || cRxedChar == '\r')
+            if( cRxedChar == '\n' || cRxedChar == '\r' )
             {
                 printf("\r\n");
-                fflush(stdout); // fflush na siłe opróżnia wewnętrzny bufor stdout (stdout to zmienna w stdio)
+                fflush(stdout);
 
                 /* The command interpreter is called repeatedly until it returns
                 pdFALSE.  See the "Implementing a command" documentation for an
@@ -213,17 +261,17 @@ void vCommandConsoleTask( void *pvParameters )
                                     MAX_OUTPUT_LENGTH/* The size of the output buffer. */
                                 );
 
-                    for (int i = 0; i < (xMoreDataToFollow == pdTRUE ? MAX_OUTPUT_LENGTH : strlen((const char *)pcOutputString)); i++)
+                    for ( int i = 0; i < ( xMoreDataToFollow == pdTRUE ? MAX_OUTPUT_LENGTH : strlen( ( const char * ) pcOutputString ) ); i++ )
                     {
-                        printf("%c", *(pcOutputString + i));
+                        printf( "%c", *(pcOutputString + i) );
                         fflush(stdout);
                     }
 
                 } while( xMoreDataToFollow != pdFALSE );
 
                 cInputIndex = 0;
-                memset(pcInputString, 0x00, MAX_INPUT_LENGTH);
-                memset(pcOutputString, 0x00, MAX_INPUT_LENGTH);
+                memset( pcInputString, 0x00, MAX_INPUT_LENGTH );
+                memset( pcOutputString, 0x00, MAX_INPUT_LENGTH );
             }
             else
             {
@@ -252,6 +300,7 @@ void vCommandConsoleTask( void *pvParameters )
                         pcInputString[ cInputIndex ] = cRxedChar;
                         cInputIndex++;
                         printf("%c", cRxedChar);
+                        fflush(stdout);            
                     }
                 }
             }
@@ -260,5 +309,4 @@ void vCommandConsoleTask( void *pvParameters )
         } // if (cRxedChar != 0x00)
     } // for( ;; )
 } //vCommandConsoleTask
-
 

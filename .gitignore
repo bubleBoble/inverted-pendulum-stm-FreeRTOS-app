@@ -1,14 +1,12 @@
 Middlewares/**
-Drivers/**
 Debug/**
-.settings/**
-.cproject
-.mxproject
-.project
+# .cproject
+# .mxproject
+# .project
 OLD_MAIN_CODE_2.TXT
 OLD_MAIN_CODE.TXT
-STM32F429ZITX_FLASH.ld
-STM32F429ZITX_RAM.ld
+# STM32F429ZITX_FLASH.ld
+# STM32F429ZITX_RAM.ld
 test_freertos_dmc_ctrl_encoder Debug.launch
 notes.md
 launch.json
@@ -16,3 +14,4 @@ settings.json
 tasks.json
 stare_freertoscli/
 FREERTOS_BASIC_CLI_HOWTO.pdf
+encoder_revolutions_pseudo_code.adam.txt

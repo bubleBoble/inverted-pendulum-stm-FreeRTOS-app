@@ -16,7 +16,10 @@
 
 static as5600_handle_t gs_handle;        /**< as5600 handle */
 
-static uint16_t angle_raw;
+static uint16_t angle_raw = 0;
+
+static int32_t cumulative_count = 0;
+static uint16_t last_count = 0;
 
 uint8_t pend_enc_init(void)
 {
@@ -79,4 +82,25 @@ uint8_t pend_enc_deinit(void)
     {
         return 0;
     }
+}
+
+/* Have to be called often enough, at least 3 times per revolution */
+int32_t pend_enc_get_cumulative_count(void)
+{
+    as5600_get_raw_angle(&gs_handle, &angle_raw);
+    if ( ( last_count > 2048 ) && ( angle_raw < (last_count - 2048) ) )
+    {
+        cumulative_count = cumulative_count + 4096 - last_count + angle_raw;
+    }
+    else if ( ( angle_raw > 2048 ) && ( last_count < ( angle_raw - 2048 ) ) )
+    {
+        cumulative_count = cumulative_count - 4096 - last_count + angle_raw;
+    }
+    else
+    {
+        cumulative_count = cumulative_count - last_count + angle_raw;
+    }
+    last_count = angle_raw;
+    
+    return cumulative_count;
 }
