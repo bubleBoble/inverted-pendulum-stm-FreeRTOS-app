@@ -17,7 +17,6 @@
 static as5600_handle_t gs_handle;        /**< as5600 handle */
 
 static uint16_t angle_raw = 0;
-
 static int32_t cumulative_count = 0;
 static uint16_t last_count = 0;
 

@@ -7,10 +7,13 @@
  * 	Timer for encoder is tim4 (htim4) (APB1@84MHz)
  * 	on CH1 & CH2
  *
- *	For Encoder_mode : Encoder Mode TI1   => ARR set to 1103 (final CPR)
- *					   (= 23*48-1 = 1103 = gear_ration*base_CPR*1)
- * 	For Encoder_mode : Encoder Mode TI1&2 => ARR set to 2207 (final CPR)
- * 					   (= 23*48*2-1 = 2207 = gear_ration*base_CPR*2*1)
+ *  Whole trolley track generates about 6488 ticks
+ *  So dcm encoder ARR register is set to 7000 so that it won't 
+ *  randomly reset its value at limit max position.
+ *  Track length is 47cm 
+ *      6488 ticks -> 47cm
+ * 
+ * 	Encoder mode: Encoder Mode TI1&2 => ARR set to 7000 (final CPR)
  *
  *	Counter mode: up
  *
@@ -19,30 +22,28 @@
  *
  */
 
+#include "tim.h"
+
 #ifndef DCM_ENC_DRIVER
 #define DCM_ENC_DRIVER
 
-#include "tim.h" // IDE AUTO GENERATED CODE
-
 /* handle to timer */
 #define ENC_TIMER_HANDLE htim4
+
 /* Max encoder timer count */
-#define ENC_MAX_CNT 2207
-#define PI  3.1415926536
-#define PI2 6.2831853072
+#define ENC_MAX_CNT 6488
+#define TRACK_LEN_MAX_CM 47.0f
 
-/* Encoder timer count converted to degrees */
-extern float enc_read_deg;
-/* Encoder timer count converted to radians */
-extern float enc_read_rad;
-
-/* To start encoder timer in encoder mode */
+/* Start encoder timer in encoder mode */
 void enc_init(void);
+
 /* Return: raw encoder timer count (uint16_t) */
 uint16_t enc_get_count(void);
-/* Return: encoder timer count converted to degrees */
-float enc_get_deg(void);
-/* Return: encoder timer count converted to radians */
-float enc_get_rad(void);
+
+/* Zero the encoder counter value */
+void dcm_enc_zero_counter(void);
+
+/* Returns trolley position in cm */
+float dcm_enc_get_trolley_position_cm(void);
 
 #endif /* DCM_ENC_DRIVER */

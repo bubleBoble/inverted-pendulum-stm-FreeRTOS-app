@@ -41,14 +41,14 @@ void vCommandConsoleTask( void *pvParameters );
 StackType_t console_STACKBUFFER [ CONSOLE_STACKDEPTH ];
 StaticTask_t console_TASKBUFFER_TCB;
 TickType_t time_at_which_consoleMutex_was_taken;
-SemaphoreHandle_t xConsoleWriteMutex; // mutex for console writing
+// SemaphoreHandle_t xConsoleWriteMutex; // mutex for console writing
 
-/* Magnetic encoder task */
-#define MAGENC_TASK_STACKDEPTH 500
-TaskHandle_t magEncTaskHandle = NULL;
-void magEncTask( void *pvParameters );
-StackType_t magEncTask_STACKBUFFER [ MAGENC_TASK_STACKDEPTH ];
-StaticTask_t magEncTask_TASKBUFFER_TCB;
+/* Encoders test task */
+#define ENC_TEST_STACK_DEPTH 500
+TaskHandle_t encTestTaskHandle = NULL;
+void encTestTask( void *pvParameters );
+StackType_t encTestTask_STACKBUFFER [ ENC_TEST_STACK_DEPTH ];
+StaticTask_t encTestTask_TASKBUFFER_TCB;
 
 /* ========================================================================
  * LIP INIT & RUN
@@ -85,6 +85,7 @@ void HAL_GPIO_EXTI_Callback( uint16_t GPIO_Pin )
         ZERO_POSITION_REACHED = 1;
         MAX_POSITION_REACHED = 0;
         dcm_set_output_volatage(0.0f);
+        dcm_enc_zero_counter();
     }
     if (GPIO_Pin == limitSW_right_Pin) // limit switch right
     {
@@ -96,12 +97,12 @@ void HAL_GPIO_EXTI_Callback( uint16_t GPIO_Pin )
     {
         if (ZERO_POSITION_REACHED)              // go to the max position if trolley on the zero 
         {
-            dcm_set_output_volatage(2.0f);
+            dcm_set_output_volatage(2.4f);
         } else if (MAX_POSITION_REACHED)        // go to the zero position if trolley on the max 
         { 
-            dcm_set_output_volatage(-2.0f);
+            dcm_set_output_volatage(-2.4f);
         } else {
-            dcm_set_output_volatage(-2.0f);     // if trolley not on max or zero, go to the zero position
+            dcm_set_output_volatage(-2.4f);     // if trolley not on max or zero, go to the zero position
         }
     }
     else
@@ -164,13 +165,13 @@ void LIPcreateTasks()
     //                                        console_STACKBUFFER,
     //                                        &console_TASKBUFFER_TCB );
 
-    magEncTaskHandle = xTaskCreateStatic( magEncTask,
-                                          (const char*) "magnetic encoder task",
-                                          MAGENC_TASK_STACKDEPTH,
-                                          (void *) 0,
-                                          tskIDLE_PRIORITY+2,
-                                          magEncTask_STACKBUFFER,
-                                          &magEncTask_TASKBUFFER_TCB );
+    encTestTaskHandle = xTaskCreateStatic( encTestTask,
+                                           (const char*) "magnetic encoder task",
+                                           ENC_TEST_STACK_DEPTH,
+                                           (void *) 0,
+                                           tskIDLE_PRIORITY+2,
+                                           encTestTask_STACKBUFFER,
+                                           &encTestTask_TASKBUFFER_TCB );
 }
 
 /* ========================================================================
@@ -200,34 +201,63 @@ void startTask(void * pvParameters)
     }
 }
 
-#define dt      10.0f
+#define dt      10
 #define dt_inv  100.0f
-void magEncTask( void *pvParameters )
+void encTestTask( void *pvParameters )
 {
     /*
+        This task is used to test encoder functionality
+
         Poll the pnedulum encoder at least 3 times per full revolution
+
+        saving previous sample readings convention:
+            reading [0] : reading [n]     : current sample (n)
+            reading [1] : reading [n - 1] : previous sample (n-1)
+            etc.
     */
 
-    float angle[2] = {0.0f};                        // Angle[0] : angle [n]     : current sample (n)
-                                                    // Angle[1] : angle [n - 1] : previous sample (n-1)
-    float D_angle;                                  // Angle derivative
     TickType_t xLastWakeTime = xTaskGetTickCount(); // For RTOS vTaskDelayUntil()
-    FIR_filter low_pass_FIR;                        // Low pas filter for angle derivative
-    float filter_coeffs[ FIR_BUFF_LEN ] = FIR_1;    // FIR_1 is #define in filters_coeffs.h
-    FIR_init( &low_pass_FIR, filter_coeffs );
+
+    // Pendulum magnetic encoder reading 
+    float angle[2] = {0.0f};                             // Angle current & previous sample
+    float D_angle;                                       // Angle derivative
+    FIR_filter low_pass_FIR_pend;                        // Low pas filter for angle derivative
+    float filter_coeffs_pend[ FIR_BUFF_LEN ] = FIR_1;    // FIR_1 is #define in filtePrs_coeffs.h
+    FIR_init( &low_pass_FIR_pend, filter_coeffs_pend );
+
+    // DCM encoder reading
+    float trolley_position[2] = {0};
+    float D_trolley_position;
+    FIR_filter low_pass_FIR_dcm;
+    float filter_coeffs_dcm[ FIR_BUFF_LEN ] = FIR_1;
+    FIR_init( &low_pass_FIR_dcm, filter_coeffs_dcm );
 
     for (;;)
     {
+#if 0 
+        // Pendulum magnetic encoder reading
         angle[1] = angle[0]; // count[t-1] = count[t]
         angle[0] = (float) pend_enc_get_cumulative_count() / 4096.0f * 360.0f;
         
-        // Calculate the first derivative
-        D_angle = ( angle[0] - angle[1] ) * dt_inv;
-        FIR_update(&low_pass_FIR, D_angle);
+        D_angle = ( angle[0] - angle[1] ) * dt_inv; // Calculate the first derivative
+        FIR_update( &low_pass_FIR_pend, D_angle );
 
-        printf( "%f,%f,%f\r\n", angle[0], D_angle, low_pass_FIR.out );
+        printf( "%f,%f\r\n", angle[0], low_pass_FIR_pend.out );
         fflush( stdout );
-    
+#endif
+
+#if 1    
+        // DCM encoder reading
+        trolley_position[1] = trolley_position[0]; // count[t-1] = count[t]
+        trolley_position[0] = dcm_enc_get_trolley_position_cm();
+        
+        D_trolley_position = ( trolley_position[0] - trolley_position[1] ) * dt_inv; // Calculate the first derivative
+        FIR_update( &low_pass_FIR_dcm, D_trolley_position );
+
+        printf( "%f,%f,%f\r\n", trolley_position[0], D_trolley_position, low_pass_FIR_dcm.out );
+        fflush( stdout );
+#endif
+
         vTaskDelayUntil( &xLastWakeTime, dt );
     }
 }
