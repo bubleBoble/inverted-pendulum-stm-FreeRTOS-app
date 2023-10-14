@@ -8,6 +8,8 @@ void enc_init(void)
 {
 	// Alternative is to start this timer in interrupt or DMA mode
 	HAL_TIM_Encoder_Start( &ENC_TIMER_HANDLE, TIM_CHANNEL_ALL );
+
+	// HAL_TIM_Encoder_Start_IT( &ENC_TIMER_HANDLE, TIM_CHANNEL_ALL );
 }
 
 /* Return: raw encoder timer count (uint16_t) */

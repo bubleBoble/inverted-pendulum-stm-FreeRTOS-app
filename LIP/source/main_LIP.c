@@ -97,12 +97,12 @@ void HAL_GPIO_EXTI_Callback( uint16_t GPIO_Pin )
     {
         if (ZERO_POSITION_REACHED)              // go to the max position if trolley on the zero 
         {
-            dcm_set_output_volatage(2.4f);
+            dcm_set_output_volatage(2.0f);
         } else if (MAX_POSITION_REACHED)        // go to the zero position if trolley on the max 
         { 
-            dcm_set_output_volatage(-2.4f);
+            dcm_set_output_volatage(-2.0f);
         } else {
-            dcm_set_output_volatage(-2.4f);     // if trolley not on max or zero, go to the zero position
+            dcm_set_output_volatage(-2.0f);     // if trolley not on max or zero, go to the zero position
         }
     }
     else
@@ -232,9 +232,11 @@ void encTestTask( void *pvParameters )
     float filter_coeffs_dcm[ FIR_BUFF_LEN ] = FIR_1;
     FIR_init( &low_pass_FIR_dcm, filter_coeffs_dcm );
 
+    char msg[64]; // msg for uart data transfer
+
     for (;;)
     {
-#if 0 
+#if 1 
         // Pendulum magnetic encoder reading
         angle[1] = angle[0]; // count[t-1] = count[t]
         angle[0] = (float) pend_enc_get_cumulative_count() / 4096.0f * 360.0f;
@@ -242,11 +244,15 @@ void encTestTask( void *pvParameters )
         D_angle = ( angle[0] - angle[1] ) * dt_inv; // Calculate the first derivative
         FIR_update( &low_pass_FIR_pend, D_angle );
 
-        printf( "%f,%f\r\n", angle[0], low_pass_FIR_pend.out );
-        fflush( stdout );
+        // printf( "%f,%f\r\n", angle[0], low_pass_FIR_pend.out );
+        // fflush( stdout );
+
+        // Use this to see time
+        sprintf( msg, "%f,%f,%f,%ld\r\n", angle[0], D_angle, low_pass_FIR_pend.out, xLastWakeTime );
+        com_send( msg, strlen(msg) );
 #endif
 
-#if 1    
+#if 0    
         // DCM encoder reading
         trolley_position[1] = trolley_position[0]; // count[t-1] = count[t]
         trolley_position[0] = dcm_enc_get_trolley_position_cm();
@@ -254,8 +260,13 @@ void encTestTask( void *pvParameters )
         D_trolley_position = ( trolley_position[0] - trolley_position[1] ) * dt_inv; // Calculate the first derivative
         FIR_update( &low_pass_FIR_dcm, D_trolley_position );
 
-        printf( "%f,%f,%f\r\n", trolley_position[0], D_trolley_position, low_pass_FIR_dcm.out );
-        fflush( stdout );
+        // Don't know if printf isn't to heavy for that
+        // printf( "%f,%f,%f\r\n", trolley_position[0], D_trolley_position, low_pass_FIR_dcm.out );
+        // fflush( stdout );
+
+        // Use this to see time
+        sprintf( msg, "%f,%f,%f,%ld\r\n", trolley_position[0], D_trolley_position, low_pass_FIR_dcm.out, xLastWakeTime );
+        com_send( msg, strlen(msg) );
 #endif
 
         vTaskDelayUntil( &xLastWakeTime, dt );
