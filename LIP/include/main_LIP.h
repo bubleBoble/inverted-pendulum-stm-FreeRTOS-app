@@ -26,6 +26,8 @@
 #include "dcm_encoder_driver.h"
 #include "com_driver.h"
 #include "pend_enc_driver.h"
+#include "FIR_filter.h"
+#include "filters_coeffs.h"
 
 void main_LIP_init(void);
 void main_LIP_run(void);

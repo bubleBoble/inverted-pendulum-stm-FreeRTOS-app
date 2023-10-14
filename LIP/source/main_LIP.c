@@ -15,8 +15,10 @@ extern UART_HandleTypeDef huart3;
 /* stdio reroute */
 int _write(int file, char *ptr, int len) 
 {
-  HAL_UART_Transmit(&huart3, (uint8_t *)ptr, len, HAL_MAX_DELAY);
-  return len;
+    HAL_UART_Transmit(&huart3, (uint8_t *)ptr, len, HAL_MAX_DELAY);
+    // HAL_UART_Transmit_IT(&huart3, (uint8_t *)ptr, len);
+
+    return len;
 }
 
 /* ========================================================================
@@ -198,29 +200,34 @@ void startTask(void * pvParameters)
     }
 }
 
+#define dt      10.0f
+#define dt_inv  100.0f
 void magEncTask( void *pvParameters )
 {
     /*
-        poll the pnedulum encoder at least 3 times per full revolution
+        Poll the pnedulum encoder at least 3 times per full revolution
     */
 
-    // last_cnts[0] : encoder count [t]     // present
-    // last_cnts[1] : encoder count [t - 1] // previous
-    float angle[2];
-    TickType_t xLastWakeTime = xTaskGetTickCount();
-    uint8_t dt = 10; // 10 tics = 10 ms (Freertos scheduler tickrate=1000Hz)
-
-    angle[0] = 0;
-    angle[1] = 0;
+    float angle[2] = {0.0f};                        // Angle[0] : angle [n]     : current sample (n)
+                                                    // Angle[1] : angle [n - 1] : previous sample (n-1)
+    float D_angle;                                  // Angle derivative
+    TickType_t xLastWakeTime = xTaskGetTickCount(); // For RTOS vTaskDelayUntil()
+    FIR_filter low_pass_FIR;                        // Low pas filter for angle derivative
+    float filter_coeffs[ FIR_BUFF_LEN ] = FIR_1;    // FIR_1 is #define in filters_coeffs.h
+    FIR_init( &low_pass_FIR, filter_coeffs );
 
     for (;;)
     {
         angle[1] = angle[0]; // count[t-1] = count[t]
         angle[0] = (float) pend_enc_get_cumulative_count() / 4096.0f * 360.0f;
         
-        printf( "%f\r\n", angle[0] );
-        fflush( stdout );
+        // Calculate the first derivative
+        D_angle = ( angle[0] - angle[1] ) * dt_inv;
+        FIR_update(&low_pass_FIR, D_angle);
 
+        printf( "%f,%f,%f\r\n", angle[0], D_angle, low_pass_FIR.out );
+        fflush( stdout );
+    
         vTaskDelayUntil( &xLastWakeTime, dt );
     }
 }
