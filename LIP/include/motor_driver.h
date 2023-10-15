@@ -26,8 +26,8 @@
 
 #define TIMER_HANDLE htim3
 
-#define MAX_INPUT_VOLTAGE_POSITIVE 12.0
-#define MAX_INPUT_VOLTAGE_NEGATIVE -12.0
+#define MAX_INPUT_VOLTAGE_POSITIVE 12.0f
+#define MAX_INPUT_VOLTAGE_NEGATIVE -12.0f
 
 #define DCM_PWM_FREQ 1000 // from precalculated value from PSC & ARR(autoreload register)
 

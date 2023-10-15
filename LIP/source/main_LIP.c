@@ -50,6 +50,14 @@ void encTestTask( void *pvParameters );
 StackType_t encTestTask_STACKBUFFER [ ENC_TEST_STACK_DEPTH ];
 StaticTask_t encTestTask_TASKBUFFER_TCB;
 
+/* --------------------- REMOVE - RAMPA TEST --------------------- */
+#define RAMPA_TASK_STACK_DEPTH 500
+TaskHandle_t rampaTaskHandle = NULL;
+void rampaTask( void *pvParameters );
+StackType_t rampaTask_STACKBUFFER [ RAMPA_TASK_STACK_DEPTH ];
+StaticTask_t rampaTask_TASKBUFFER_TCB;
+/* --------------------- REMOVE - RAMPA TEST --------------------- */
+
 /* ========================================================================
  * LIP INIT & RUN
  * ========================================================================
@@ -78,6 +86,11 @@ void main_LIP_run(void)
  */
 uint8_t ZERO_POSITION_REACHED = 0;  // 1 only if left limit switch activated 
 uint8_t MAX_POSITION_REACHED = 0;   // 1 only if right limit switch activated
+
+/* --------------------- REMOVE - RAMPA TEST --------------------- */
+uint8_t RAMPA_START=0;
+/* --------------------- REMOVE - RAMPA TEST --------------------- */
+
 void HAL_GPIO_EXTI_Callback( uint16_t GPIO_Pin )
 {
     if (GPIO_Pin == limitSW_left_Pin) // limit switch left
@@ -97,10 +110,16 @@ void HAL_GPIO_EXTI_Callback( uint16_t GPIO_Pin )
     {
         if (ZERO_POSITION_REACHED)              // go to the max position if trolley on the zero 
         {
-            dcm_set_output_volatage(2.0f);
+            // dcm_set_output_volatage(2.0f);
+            /* --------------------- REMOVE - RAMPA TEST --------------------- */
+            RAMPA_START=1;
+            /* --------------------- REMOVE - RAMPA TEST --------------------- */
         } else if (MAX_POSITION_REACHED)        // go to the zero position if trolley on the max 
         { 
             dcm_set_output_volatage(-2.0f);
+            /* --------------------- REMOVE - RAMPA TEST --------------------- */
+            RAMPA_START=0;
+            /* --------------------- REMOVE - RAMPA TEST --------------------- */
         } else {
             dcm_set_output_volatage(-2.0f);     // if trolley not on max or zero, go to the zero position
         }
@@ -172,13 +191,22 @@ void LIPcreateTasks()
                                            tskIDLE_PRIORITY+2,
                                            encTestTask_STACKBUFFER,
                                            &encTestTask_TASKBUFFER_TCB );
+
+    /* --------------------- REMOVE - RAMPA TEST --------------------- */
+    rampaTaskHandle = xTaskCreateStatic( rampaTask,
+                                         (const char*) "rampatest",
+                                         RAMPA_TASK_STACK_DEPTH,
+                                         (void *) 0,
+                                         tskIDLE_PRIORITY+2,
+                                         rampaTask_STACKBUFFER,
+                                         &rampaTask_TASKBUFFER_TCB );
+    /* --------------------- REMOVE - RAMPA TEST --------------------- */
 }
 
 /* ========================================================================
  * TASKS
  * ========================================================================
  */
-// START TASK
 void startTask(void * pvParameters)
 {
     // float deg;
@@ -226,53 +254,86 @@ void encTestTask( void *pvParameters )
     FIR_init( &low_pass_FIR_pend, filter_coeffs_pend );
 
     // DCM encoder reading
-    float trolley_position[2] = {0};
+    float trolley_position[2] = {0.0f};
     float D_trolley_position;
     FIR_filter low_pass_FIR_dcm;
     float filter_coeffs_dcm[ FIR_BUFF_LEN ] = FIR_1;
     FIR_init( &low_pass_FIR_dcm, filter_coeffs_dcm );
 
-    char msg[64]; // msg for uart data transfer
+    char msg[128]; // msg for uart data transfer
+    float voltage_setting;
+
+    com_send("xw,Dxw,DxwF,a,Da,DaF,V,T\r\n", 24);
+    vTaskDelay(1000);
 
     for (;;)
-    {
-#if 1 
+    { 
         // Pendulum magnetic encoder reading
-        angle[1] = angle[0]; // count[t-1] = count[t]
+        angle[1] = angle[0];
         angle[0] = (float) pend_enc_get_cumulative_count() / 4096.0f * 360.0f;
         
-        D_angle = ( angle[0] - angle[1] ) * dt_inv; // Calculate the first derivative
+        D_angle = ( angle[0] - angle[1] ) * dt_inv; // Pend. angle first derivative (wrt time)
         FIR_update( &low_pass_FIR_pend, D_angle );
 
-        // printf( "%f,%f\r\n", angle[0], low_pass_FIR_pend.out );
-        // fflush( stdout );
-
-        // Use this to see time
-        sprintf( msg, "%f,%f,%f,%ld\r\n", angle[0], D_angle, low_pass_FIR_pend.out, xLastWakeTime );
-        com_send( msg, strlen(msg) );
-#endif
-
-#if 0    
         // DCM encoder reading
-        trolley_position[1] = trolley_position[0]; // count[t-1] = count[t]
+        trolley_position[1] = trolley_position[0];
         trolley_position[0] = dcm_enc_get_trolley_position_cm();
         
-        D_trolley_position = ( trolley_position[0] - trolley_position[1] ) * dt_inv; // Calculate the first derivative
+        D_trolley_position = ( trolley_position[0] - trolley_position[1] ) * dt_inv; // 1st deriv
         FIR_update( &low_pass_FIR_dcm, D_trolley_position );
 
-        // Don't know if printf isn't to heavy for that
-        // printf( "%f,%f,%f\r\n", trolley_position[0], D_trolley_position, low_pass_FIR_dcm.out );
-        // fflush( stdout );
+        voltage_setting = dcm_get_output_voltage();
 
-        // Use this to see time
-        sprintf( msg, "%f,%f,%f,%ld\r\n", trolley_position[0], D_trolley_position, low_pass_FIR_dcm.out, xLastWakeTime );
+        /* LOGGING SCENARIO 1 */
+        // Cast to dobule to remove warning about implicit cast to double
+        sprintf( msg, "%f,%f,%f,%f,%f,%f,%f,%ld\r\n", 
+            (double)trolley_position[0], (double)D_trolley_position, (double)low_pass_FIR_dcm.out,
+            (double)angle[0],            (double)D_angle           , (double)low_pass_FIR_pend.out,
+            (double)voltage_setting, xLastWakeTime );
         com_send( msg, strlen(msg) );
-#endif
+
+        /* LOGGING SCENARIO 2 */
+        // sprintf( msg, "%f,%f,%f,%f,%f,%f,%f,%ld\r\n", 
+        //     (double)trolley_position[0], (double)angle[0], (double)voltage_setting, xLastWakeTime );
+        // com_send( msg, strlen(msg) );
 
         vTaskDelayUntil( &xLastWakeTime, dt );
     }
 }
 
+
+/* --------------------- REMOVE - RAMPA TEST --------------------- */
+void rampaTask( void *pvParameters )
+{
+    uint16_t i=0;
+
+    for (;;)
+    {
+        if (RAMPA_START)
+        {
+            vTaskDelay(2000);
+
+            for ( i=0; i<1200; i++ )
+            {
+                dcm_set_output_volatage((float)i/100.0f);
+                if ( MAX_POSITION_REACHED )
+                {
+                    dcm_set_output_volatage(0.0f);
+                    break;
+                }
+                vTaskDelay(10);
+            }
+        }
+        vTaskDelay(500);
+    }
+}
+/* --------------------- REMOVE - RAMPA TEST --------------------- */
+
+
+
+
+/* ------------------------------------------------------------ */
+/* --------------------- TASK FOR CONSOLE --------------------- */
 // Source: https://www.freertos.org/FreeRTOS-Plus/FreeRTOS_Plus_CLI/FreeRTOS_Plus_CLI_IO_Interfacing_and_Task.html
 void vCommandConsoleTask( void *pvParameters )
 {
@@ -357,4 +418,3 @@ void vCommandConsoleTask( void *pvParameters )
         } // if (cRxedChar != 0x00)
     } // for( ;; )
 } //vCommandConsoleTask
-

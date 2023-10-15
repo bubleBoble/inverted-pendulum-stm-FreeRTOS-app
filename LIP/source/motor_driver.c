@@ -23,6 +23,8 @@
 
 float dutycycle;
 
+float voltage_sign = 1.0f; // 1 for positive, -1 for negative output voltage
+
 /*
  * Function to initialize pwm GPIOs and set initial pwm to 0 DC
  */
@@ -61,7 +63,8 @@ void dcm_set_output_volatage(float inV)
 		dutycycle = dutycycle * 1000.0;               // map to value in [0, 1000] range
 		dcm_set_ch2_dutycycle(0);                     // zero the other channel first
 		dcm_set_ch1_dutycycle((uint16_t)dutycycle);   // could be round((uint16_t)_dutycycle) but cast is fine
-    }
+		voltage_sign = 1.0f;
+	}
     else if (inV < 0) // ch1=0V, ch2>0V
     {
 		if (inV < MAX_INPUT_VOLTAGE_NEGATIVE)
@@ -72,7 +75,8 @@ void dcm_set_output_volatage(float inV)
 		dutycycle = dutycycle * 1000.0;               // map to value in [0, 1000] range
 		dcm_set_ch1_dutycycle(0);                     // zero the other channel first
 		dcm_set_ch2_dutycycle((uint16_t)dutycycle);   // could be round((uint16_t)_dutycycle) but cast is fine
-    }
+		voltage_sign = -1.0f;
+	}
 }
 
 /*
@@ -81,9 +85,7 @@ void dcm_set_output_volatage(float inV)
  */
 float dcm_get_output_voltage(void)
 {
-	float outV = dutycycle / 1000.0;
-	outV = outV * 12.0;
-	return outV;
+	return (dutycycle / 1000.0f * MAX_INPUT_VOLTAGE_POSITIVE * voltage_sign);
 }
 
 
