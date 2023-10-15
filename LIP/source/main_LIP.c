@@ -116,7 +116,7 @@ void HAL_GPIO_EXTI_Callback( uint16_t GPIO_Pin )
             /* --------------------- REMOVE - RAMPA TEST --------------------- */
         } else if (MAX_POSITION_REACHED)        // go to the zero position if trolley on the max 
         { 
-            dcm_set_output_volatage(-2.0f);
+            // dcm_set_output_volatage(-2.0f);
             /* --------------------- REMOVE - RAMPA TEST --------------------- */
             RAMPA_START=0;
             /* --------------------- REMOVE - RAMPA TEST --------------------- */
@@ -301,30 +301,30 @@ void encTestTask( void *pvParameters )
     }
 }
 
-
+#include "math.h"
 /* --------------------- REMOVE - RAMPA TEST --------------------- */
 void rampaTask( void *pvParameters )
 {
     uint16_t i=0;
 
+    TickType_t starttime = xTaskGetTickCount();
+    uint32_t time = 0;
+    float vol_out = 0;
+
     for (;;)
     {
         if (RAMPA_START)
         {
-            vTaskDelay(2000);
-
-            for ( i=0; i<1200; i++ )
-            {
-                dcm_set_output_volatage((float)i/100.0f);
-                if ( MAX_POSITION_REACHED )
-                {
-                    dcm_set_output_volatage(0.0f);
-                    break;
-                }
-                vTaskDelay(10);
-            }
+            vol_out = 6.0f * sinf((float)time * 0.001f * PI2 * 0.70f) + sinf((float)time * 0.001f * PI2 * 1.4f);
         }
-        vTaskDelay(500);
+        else
+        {
+            vol_out = 0.0f;
+        }
+        dcm_set_output_volatage(vol_out);
+        time = xTaskGetTickCount()-starttime;
+
+        vTaskDelay(10);
     }
 }
 /* --------------------- REMOVE - RAMPA TEST --------------------- */
