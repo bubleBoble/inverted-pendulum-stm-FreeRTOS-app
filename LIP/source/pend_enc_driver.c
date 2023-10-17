@@ -14,7 +14,7 @@
 
 #include "pend_enc_driver.h"
 
-static as5600_handle_t gs_handle;        /**< as5600 handle */
+static as5600_handle_t gs_handle;
 
 static uint16_t angle_raw = 0;
 static int32_t cumulative_count = 0;
@@ -40,16 +40,6 @@ uint8_t pend_enc_init(void)
        
         return 1;
     }
-
-    // as5600_set_start_position(&gs_handle, (uint16_t)0);
-    // uint16_t start_pos; 
-    // as5600_get_start_position(&gs_handle, &start_pos);
-    // as5600_interface_debug_print("start position: %u\n", start_pos);
-
-    // as5600_set_stop_position(&gs_handle, (uint16_t)4094);
-    // uint16_t stop_pos; 
-    // as5600_get_stop_position(&gs_handle, &stop_pos);
-    // as5600_interface_debug_print("stop position: %u\n", stop_pos);
     return 0;
 }
 
@@ -66,7 +56,7 @@ uint8_t pend_enc_read_angle_rad(float *angle)
     /* Writes raw angle value into &angle_raw */
     as5600_get_raw_angle(&gs_handle, &angle_raw);
 
-    *angle = (float)angle_raw / 4096.0f * PI2;
+    *angle = (float)angle_raw * 0.001533980788; // 0.001533980788 = 1 / 4096.0f * PI2;
     
     return 0;
 }
@@ -83,9 +73,10 @@ uint8_t pend_enc_deinit(void)
     }
 }
 
-/* Have to be called often enough, at least 3 times per revolution */
+/* Have to be called often enough, at least 3 times per revolution (from some arduino library) */
 int32_t pend_enc_get_cumulative_count(void)
 {
+    // as5600_read_raw_fast(&gs_handle, &angle_raw);
     as5600_get_raw_angle(&gs_handle, &angle_raw);
     if ( ( last_count > 2048 ) && ( angle_raw < (last_count - 2048) ) )
     {

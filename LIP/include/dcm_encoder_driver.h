@@ -7,7 +7,7 @@
  * 	Timer for encoder is tim4 (htim4) (APB1@84MHz)
  * 	on CH1 & CH2
  *
- *  Whole trolley track generates about 6488 ticks
+ *  Whole IP track generates about 6488 ticks
  *  So dcm encoder ARR register is set to 7000 so that it won't 
  *  randomly reset its value at limit max position.
  *  Track length is 47cm 
@@ -43,7 +43,7 @@ uint16_t enc_get_count(void);
 /* Zero the encoder counter value */
 void dcm_enc_zero_counter(void);
 
-/* Returns trolley position in cm */
-float dcm_enc_get_trolley_position_cm(void);
+/* Returns cart position in cm */
+float dcm_enc_get_cart_position_cm(void);
 
 #endif /* DCM_ENC_DRIVER */

@@ -13,7 +13,7 @@ uint8_t cRxedChar = 0x00;
 extern UART_HandleTypeDef huart3;
 
 /* stdio reroute */
-int _write(int file, char *ptr, int len) 
+int _write(int file, char *ptr, int len)
 {
     HAL_UART_Transmit(&huart3, (uint8_t *)ptr, len, HAL_MAX_DELAY);
     // HAL_UART_Transmit_IT(&huart3, (uint8_t *)ptr, len);
@@ -50,14 +50,6 @@ void encTestTask( void *pvParameters );
 StackType_t encTestTask_STACKBUFFER [ ENC_TEST_STACK_DEPTH ];
 StaticTask_t encTestTask_TASKBUFFER_TCB;
 
-/* --------------------- REMOVE - RAMPA TEST --------------------- */
-#define RAMPA_TASK_STACK_DEPTH 500
-TaskHandle_t rampaTaskHandle = NULL;
-void rampaTask( void *pvParameters );
-StackType_t rampaTask_STACKBUFFER [ RAMPA_TASK_STACK_DEPTH ];
-StaticTask_t rampaTask_TASKBUFFER_TCB;
-/* --------------------- REMOVE - RAMPA TEST --------------------- */
-
 /* ========================================================================
  * LIP INIT & RUN
  * ========================================================================
@@ -66,11 +58,11 @@ void main_LIP_init(void)
 {
 	SCB->CPACR |= ((3 << 10*2)|(3 << 11*2)); // FPU initialization
                                              // FPU must be enabled before any FPU
-                                             // instruction is executed, otherwise 
+                                             // instruction is executed, otherwise
                                              // hardware exception will be raised.
-    dcm_init_output_voltage();               // Initialize PWM timer and zero its PWM output    
+    dcm_init_output_voltage();               // Initialize PWM timer and zero its PWM output
     enc_init();                              // Initialize encoder timer
-    pend_enc_init();                         // Initialize AS5600 encoder 
+    pend_enc_init();                         // Initialize AS5600 encoder
 }
 void main_LIP_run(void)
 {
@@ -84,12 +76,8 @@ void main_LIP_run(void)
  * Interrupts callback functions
  * ========================================================================
  */
-uint8_t ZERO_POSITION_REACHED = 0;  // 1 only if left limit switch activated 
+uint8_t ZERO_POSITION_REACHED = 0;  // 1 only if left limit switch activated
 uint8_t MAX_POSITION_REACHED = 0;   // 1 only if right limit switch activated
-
-/* --------------------- REMOVE - RAMPA TEST --------------------- */
-uint8_t RAMPA_START=0;
-/* --------------------- REMOVE - RAMPA TEST --------------------- */
 
 void HAL_GPIO_EXTI_Callback( uint16_t GPIO_Pin )
 {
@@ -108,20 +96,14 @@ void HAL_GPIO_EXTI_Callback( uint16_t GPIO_Pin )
     }
     if (GPIO_Pin == blue_btn_Pin) // built in blue button
     {
-        if (ZERO_POSITION_REACHED)              // go to the max position if trolley on the zero 
+        if (ZERO_POSITION_REACHED)              // go to the max position if cart on the zero
         {
-            // dcm_set_output_volatage(2.0f);
-            /* --------------------- REMOVE - RAMPA TEST --------------------- */
-            RAMPA_START=1;
-            /* --------------------- REMOVE - RAMPA TEST --------------------- */
-        } else if (MAX_POSITION_REACHED)        // go to the zero position if trolley on the max 
-        { 
-            // dcm_set_output_volatage(-2.0f);
-            /* --------------------- REMOVE - RAMPA TEST --------------------- */
-            RAMPA_START=0;
-            /* --------------------- REMOVE - RAMPA TEST --------------------- */
+            dcm_set_output_volatage(2.0f);
+        } else if (MAX_POSITION_REACHED)        // go to the zero position if cart on the max
+        {
+            dcm_set_output_volatage(-2.0f);
         } else {
-            dcm_set_output_volatage(-2.0f);     // if trolley not on max or zero, go to the zero position
+            dcm_set_output_volatage(-2.0f);     // if cart not on max or zero, go to the zero position
         }
     }
     else
@@ -169,18 +151,18 @@ void vApplicationGetIdleTaskMemory( StaticTask_t **ppxIdleTaskTCBBuffer,
 void LIPcreateTasks()
 {
     // startTaskHandle = xTaskCreateStatic( startTask,
-    //                                      (const char*) "enctask mag", 
-    //                                      STARTTASK_STACKDEPTH, 
-    //                                      (void *) 0, 
-    //                                      tskIDLE_PRIORITY+1, 
+    //                                      (const char*) "enctask mag",
+    //                                      STARTTASK_STACKDEPTH,
+    //                                      (void *) 0,
+    //                                      tskIDLE_PRIORITY+1,
     //                                      startTask_STACKBUFFER,
     //                                      &startTask_TASKBUFFER_TCB );
 
     // consoleTaskHandle = xTaskCreateStatic( vCommandConsoleTask,
     //                                        (const char*) "Console",
     //                                        CONSOLE_STACKDEPTH,
-    //                                        (void *) 0, 
-    //                                        tskIDLE_PRIORITY+1, 
+    //                                        (void *) 0,
+    //                                        tskIDLE_PRIORITY+1,
     //                                        console_STACKBUFFER,
     //                                        &console_TASKBUFFER_TCB );
 
@@ -192,15 +174,6 @@ void LIPcreateTasks()
                                            encTestTask_STACKBUFFER,
                                            &encTestTask_TASKBUFFER_TCB );
 
-    /* --------------------- REMOVE - RAMPA TEST --------------------- */
-    rampaTaskHandle = xTaskCreateStatic( rampaTask,
-                                         (const char*) "rampatest",
-                                         RAMPA_TASK_STACK_DEPTH,
-                                         (void *) 0,
-                                         tskIDLE_PRIORITY+2,
-                                         rampaTask_STACKBUFFER,
-                                         &rampaTask_TASKBUFFER_TCB );
-    /* --------------------- REMOVE - RAMPA TEST --------------------- */
 }
 
 /* ========================================================================
@@ -210,17 +183,17 @@ void LIPcreateTasks()
 void startTask(void * pvParameters)
 {
     // float deg;
-    
+
     if (!READ_ZERO_POSITION_REACHED)
     {
-        dcm_set_output_volatage(-2.0f); // start moving trolley to the left
+        dcm_set_output_volatage(-2.0f); // start moving cart to the left
     }
 
     for (;;)
     {
         // /* read data */
         // pend_enc_read_angle_deg(&deg);
-        
+
         // /* console output */
         // as5600_interface_debug_print("%.2f\r\n", deg);
 
@@ -246,7 +219,7 @@ void encTestTask( void *pvParameters )
 
     TickType_t xLastWakeTime = xTaskGetTickCount(); // For RTOS vTaskDelayUntil()
 
-    // Pendulum magnetic encoder reading 
+    // Pendulum magnetic encoder reading
     float angle[2] = {0.0f};                             // Angle current & previous sample
     float D_angle;                                       // Angle derivative
     FIR_filter low_pass_FIR_pend;                        // Low pas filter for angle derivative
@@ -254,82 +227,88 @@ void encTestTask( void *pvParameters )
     FIR_init( &low_pass_FIR_pend, filter_coeffs_pend );
 
     // DCM encoder reading
-    float trolley_position[2] = {0.0f};
-    float D_trolley_position;
+    float cart_position[2] = {0.0f};
+    float D_cart_position;
     FIR_filter low_pass_FIR_dcm;
     float filter_coeffs_dcm[ FIR_BUFF_LEN ] = FIR_1;
     FIR_init( &low_pass_FIR_dcm, filter_coeffs_dcm );
 
+    /* For serial osciloscope */
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
     char msg[128]; // msg for uart data transfer
     float voltage_setting;
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
 
     com_send("xw,Dxw,DxwF,a,Da,DaF,V,T\r\n", 24);
     vTaskDelay(1000);
 
+    // /* For matlab/simulink com */
+    // ////////////////////////////////////////////////////////////////////////////////////////////////////
+    // typedef struct 
+    // {
+    //     float trol_pos; // 4 bytes
+    //     float angle;    // 4 bytes
+    //     float volt;     // 4 bytes
+    // } tx_data;
+    // ////////////////////////////////////////////////////////////////////////////////////////////////////
+
     for (;;)
-    { 
-        // Pendulum magnetic encoder reading
+    {
+        /* Pendulum magnetic encoder reading 
+        read_in_degrees = pend_raw_read / 4096 * 360 + 180 + 9.404
+        9.404 is base value which as5600 outputs when pendulum is in down position
+        Todo: as5600 setting can be changed later */
         angle[1] = angle[0];
-        angle[0] = (float) pend_enc_get_cumulative_count() / 4096.0f * 360.0f;
-        
+        angle[0] = (float) pend_enc_get_cumulative_count() * 0.087890625f + 180.0f + 9.404f; // 360/4096=0.087890625  
+
         D_angle = ( angle[0] - angle[1] ) * dt_inv; // Pend. angle first derivative (wrt time)
         FIR_update( &low_pass_FIR_pend, D_angle );
 
         // DCM encoder reading
-        trolley_position[1] = trolley_position[0];
-        trolley_position[0] = dcm_enc_get_trolley_position_cm();
-        
-        D_trolley_position = ( trolley_position[0] - trolley_position[1] ) * dt_inv; // 1st deriv
-        FIR_update( &low_pass_FIR_dcm, D_trolley_position );
+        cart_position[1] = cart_position[0];
+        cart_position[0] = dcm_enc_get_cart_position_cm();
 
-        voltage_setting = dcm_get_output_voltage();
+        D_cart_position = ( cart_position[0] - cart_position[1] ) * dt_inv; // 1st deriv
+        FIR_update( &low_pass_FIR_dcm, D_cart_position );
 
-        /* LOGGING SCENARIO 1 */
+
+        /* LOGGING SCENARIO 1 - good enought to be used with serial osciloscope and data logging with
+        for eg. with hterm  */
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
         // Cast to dobule to remove warning about implicit cast to double
-        sprintf( msg, "%f,%f,%f,%f,%f,%f,%f,%ld\r\n", 
-            (double)trolley_position[0], (double)D_trolley_position, (double)low_pass_FIR_dcm.out,
+        voltage_setting = dcm_get_output_voltage();
+        sprintf( msg, "%f,%f,%f,%f,%f,%f,%f,%ld\r\n",
+            (double)cart_position[0], (double)D_cart_position, (double)low_pass_FIR_dcm.out,
             (double)angle[0],            (double)D_angle           , (double)low_pass_FIR_pend.out,
             (double)voltage_setting, xLastWakeTime );
         com_send( msg, strlen(msg) );
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-        /* LOGGING SCENARIO 2 */
-        // sprintf( msg, "%f,%f,%f,%f,%f,%f,%f,%ld\r\n", 
-        //     (double)trolley_position[0], (double)angle[0], (double)voltage_setting, xLastWakeTime );
-        // com_send( msg, strlen(msg) );
+        // /* for matlab/simulink com */
+        // ////////////////////////////////////////////////////////////////////////////////////////////////////
+        // /*
+        //     115200 baudrate
+        //     so about 115200/8=14400 bytes/sec
+        //     so 1/14400=0.00006944444 sec/byte
+        //     so 0.00083333333 sec for 12 bytes
+        //     which is 0.83(3) < 1 ms for one data packet
+        //     Tx loop sample period is 10 ms so should be
+        //     allright
+        // */
+        // tx_data data;
+        // data.trol_pos = cart_position[0];
+        // data.angle = angle[0];
+        // data.volt = voltage_setting;
+
+        // char tx_buff[12];
+
+        // memcpy( tx_buff, &data, 12 );
+        // com_send( tx_buff, 12 );
+        // ////////////////////////////////////////////////////////////////////////////////////////////////////
 
         vTaskDelayUntil( &xLastWakeTime, dt );
     }
 }
-
-#include "math.h"
-/* --------------------- REMOVE - RAMPA TEST --------------------- */
-void rampaTask( void *pvParameters )
-{
-    uint16_t i=0;
-
-    TickType_t starttime = xTaskGetTickCount();
-    uint32_t time = 0;
-    float vol_out = 0;
-
-    for (;;)
-    {
-        if (RAMPA_START)
-        {
-            vol_out = 6.0f * sinf((float)time * 0.001f * PI2 * 0.70f) + sinf((float)time * 0.001f * PI2 * 1.4f);
-        }
-        else
-        {
-            vol_out = 0.0f;
-        }
-        dcm_set_output_volatage(vol_out);
-        time = xTaskGetTickCount()-starttime;
-
-        vTaskDelay(10);
-    }
-}
-/* --------------------- REMOVE - RAMPA TEST --------------------- */
-
-
 
 
 /* ------------------------------------------------------------ */
@@ -409,7 +388,7 @@ void vCommandConsoleTask( void *pvParameters )
                         pcInputString[ cInputIndex ] = cRxedChar;
                         cInputIndex++;
                         printf("%c", cRxedChar);
-                        fflush(stdout);            
+                        fflush(stdout);
                     }
                 }
             }

@@ -312,6 +312,9 @@ uint8_t as5600_deinit(as5600_handle_t *handle);
  */
 uint8_t as5600_read(as5600_handle_t *handle, uint16_t *angle_raw, float *deg);
 
+/* Custom - stripped version of as5600_read() to make it faster */
+void as5600_read_raw_fast(as5600_handle_t *handle, uint16_t *angle_raw);
+
 /**
  * @brief      convert the angle to the register raw data
  * @param[in]  *handle points to an as5600 handle structure
