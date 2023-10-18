@@ -60,12 +60,8 @@ void Error_Handler(void);
 #define blue_btn_Pin GPIO_PIN_13
 #define blue_btn_GPIO_Port GPIOC
 #define blue_btn_EXTI_IRQn EXTI15_10_IRQn
-#define adc_dcm_L_i_Pin GPIO_PIN_3
-#define adc_dcm_L_i_GPIO_Port GPIOF
 #define MCO_Pin GPIO_PIN_0
 #define MCO_GPIO_Port GPIOH
-#define adc_dcm_R_I_Pin GPIO_PIN_3
-#define adc_dcm_R_I_GPIO_Port GPIOC
 #define adc_pot_Pin GPIO_PIN_3
 #define adc_pot_GPIO_Port GPIOA
 #define pwm1_dcmA1_Pin GPIO_PIN_6

@@ -30,18 +30,15 @@ extern ADC_HandleTypeDef hadc3;
 extern DMA_HandleTypeDef hdma_adc3;
 extern TIM_HandleTypeDef htim2;
 
-extern volatile uint16_t adc_data_pot_Ri_Li[ 3 ]; // array for adc data, defined in main_LIP.c
-								  		 		  // [0] - potentiometer read
-								  		 		  // [1] - current in right cart direction
-								  		 		  // [2] - current in left cart direction
-
+extern volatile uint16_t adc_data_pot_Ri_Li; // for adc data, defined in main_LIP.c
+								  		 		
 /*
  * Function to initialize pwm GPIOs and set initial pwm to 0 DC
  */
 void dcm_init(void)
 {
 	HAL_TIM_Base_Start( &htim2 );
-	HAL_ADC_Start_DMA( &hadc3, (uint32_t *)adc_data_pot_Ri_Li, 3 ); // init dma for adc
+	HAL_ADC_Start_DMA( &hadc3, (uint32_t *) &adc_data_pot_Ri_Li, 1 ); // init dma for adc
 
     // start timer
     HAL_TIM_PWM_Start( &TIMER_HANDLE, TIM_CHANNEL_1 );

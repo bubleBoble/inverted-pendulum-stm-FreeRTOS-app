@@ -52,7 +52,7 @@ void MX_ADC3_Init(void)
   hadc3.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_RISING;
   hadc3.Init.ExternalTrigConv = ADC_EXTERNALTRIGCONV_T2_TRGO;
   hadc3.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  hadc3.Init.NbrOfConversion = 3;
+  hadc3.Init.NbrOfConversion = 1;
   hadc3.Init.DMAContinuousRequests = ENABLE;
   hadc3.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
   if (HAL_ADC_Init(&hadc3) != HAL_OK)
@@ -65,24 +65,6 @@ void MX_ADC3_Init(void)
   sConfig.Channel = ADC_CHANNEL_3;
   sConfig.Rank = 1;
   sConfig.SamplingTime = ADC_SAMPLETIME_480CYCLES;
-  if (HAL_ADC_ConfigChannel(&hadc3, &sConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-
-  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
-  */
-  sConfig.Channel = ADC_CHANNEL_9;
-  sConfig.Rank = 2;
-  if (HAL_ADC_ConfigChannel(&hadc3, &sConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-
-  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
-  */
-  sConfig.Channel = ADC_CHANNEL_13;
-  sConfig.Rank = 3;
   if (HAL_ADC_ConfigChannel(&hadc3, &sConfig) != HAL_OK)
   {
     Error_Handler();
@@ -105,24 +87,10 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* adcHandle)
     /* ADC3 clock enable */
     __HAL_RCC_ADC3_CLK_ENABLE();
 
-    __HAL_RCC_GPIOF_CLK_ENABLE();
-    __HAL_RCC_GPIOC_CLK_ENABLE();
     __HAL_RCC_GPIOA_CLK_ENABLE();
     /**ADC3 GPIO Configuration
-    PF3     ------> ADC3_IN9
-    PC3     ------> ADC3_IN13
     PA3     ------> ADC3_IN3
     */
-    GPIO_InitStruct.Pin = adc_dcm_L_i_Pin;
-    GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    HAL_GPIO_Init(adc_dcm_L_i_GPIO_Port, &GPIO_InitStruct);
-
-    GPIO_InitStruct.Pin = adc_dcm_R_I_Pin;
-    GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    HAL_GPIO_Init(adc_dcm_R_I_GPIO_Port, &GPIO_InitStruct);
-
     GPIO_InitStruct.Pin = adc_pot_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
@@ -165,14 +133,8 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* adcHandle)
     __HAL_RCC_ADC3_CLK_DISABLE();
 
     /**ADC3 GPIO Configuration
-    PF3     ------> ADC3_IN9
-    PC3     ------> ADC3_IN13
     PA3     ------> ADC3_IN3
     */
-    HAL_GPIO_DeInit(adc_dcm_L_i_GPIO_Port, adc_dcm_L_i_Pin);
-
-    HAL_GPIO_DeInit(adc_dcm_R_I_GPIO_Port, adc_dcm_R_I_Pin);
-
     HAL_GPIO_DeInit(adc_pot_GPIO_Port, adc_pot_Pin);
 
     /* ADC3 DMA DeInit */

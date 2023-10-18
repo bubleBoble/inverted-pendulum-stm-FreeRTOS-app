@@ -25,7 +25,7 @@ int _write( int file, char *ptr, int len )
  * ========================================================================
  */
 /* Holds data from ADC3 tranfered over DMA, init code is in motor_driver.c/dcm_init() */
-volatile uint16_t adc_data_pot_Ri_Li[ 3 ];
+volatile uint16_t adc_data_pot_Ri_Li;
 
 /* ========================================================================
  * TASKS RELATED
@@ -61,11 +61,11 @@ StaticTask_t encTestTask_TASKBUFFER_TCB;
  */
 void main_LIP_init( void )
 {
-    dcm_init();                              // Initialize PWM timer and zero its PWM output
 	SCB->CPACR |= ((3 << 10*2)|(3 << 11*2)); // FPU initialization
                                              // FPU must be enabled before any FPU
                                              // instruction is executed, otherwise
                                              // hardware exception will be raised.
+    dcm_init();                              // Initialize PWM timer and zero its PWM output
     enc_init();                              // Initialize encoder timer
     pend_enc_init();                         // Initialize AS5600 encoder
 }
@@ -277,12 +277,12 @@ void encTestTask( void *pvParameters )
         ////////////////////////////////////////////////////////////////////////////////////////////////////
         // Cast to dobule to remove warning about implicit cast to double
         voltage_setting = dcm_get_output_voltage();
-        // sprintf( msg, "%f,%f,%f,%f,%f,%f,%f,%ld\r\n",
-        //     (double)cart_position[0], (double)D_cart_position, (double)low_pass_FIR_dcm.out,
-        //     (double)angle[0],         (double)D_angle,         (double)low_pass_FIR_pend.out,
-        //     (double)voltage_setting, xLastWakeTime );
-        sprintf( msg, "%d,%d,%d\r\n",
-            adc_data_pot_Ri_Li[0], adc_data_pot_Ri_Li[1], adc_data_pot_Ri_Li[2] );
+        sprintf( msg, "%f,%f,%f,%f,%f,%f,%f,%ld\r\n",
+            (double)cart_position[0], (double)D_cart_position, (double)low_pass_FIR_dcm.out,
+            (double)angle[0],         (double)D_angle,         (double)low_pass_FIR_pend.out,
+            (double)voltage_setting, xLastWakeTime );
+        
+        // sprintf( msg, "%d\r\n", adc_data_pot_Ri_Li ); // used for pot testing
         com_send( msg, strlen(msg) );
         ////////////////////////////////////////////////////////////////////////////////////////////////////
 
