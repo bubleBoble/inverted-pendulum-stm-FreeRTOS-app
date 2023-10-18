@@ -4,22 +4,28 @@
 #include "main_LIP.h"
 
 /* For limit switch interrupts */
-#define READ_ZERO_POSITION_REACHED HAL_GPIO_ReadPin(limitSW_left_GPIO_Port, limitSW_left_Pin)
-#define READ_MAX_POSITION_REACHED HAL_GPIO_ReadPin(limitSW_right_GPIO_Port, limitSW_right_Pin)
+#define READ_ZERO_POSITION_REACHED HAL_GPIO_ReadPin( limitSW_left_GPIO_Port, limitSW_left_Pin )
+#define READ_MAX_POSITION_REACHED HAL_GPIO_ReadPin( limitSW_right_GPIO_Port, limitSW_right_Pin )
 
 /* holds each byte received from console (uart3) */
 uint8_t cRxedChar = 0x00;
 
 extern UART_HandleTypeDef huart3;
 
-/* stdio reroute */
-int _write(int file, char *ptr, int len)
+/* stdio reroute - don't use it */
+int _write( int file, char *ptr, int len )
 {
-    HAL_UART_Transmit(&huart3, (uint8_t *)ptr, len, HAL_MAX_DELAY);
+    HAL_UART_Transmit( &huart3, (uint8_t *)ptr, len, HAL_MAX_DELAY );
     // HAL_UART_Transmit_IT(&huart3, (uint8_t *)ptr, len);
-
     return len;
 }
+
+/* ========================================================================
+ * ADC DMA data for motor_driver.c
+ * ========================================================================
+ */
+/* Holds data from ADC3 tranfered over DMA, init code is in motor_driver.c/dcm_init() */
+volatile uint16_t adc_data_pot_Ri_Li[ 3 ];
 
 /* ========================================================================
  * TASKS RELATED
@@ -29,7 +35,7 @@ int _write(int file, char *ptr, int len)
 #define STARTTASK_STACKDEPTH 500
 TaskHandle_t startTaskHandle = NULL;
 void startTask( void *pvParameters );
-StackType_t startTask_STACKBUFFER [ STARTTASK_STACKDEPTH ];
+StackType_t startTask_STACKBUFFER[ STARTTASK_STACKDEPTH ];
 StaticTask_t startTask_TASKBUFFER_TCB;
 
 /* console task */
@@ -38,10 +44,9 @@ StaticTask_t startTask_TASKBUFFER_TCB;
 #define CONSOLE_STACKDEPTH  4000
 TaskHandle_t consoleTaskHandle;
 void vCommandConsoleTask( void *pvParameters );
-StackType_t console_STACKBUFFER [ CONSOLE_STACKDEPTH ];
+StackType_t console_STACKBUFFER[ CONSOLE_STACKDEPTH ];
 StaticTask_t console_TASKBUFFER_TCB;
 TickType_t time_at_which_consoleMutex_was_taken;
-// SemaphoreHandle_t xConsoleWriteMutex; // mutex for console writing
 
 /* Encoders test task */
 #define ENC_TEST_STACK_DEPTH 500
@@ -54,17 +59,17 @@ StaticTask_t encTestTask_TASKBUFFER_TCB;
  * LIP INIT & RUN
  * ========================================================================
  */
-void main_LIP_init(void)
+void main_LIP_init( void )
 {
 	SCB->CPACR |= ((3 << 10*2)|(3 << 11*2)); // FPU initialization
                                              // FPU must be enabled before any FPU
                                              // instruction is executed, otherwise
                                              // hardware exception will be raised.
-    dcm_init_output_voltage();               // Initialize PWM timer and zero its PWM output
+    dcm_init();                              // Initialize PWM timer and zero its PWM output
     enc_init();                              // Initialize encoder timer
     pend_enc_init();                         // Initialize AS5600 encoder
 }
-void main_LIP_run(void)
+void main_LIP_run( void )
 {
     LIPcreateTasks();
     vTaskStartScheduler();
@@ -81,29 +86,29 @@ uint8_t MAX_POSITION_REACHED = 0;   // 1 only if right limit switch activated
 
 void HAL_GPIO_EXTI_Callback( uint16_t GPIO_Pin )
 {
-    if (GPIO_Pin == limitSW_left_Pin) // limit switch left
+    if ( GPIO_Pin == limitSW_left_Pin ) // limit switch left
     {
         ZERO_POSITION_REACHED = 1;
         MAX_POSITION_REACHED = 0;
-        dcm_set_output_volatage(0.0f);
+        dcm_set_output_volatage( 0.0f );
         dcm_enc_zero_counter();
     }
-    if (GPIO_Pin == limitSW_right_Pin) // limit switch right
+    if ( GPIO_Pin == limitSW_right_Pin ) // limit switch right
     {
         MAX_POSITION_REACHED = 1;
         ZERO_POSITION_REACHED = 0;
-        dcm_set_output_volatage(0.0f);
+        dcm_set_output_volatage( 0.0f );
     }
-    if (GPIO_Pin == blue_btn_Pin) // built in blue button
+    if ( GPIO_Pin == blue_btn_Pin ) // built in blue button
     {
-        if (ZERO_POSITION_REACHED)              // go to the max position if cart on the zero
+        if ( ZERO_POSITION_REACHED )              // go to the max position if cart on the zero
         {
-            dcm_set_output_volatage(2.0f);
-        } else if (MAX_POSITION_REACHED)        // go to the zero position if cart on the max
+            dcm_set_output_volatage( 2.0f );
+        } else if ( MAX_POSITION_REACHED )        // go to the zero position if cart on the max
         {
-            dcm_set_output_volatage(-2.0f);
+            dcm_set_output_volatage( -2.0f );
         } else {
-            dcm_set_output_volatage(-2.0f);     // if cart not on max or zero, go to the zero position
+            dcm_set_output_volatage( -2.0f );     // if cart not on max or zero, go to the zero position
         }
     }
     else
@@ -177,31 +182,27 @@ void LIPcreateTasks()
 }
 
 /* ========================================================================
- * TASKS
+ * START TASK
  * ========================================================================
  */
-void startTask(void * pvParameters)
+void startTask( void * pvParameters )
 {
     // float deg;
 
-    if (!READ_ZERO_POSITION_REACHED)
+    if ( !READ_ZERO_POSITION_REACHED )
     {
-        dcm_set_output_volatage(-2.0f); // start moving cart to the left
+        dcm_set_output_volatage( -2.0f ); // start moving cart to the left
     }
 
-    for (;;)
+    for ( ;; )
     {
-        // /* read data */
-        // pend_enc_read_angle_deg(&deg);
-
-        // /* console output */
-        // as5600_interface_debug_print("%.2f\r\n", deg);
-
-        // /* delay 100ms */
-        // vTaskDelay(100);
     }
 }
 
+/* ========================================================================
+ * ENCODER TEST TASK
+ * ========================================================================
+ */
 #define dt      10
 #define dt_inv  100.0f
 void encTestTask( void *pvParameters )
@@ -220,14 +221,14 @@ void encTestTask( void *pvParameters )
     TickType_t xLastWakeTime = xTaskGetTickCount(); // For RTOS vTaskDelayUntil()
 
     // Pendulum magnetic encoder reading
-    float angle[2] = {0.0f};                             // Angle current & previous sample
-    float D_angle;                                       // Angle derivative
-    FIR_filter low_pass_FIR_pend;                        // Low pas filter for angle derivative
-    float filter_coeffs_pend[ FIR_BUFF_LEN ] = FIR_1;    // FIR_1 is #define in filtePrs_coeffs.h
+    float angle[ 2 ] = { 0.0f };                             // Angle current & previous sample
+    float D_angle;                                           // Angle derivative
+    FIR_filter low_pass_FIR_pend;                            // Low pas filter for angle derivative
+    float filter_coeffs_pend[ FIR_BUFF_LEN ] = FIR_1;        // FIR_1 is #define in filtePrs_coeffs.h
     FIR_init( &low_pass_FIR_pend, filter_coeffs_pend );
 
     // DCM encoder reading
-    float cart_position[2] = {0.0f};
+    float cart_position[ 2 ] = { 0.0f };
     float D_cart_position;
     FIR_filter low_pass_FIR_dcm;
     float filter_coeffs_dcm[ FIR_BUFF_LEN ] = FIR_1;
@@ -235,12 +236,12 @@ void encTestTask( void *pvParameters )
 
     /* For serial osciloscope */
     ////////////////////////////////////////////////////////////////////////////////////////////////////
-    char msg[128]; // msg for uart data transfer
+    char msg[ 128 ]; // msg for uart data transfer
     float voltage_setting;
     ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    com_send("xw,Dxw,DxwF,a,Da,DaF,V,T\r\n", 24);
-    vTaskDelay(1000);
+    com_send( "xw,Dxw,DxwF,a,Da,DaF,V,T\r\n", 24 );
+    vTaskDelay( 1000 );
 
     // /* For matlab/simulink com */
     // ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -258,29 +259,30 @@ void encTestTask( void *pvParameters )
         read_in_degrees = pend_raw_read / 4096 * 360 + 180 + 9.404
         9.404 is base value which as5600 outputs when pendulum is in down position
         Todo: as5600 setting can be changed later */
-        angle[1] = angle[0];
-        angle[0] = (float) pend_enc_get_cumulative_count() * 0.087890625f + 180.0f + 9.404f; // 360/4096=0.087890625  
+        angle[ 1 ] = angle[ 0 ];
+        angle[ 0 ] = (float) pend_enc_get_cumulative_count() * 0.087890625f + 180.0f + 9.404f; // 360/4096=0.087890625  
 
         D_angle = ( angle[0] - angle[1] ) * dt_inv; // Pend. angle first derivative (wrt time)
         FIR_update( &low_pass_FIR_pend, D_angle );
 
         // DCM encoder reading
-        cart_position[1] = cart_position[0];
-        cart_position[0] = dcm_enc_get_cart_position_cm();
+        cart_position[ 1 ] = cart_position[ 0 ];
+        cart_position[ 0 ] = dcm_enc_get_cart_position_cm();
 
-        D_cart_position = ( cart_position[0] - cart_position[1] ) * dt_inv; // 1st deriv
+        D_cart_position = ( cart_position[ 0 ] - cart_position[ 1 ] ) * dt_inv; // 1st deriv
         FIR_update( &low_pass_FIR_dcm, D_cart_position );
 
-
-        /* LOGGING SCENARIO 1 - good enought to be used with serial osciloscope and data logging with
-        for eg. with hterm  */
+        /* LOGGING - good enought to be used with serial osciloscope and data logging with
+        for eg. hterm  */
         ////////////////////////////////////////////////////////////////////////////////////////////////////
         // Cast to dobule to remove warning about implicit cast to double
         voltage_setting = dcm_get_output_voltage();
-        sprintf( msg, "%f,%f,%f,%f,%f,%f,%f,%ld\r\n",
-            (double)cart_position[0], (double)D_cart_position, (double)low_pass_FIR_dcm.out,
-            (double)angle[0],            (double)D_angle           , (double)low_pass_FIR_pend.out,
-            (double)voltage_setting, xLastWakeTime );
+        // sprintf( msg, "%f,%f,%f,%f,%f,%f,%f,%ld\r\n",
+        //     (double)cart_position[0], (double)D_cart_position, (double)low_pass_FIR_dcm.out,
+        //     (double)angle[0],         (double)D_angle,         (double)low_pass_FIR_pend.out,
+        //     (double)voltage_setting, xLastWakeTime );
+        sprintf( msg, "%d,%d,%d\r\n",
+            adc_data_pot_Ri_Li[0], adc_data_pot_Ri_Li[1], adc_data_pot_Ri_Li[2] );
         com_send( msg, strlen(msg) );
         ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -310,9 +312,10 @@ void encTestTask( void *pvParameters )
     }
 }
 
-
-/* ------------------------------------------------------------ */
-/* --------------------- TASK FOR CONSOLE --------------------- */
+/* ========================================================================
+ * CONSOLE TASK 
+ * ========================================================================
+ */
 // Source: https://www.freertos.org/FreeRTOS-Plus/FreeRTOS_Plus_CLI/FreeRTOS_Plus_CLI_IO_Interfacing_and_Task.html
 void vCommandConsoleTask( void *pvParameters )
 {
@@ -387,13 +390,13 @@ void vCommandConsoleTask( void *pvParameters )
                     {
                         pcInputString[ cInputIndex ] = cRxedChar;
                         cInputIndex++;
-                        printf("%c", cRxedChar);
-                        fflush(stdout);
+                        printf( "%c", cRxedChar );
+                        fflush( stdout );
                     }
                 }
             }
             cRxedChar = 0x00;
-            fflush(stdout);
+            fflush( stdout );
         } // if (cRxedChar != 0x00)
     } // for( ;; )
 } //vCommandConsoleTask

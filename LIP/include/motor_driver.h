@@ -31,18 +31,16 @@
 
 #define DCM_PWM_FREQ 1000 // from precalculated value from PSC & ARR(autoreload register)
 
-extern float dutycycle; // PWM dutycycle of currently active PWM timer channel
-
 /*
  * Function to initialize pwm GPIOs and set initial pwm to 0 DC
  */
-void dcm_init_output_voltage(void);
-void dcm_zero_output_voltage(void);
-void dcm_set_output_volatage(float inV);
-float dcm_get_output_voltage(void);
+void dcm_init( void );
+void dcm_zero_output_voltage( void );
+void dcm_set_output_volatage( float inV );
+float dcm_get_output_voltage( void );
 
 // PRIVATE
-void dcm_set_ch1_dutycycle(uint16_t dtc);
-void dcm_set_ch2_dutycycle(uint16_t dtc);
+void dcm_set_ch1_dutycycle( uint16_t dtc );
+void dcm_set_ch2_dutycycle( uint16_t dtc );
 
 #endif /* DCM_DRIVER */
