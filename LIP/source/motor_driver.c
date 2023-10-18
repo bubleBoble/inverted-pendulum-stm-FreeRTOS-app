@@ -28,6 +28,7 @@ float voltage_sign = 1.0f; // 1 for positive, -1 for negative output voltage
 
 extern ADC_HandleTypeDef hadc3;
 extern DMA_HandleTypeDef hdma_adc3;
+extern TIM_HandleTypeDef htim2;
 
 extern volatile uint16_t adc_data_pot_Ri_Li[ 3 ]; // array for adc data, defined in main_LIP.c
 								  		 		  // [0] - potentiometer read
@@ -39,7 +40,7 @@ extern volatile uint16_t adc_data_pot_Ri_Li[ 3 ]; // array for adc data, defined
  */
 void dcm_init(void)
 {
-	// HAL_ADCEx_Calibration_Start( &hadc3, ADC_SINGLE_ENDED );
+	HAL_TIM_Base_Start( &htim2 );
 	HAL_ADC_Start_DMA( &hadc3, (uint32_t *)adc_data_pot_Ri_Li, 3 ); // init dma for adc
 
     // start timer

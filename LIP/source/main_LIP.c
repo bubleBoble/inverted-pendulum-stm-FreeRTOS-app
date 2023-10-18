@@ -61,11 +61,11 @@ StaticTask_t encTestTask_TASKBUFFER_TCB;
  */
 void main_LIP_init( void )
 {
+    dcm_init();                              // Initialize PWM timer and zero its PWM output
 	SCB->CPACR |= ((3 << 10*2)|(3 << 11*2)); // FPU initialization
                                              // FPU must be enabled before any FPU
                                              // instruction is executed, otherwise
                                              // hardware exception will be raised.
-    dcm_init();                              // Initialize PWM timer and zero its PWM output
     enc_init();                              // Initialize encoder timer
     pend_enc_init();                         // Initialize AS5600 encoder
 }
