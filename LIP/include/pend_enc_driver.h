@@ -15,8 +15,8 @@
 #ifndef PEND_ENC_DRIVER
 #define PEND_ENC_DRIVER
 
-#define PI  3.1415926536
-#define PI2 6.2831853072
+#define PI  3.1415926536f
+#define PI2 6.2831853072f
 
 uint8_t pend_enc_init(void);
 
