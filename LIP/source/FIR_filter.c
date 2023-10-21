@@ -6,15 +6,6 @@
 
 #include "FIR_filter.h"
 
-// Try to use max 64 samples
-// for FIR its the same as impulse response sample values
-// static float FIR_COEFFS[FIR_BUFF_LEN] = 
-// {
-//     -0.030435920, -0.016287268, 0.0098560303, 0.044013896, 0.080986104, 0.11514397,
-//     0.14128727, 0.15543592, 0.15543592, 0.14128727, 0.11514397, 0.080986104,
-//     0.044013896, 0.0098560303, -0.016287268, -0.030435920
-// };
-
 void FIR_init( FIR_filter *fir, float coeffs[FIR_BUFF_LEN])
 {
     // Zero all samples in the filter buffer

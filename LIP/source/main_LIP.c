@@ -16,10 +16,10 @@ extern TIM_HandleTypeDef htim2;
  * GLOBALS
  * ========================================================================
  */
-    /* Holds data from ADC3 tranfered over DMA, init code is in motor_driver.c/dcm_init() */
+    // Holds data from ADC3 tranfered over DMA, init code is in motor_driver.c/dcm_init()
     volatile uint16_t adc_data_pot;
 
-    /* holds each byte received from console (uart3) */
+    // holds each byte received from console (uart3)
     uint8_t cRxedChar = 0x00;
 
     // These are made global but only basic_test_task will write to these
@@ -28,13 +28,15 @@ extern TIM_HandleTypeDef htim2;
     float angle[ 2 ] = { 0.0f };                             // Angle current & previous sample
     float D_angle;                                           // Angle derivative
     FIR_filter low_pass_FIR_pend;                            // Low pas filter for angle derivative
+    IIR_filter low_pass_IIR_pend;
 
     // These are made global but only basic_test_task will write to them
     // Only controller_task should read these
     // DCM encoder reading
     float cart_position[ 2 ] = { 0.0f };
     float D_cart_position;
-    FIR_filter low_pass_FIR_dcm;
+    FIR_filter low_pass_FIR_cart;
+    IIR_filter low_pass_IIR_cart;
 
     float cart_position_setpoint;
 
@@ -95,7 +97,7 @@ void main_LIP_init( void )
                                              // instruction is executed, otherwise
                                              // hardware exception will be raised.
     HAL_TIM_Base_Start( &htim2 );                // Start timer for ADC3 pot read
-    HAL_ADC_Start_DMA( 
+    HAL_ADC_Start_DMA(
         &hadc3, (uint32_t *) &adc_data_pot, 1 ); // init dma for adc
     dcm_init();                                  // Initialize PWM timer and zero its PWM output
     enc_init();                                  // Initialize encoder timer
@@ -136,12 +138,12 @@ void HAL_GPIO_EXTI_Callback( uint16_t GPIO_Pin )
         if ( ZERO_POSITION_REACHED )              // go to the max position if cart on the zero
         {
             dcm_set_output_volatage( 2.0f );
-        } 
+        }
         else if ( MAX_POSITION_REACHED )        // go to the zero position if cart on the max
         {
             dcm_set_output_volatage( -2.0f );
-        } 
-        else 
+        }
+        else
         {
             dcm_set_output_volatage( -2.0f );     // if cart not on max or zero, go to the zero position
         }
@@ -214,13 +216,13 @@ void LIPcreateTasks()
                                              basicTestTask_STACKBUFFER,
                                              &basicTestTask_TASKBUFFER_TCB );
 
-    ctrlTestTaskHandle = xTaskCreateStatic( ctrlTestTask,
-                                            (const char*) "Controller test task",
-                                            CTRL_TEST_STACK_DEPTH,
-                                            (void *) 0,
-                                            tskIDLE_PRIORITY+3,
-                                            ctrlTestTask_STACKBUFFER,
-                                            &ctrlTestTask_TASKBUFFER_TCB );
+    // ctrlTestTaskHandle = xTaskCreateStatic( ctrlTestTask,
+    //                                         (const char*) "Controller test task",
+    //                                         CTRL_TEST_STACK_DEPTH,
+    //                                         (void *) 0,
+    //                                         tskIDLE_PRIORITY+3,
+    //                                         ctrlTestTask_STACKBUFFER,
+    //                                         &ctrlTestTask_TASKBUFFER_TCB );
 }
 
 /* ========================================================================
@@ -242,7 +244,7 @@ void startTask( void * pvParameters )
 }
 
 /* ========================================================================
- * ENCODER TEST TASK
+ * BASIC TEST TASK
  * ========================================================================
  */
 #define dt      10
@@ -250,135 +252,195 @@ void startTask( void * pvParameters )
 void basicTestTask( void *pvParameters )
 {
     /*
-        This task is used to :  
-            1. Read dcm encoder, 
-            2. Read pendulum magnetic encoder
-            3. Calculate derivatives of cart position and pend angular position
-            SHOULD BE MOVED TO ANOTHER TASK :
-                4. Transmit these variables for testing with serial osciloscope
-
-        Poll the pnedulum encoder at least 3 times per full revolution
-
-        This task runs every 10ms
-
-        saving previous sample readings convention:
-            reading [0] : reading [n]     : current sample (n)
-            reading [1] : reading [n - 1] : previous sample (n-1)
-            etc.
-    */
-
+     * This task is used to :
+     *    1. Read dcm encoder,
+     *    2. Read pendulum magnetic encoder
+     *    3. Calculate derivatives of cart position and pend angular position
+     *    SHOULD BE MOVED TO ANOTHER TASK :
+     *        4. Transmit these variables for testing with serial osciloscope
+     *
+     * Poll the pnedulum encoder at least 3 times per full revolution
+     *
+     * This task runs every 10ms
+     *
+     * saving previous sample readings convention:
+     *    reading [0] : reading [n]     : current sample (n)
+     *    reading [1] : reading [n - 1] : previous sample (n-1)
+     *    etc.
+     */
     TickType_t xLastWakeTime = xTaskGetTickCount(); // For RTOS vTaskDelayUntil()
 
-    // ------------------------------------------------------------
+    /////////////////////////////////////////////////////////////////////////////////////////
     // FILTERS
-    // ------------------------------------------------------------
+    /////////////////////////////////////////////////////////////////////////////////////////
     // Pendulum magnetic encoder reading
-    float filter_coeffs_pend[ FIR_BUFF_LEN ] = FIR_1;        // FIR_1 is #define in filtePrs_coeffs.h
-    FIR_init( &low_pass_FIR_pend, filter_coeffs_pend );
+        // FIR 1
+        float filter_coeffs_pend[ FIR_BUFF_LEN ] = FIR_1;   // FIR_1 is #define in filtePrs_coeffs.h
+        FIR_init( &low_pass_FIR_pend, filter_coeffs_pend );
+        
+        // IIR 1
+        float alpha_pend = 0.5;
+        IIR_init_fo( &low_pass_IIR_pend, alpha_pend );
+
     // DCM encoder reading
-    float filter_coeffs_dcm[ FIR_BUFF_LEN ] = FIR_1;
-    FIR_init( &low_pass_FIR_dcm, filter_coeffs_dcm );
+        // FIR 1
+        float filter_coeffs_cart[ FIR_BUFF_LEN ] = FIR_1;
+        FIR_init( &low_pass_FIR_cart, filter_coeffs_cart );
+        
+        // IIR 1
+        float alpha_cart = 0.75;
+        IIR_init_fo( &low_pass_IIR_cart, alpha_cart );
 
-    // ------------------------------------------------------------
+    /////////////////////////////////////////////////////////////////////////////////////////
     // For serial osciloscope - testing/debug purposes
-    // ------------------------------------------------------------
-    // char msg[ 128 ]; // msg for uart data transfer
-    // float voltage_setting;
+    /////////////////////////////////////////////////////////////////////////////////////////
+    char msg[ 128 ]; // msg for uart data transfer
+    float voltage_setting;
 
-    // ------------------------------------------------------------
-    // Raw data transmission for matlab/simulink com 
-    // ------------------------------------------------------------
-    typedef struct 
+    /////////////////////////////////////////////////////////////////////////////////////////
+    // Raw data transmission for matlab/simulink com
+    /////////////////////////////////////////////////////////////////////////////////////////
+    typedef struct
     {
-        float cart_pos;     // 4B
-        float cart_speed;   // 4B
-        float angle;        // 4B
-        float pend_speed;   // 4B
-        float volt_setting; // 4B
-        float cart_setpoint;// 4B
-    } tx_data;              // sum: 24B
+        float cart_pos;     // float 4 Bytes
+        float cart_speed;   
+        float angle;        
+        float pend_speed;   
+        float volt_setting; 
+        float cart_setpoint;
+    } tx_data;              // sum: 24 Bytes
     tx_data data;
     char tx_buff[ 24 ];
 
     // Task main loop
     for ( ;; )
     {
-        // Pendulum magnetic encoder reading 
+        // Pendulum magnetic encoder reading
+        /////////////////////////////////////////////////////////////////////////////////////////
         // read_in_degrees = pend_raw_read / 4096 * 360 + 180 + 9.404
         // 9.404 is base value which as5600 outputs when pendulum is in down position
         // Todo: as5600 setting for base ang. position can be changed later
         angle[ 1 ] = angle[ 0 ];
-        // angle[ 0 ] = (float) pend_enc_get_cumulative_count() / 4096.0f * 360.0f + 180.0f + 9.404f; // 360/4096=0.087890625  
-        angle[ 0 ] = (float) pend_enc_get_cumulative_count() / 4096.0f * PI2 + 0.1455 + PI; // 360/4096=0.087890625  
-
-        // FIR for cart position
-        // FIR_update( &low_pass_FIR_pend, angle[0] );
-
+        angle[ 0 ] = (float) pend_enc_get_cumulative_count() / 4096.0f * PI2 + 0.1455 + PI; // 360/4096=0.087890625
         D_angle = ( angle[0] - angle[1] ) * dt_inv; // Pend. angle first derivative (wrt time)
 
-        // FIR filter for pendulum angle derivative
-        FIR_update( &low_pass_FIR_pend, D_angle );
-        D_angle = low_pass_FIR_pend.out;
-        
-        if ( ( D_angle < 0.2 ) && ( D_angle > -0.2 ) ) // dead zone for derivative about +-10 deg/sec
-        {
-            D_angle = 0;
-        }
+        // FILTERS
+            // FIR for pendulum angle
+            // FIR_update( &low_pass_FIR_pend, angle[0] );
+
+            // FIR filter for pendulum angle derivative
+            // FIR_update( &low_pass_FIR_pend, D_angle );
+            // D_angle = low_pass_FIR_pend.out;
+            // if ( ( D_angle < 0.2 ) && ( D_angle > -0.2 ) ) // dead zone for derivative about +-10 deg/sec
+            // {
+            //     D_angle = 0;
+            // }
+
+            // IIR filter for pendulum angle derivative
+            IIR_update_fo( &low_pass_IIR_pend, D_angle );
+            // D_angle = low_pass_IIR_pend.out;
+            if ( ( D_angle < 0.2 ) && ( D_angle > -0.2 ) ) // dead zone for derivative about +-10 deg/sec
+            {
+                D_angle = 0;
+            }
 
         // DCM encoder reading
+        //////////////////////////////////////////////////////////////////////////////////////////
         cart_position[ 1 ] = cart_position[ 0 ];
         cart_position[ 0 ] = dcm_enc_get_cart_position_cm();
 
-        // FIR filter for cart position;
-        // FIR_update( &low_pass_FIR_dcm, cart_position[0] );
+        // FILTERS
+            // FIR filter for cart position;
+            // FIR_update( &low_pass_FIR_cart, cart_position[0] );
 
-        D_cart_position = ( cart_position[ 0 ] - cart_position[ 1 ] ) * dt_inv; // 1st deriv
-        
-        // // FIR for cart velocity
-        FIR_update( &low_pass_FIR_dcm, D_cart_position );
-        D_cart_position = low_pass_FIR_dcm.out;
+            D_cart_position = ( cart_position[ 0 ] - cart_position[ 1 ] ) * dt_inv; // 1st deriv
 
-        // ------------------------------------------------------------
+            // // FIR for cart velocity
+            FIR_update( &low_pass_FIR_cart, D_cart_position );
+
+            // IIR filter for cart speed
+            IIR_update_fo( &low_pass_IIR_cart, D_cart_position );
+                // D_angle = low_pass_IIR_pend.out;
+                // if ( ( D_angle < 0.2 ) && ( D_angle > -0.2 ) ) // dead zone for derivative about +-10 deg/sec
+                // {
+                //     D_angle = 0;
+                // }
+
+        //////////////////////////////////////////////////////////////////////////////////////////
         // LOGGING - good enough to be used with serial osciloscope and data logging with
         // for eg. hterm
-        // ------------------------------------------------------------
-        
+        //////////////////////////////////////////////////////////////////////////////////////////
+
         // Message 1
         // voltage_setting = dcm_get_output_voltage();
-        // sprintf( msg, "%f,%f,%f,%f,%f,%f,%f,%ld\r\n",
-        //     (double)cart_position[0], (double)D_cart_position, (double)low_pass_FIR_dcm.out,
-        //     (double)angle[0],         (double)D_angle,         (double)low_pass_FIR_pend.out,
-        //     (double)voltage_setting, xLastWakeTime );
-        
+        sprintf( msg,
+                 "%f,%f,%f,%f,%f,%f,%f,%ld\r\n",
+                 (double) cart_position[0],            // CH1
+                 (double) D_cart_position,             // CH2
+                 (double) low_pass_FIR_cart.out,        // CH3
+                 (double) angle[0],                    // CH4
+                 (double) D_angle,                     // CH5
+                 (double) low_pass_FIR_pend.out,       // CH6
+                 (double) voltage_setting,             // CH7
+                 xLastWakeTime                         // CH8
+        );
+
         // Message 2
-        // sprintf( msg, "%.3f,%.3f,%.3f,%.3f\r\n",
-        //     (double)cart_position[0], (double)D_cart_position,
-        //     (double)angle[0],         (double)D_angle );
+        // sprintf( msg,
+        //          "%.3f,%.3f,0,%.3f,%.3f\r\n",
+        //          (double)cart_position[0],
+        //          (double)D_cart_position,
+        //          (double)angle[0]);
+
+        // Message 3
+        // sprintf( msg,
+        //          "%d,%f\r\n",
+        //          adc_data_pot,
+        //          (double)angle[0]);
+
+        // Message 4
+        sprintf( msg,
+                 "%f,%f,%f,%f,%f,%f,%f,%ld\r\n",
+                 // for pendulum
+                 (double) angle[0],
+                 (double) D_angle,
+                 (double) low_pass_IIR_pend.out,
+                 // for cart
+                 (double) cart_position[ 0 ],
+                 (double) D_cart_position,
+                 (double) low_pass_IIR_cart.out,
+                 //
+                 (double) voltage_setting,
+                 xLastWakeTime
+        );
+
+        // Message 5 - used for potentiometer testing
+        // sprintf( msg, "%d\r\n", adc_data_pot );
         
-        // Message 1 - used for potentiometer testing
-        // sprintf( msg, "%d\r\n", adc_data_pot_Ri_Li ); 
-        // com_send( msg, strlen(msg) );
+        com_send( msg, strlen(msg) );
 
-        // ------------------------------------------------------------
-        // for matlab/simulink com
-        // ------------------------------------------------------------
-        // 115200 baudrate
-        // so about 115200/8=14400 bytes/sec
-        // so 1/14400=0.00006944444 sec/byte
-        // so 0.00083333333 sec for 12 bytes
-        // which is 0.83(3) < 1 ms for one data packet
-        // Tx loop sample period is 10 ms so should be
-        // allright
- 
-        data.cart_pos       = cart_position[ 0 ];
-        data.cart_speed     = D_cart_position;
-        data.angle          = angle[ 0 ];
-        data.pend_speed     = D_angle;
-        data.volt_setting   = dcm_get_output_voltage();
-        data.cart_setpoint  = cart_position_setpoint;
-        memcpy( tx_buff, &data, 24 );
-        com_send( tx_buff, 24 );
+        //////////////////////////////////////////////////////////////////////////////////////////
+        // Com for matlab/simulink - raw byte com
+        //////////////////////////////////////////////////////////////////////////////////////////
+        // Note:
+        //     115200 baudrate
+        //     so about 115200/8=14400 bytes/sec
+        //     so 1/14400=0.00006944444 sec/byte
+        //     so 0.00083333333 sec for 12 bytes
+        //     which is 0.83(3) < 1 ms for one data packet
+        //     Tx loop sample period is 10 ms so should be
+        //     allright
+        // data.cart_pos       = cart_position[ 0 ];
+        // data.cart_speed     = D_cart_position;
+        // data.angle          = angle[ 0 ];
+        // data.pend_speed     = D_angle;
+        // data.volt_setting   = dcm_get_output_voltage();
+        // data.cart_setpoint  = cart_position_setpoint;
+        // memcpy( tx_buff, &data, 24 );
+        // com_send( tx_buff, 24 );
 
+
+        // Task delay
         vTaskDelayUntil( &xLastWakeTime, dt );
     }
 
@@ -391,21 +453,21 @@ void basicTestTask( void *pvParameters )
 void ctrlTestTask( void *pvParameters )
 {
     /*
-        This task is used to:  
-            1. Read LIP state variables defined as global, these are:
-                Cart position:      cart_position[ 0 ]
-                Cart speed:         D_cart_position
-                Pendulum angle:     angle[ 0 ]
-                Pendulum speed:     D_angle
-            2. Calculate control signal for inverted pendulum - dc motor voltage.
-
-        This task runs every 10ms
-    */
+     *  This task is used to:
+     *      1. Read LIP state variables defined as global, these are:
+     *          Cart position:      cart_position[ 0 ]
+     *          Cart speed:         D_cart_position
+     *          Pendulum angle:     angle[ 0 ]
+     *          Pendulum speed:     D_angle
+     *      2. Calculate control signal for inverted pendulum - dc motor voltage.
+     *
+     *  This task runs every 10ms
+     */
 
     TickType_t xLastWakeTime = xTaskGetTickCount(); // For RTOS vTaskDelayUntil()
 
     // // state feedback gains:
-    
+
     // dla dół zwykły lqr
     float xw_gain   = -60.42;
     float the_gain  = -6.115;
@@ -441,7 +503,7 @@ void ctrlTestTask( void *pvParameters )
 
         // Convert cart position from cm to m
         cart_position_m = cart_position[0] * 0.01;
-        
+
         // controller update - pozycja dół - działa
         // ( non_lin_state - setpoint_state ) .* ( state_feedback_gains )
         ctrl_signal = ( cart_position_m - cart_position_setpoint )          * xw_gain +
@@ -451,7 +513,7 @@ void ctrlTestTask( void *pvParameters )
 
         // // controller update - pozycja góra - nie działa
         // if( ( angle[ 0 ] < up_position_controller_treshold ) &&
-        //     ( angle[ 0 ] > -up_position_controller_treshold ) && 
+        //     ( angle[ 0 ] > -up_position_controller_treshold ) &&
         //     ( cart_position[0] > 5.0f ) &&
         //     ( cart_position[0] < 42.0f ) )
         // {
@@ -516,7 +578,7 @@ void ctrlTestTask( void *pvParameters )
 }
 
 /* ========================================================================
- * CONSOLE TASK 
+ * CONSOLE TASK
  * ========================================================================
  */
 // Source: https://www.freertos.org/FreeRTOS-Plus/FreeRTOS_Plus_CLI/FreeRTOS_Plus_CLI_IO_Interfacing_and_Task.html

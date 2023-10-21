@@ -4,6 +4,12 @@
 #ifndef LIP_MAIN
 #define LIP_MAIN
 
+#include "stdarg.h"
+#include "stdint.h"
+#include "stdio.h"
+#include "stdlib.h"
+#include "string.h"
+
 #include "FreeRTOS.h"
 #include "FreeRTOS.h"
 #include "task.h"
@@ -17,18 +23,13 @@
 #include "stm32f4xx_hal.h"
 #include "main.h"
 
-#include "stdarg.h"
-#include "stdint.h"
-#include "stdio.h"
-#include "stdlib.h"
-#include "string.h"
-
 #include "motor_driver.h"
 #include "dcm_encoder_driver.h"
 #include "com_driver.h"
 #include "pend_enc_driver.h"
 #include "FIR_filter.h"
 #include "filters_coeffs.h"
+#include "IIR_filter.h"
 
 void main_LIP_init(void);
 void main_LIP_run(void);
