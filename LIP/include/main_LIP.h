@@ -31,6 +31,9 @@
 #include "filters_coeffs.h"
 #include "IIR_filter.h"
 
+// turn on ramp input task 
+#define TEST_RAMP_INPUT 0
+
 void main_LIP_init(void);
 void main_LIP_run(void);
 

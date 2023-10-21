@@ -86,6 +86,15 @@ void ctrlTestTask( void *pvParameters );
 StackType_t ctrlTestTask_STACKBUFFER [ CTRL_TEST_STACK_DEPTH ];
 StaticTask_t ctrlTestTask_TASKBUFFER_TCB;
 
+#if TEST_RAMP_INPUT
+    uint8_t RAMPA_START=0;
+    #define RAMPA_TASK_STACK_DEPTH 500
+    TaskHandle_t rampaTaskHandle = NULL;
+    void rampaTask( void *pvParameters );
+    StackType_t rampaTask_STACKBUFFER [ RAMPA_TASK_STACK_DEPTH ];
+    StaticTask_t rampaTask_TASKBUFFER_TCB;
+#endif
+
 /* ========================================================================
  * LIP INIT & RUN
  * ========================================================================
@@ -137,10 +146,17 @@ void HAL_GPIO_EXTI_Callback( uint16_t GPIO_Pin )
     {
         if ( ZERO_POSITION_REACHED )              // go to the max position if cart on the zero
         {
+#if TEST_RAMP_INPUT
+            RAMPA_START=1;                 
+#else
             dcm_set_output_volatage( 2.0f );
+#endif
         }
         else if ( MAX_POSITION_REACHED )        // go to the zero position if cart on the max
         {
+#if TEST_RAMP_INPUT
+            RAMPA_START=0;
+#endif
             dcm_set_output_volatage( -2.0f );
         }
         else
@@ -223,6 +239,16 @@ void LIPcreateTasks()
     //                                         tskIDLE_PRIORITY+3,
     //                                         ctrlTestTask_STACKBUFFER,
     //                                         &ctrlTestTask_TASKBUFFER_TCB );
+
+#if TEST_RAMP_INPUT
+    rampaTaskHandle = xTaskCreateStatic( rampaTask,
+                                        (const char*) "rampatest",
+                                        RAMPA_TASK_STACK_DEPTH,
+                                        (void *) 0,
+                                        tskIDLE_PRIORITY+2,
+                                        rampaTask_STACKBUFFER,
+                                        &rampaTask_TASKBUFFER_TCB );
+#endif
 }
 
 /* ========================================================================
@@ -372,18 +398,18 @@ void basicTestTask( void *pvParameters )
         //////////////////////////////////////////////////////////////////////////////////////////
 
         // Message 1
-        // voltage_setting = dcm_get_output_voltage();
-        sprintf( msg,
-                 "%f,%f,%f,%f,%f,%f,%f,%ld\r\n",
-                 (double) cart_position[0],            // CH1
-                 (double) D_cart_position,             // CH2
-                 (double) low_pass_FIR_cart.out,        // CH3
-                 (double) angle[0],                    // CH4
-                 (double) D_angle,                     // CH5
-                 (double) low_pass_FIR_pend.out,       // CH6
-                 (double) voltage_setting,             // CH7
-                 xLastWakeTime                         // CH8
-        );
+        voltage_setting = dcm_get_output_voltage();
+        // sprintf( msg,
+        //          "%f,%f,%f,%f,%f,%f,%f,%ld\r\n",
+        //          (double) cart_position[0],            // CH1
+        //          (double) D_cart_position,             // CH2
+        //          (double) low_pass_FIR_cart.out,       // CH3
+        //          (double) angle[0],                    // CH4
+        //          (double) D_angle,                     // CH5
+        //          (double) low_pass_FIR_pend.out,       // CH6
+        //          (double) voltage_setting,             // CH7
+        //          xLastWakeTime                         // CH8
+        // );
 
         // Message 2
         // sprintf( msg,
@@ -665,3 +691,30 @@ void vCommandConsoleTask( void *pvParameters )
         } // if (cRxedChar != 0x00)
     } // for( ;; )
 } //vCommandConsoleTask
+
+#if TEST_RAMP_INPUT
+void rampaTask( void *pvParameters )
+{
+    uint16_t i=0;
+
+    for (;;)
+    {
+        if (RAMPA_START)
+        {
+            vTaskDelay(2000);
+
+            for ( i=0; i<30000; i++ )
+            {
+                dcm_set_output_volatage((float)i/10000.0f);
+                if ( MAX_POSITION_REACHED )
+                {
+                    dcm_set_output_volatage(0.0f);
+                    break;
+                }
+                vTaskDelay(2);
+            }
+        }
+        vTaskDelay(500);
+    }
+}
+#endif
