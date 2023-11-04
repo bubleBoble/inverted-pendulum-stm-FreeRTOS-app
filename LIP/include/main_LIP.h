@@ -11,7 +11,6 @@
 #include "string.h"
 
 #include "FreeRTOS.h"
-#include "FreeRTOS.h"
 #include "task.h"
 #include "FreeRTOSConfig.h"
 #include "FreeRTOS_CLI.h"
@@ -30,17 +29,20 @@
 #include "FIR_filter.h"
 #include "filters_coeffs.h"
 #include "IIR_filter.h"
+#include "LIP_tasks_common.h"
 
-// turn on ramp input task 
-#define TEST_RAMP_INPUT 0
+/* Sampling period in milli seconds and its inverse used for calculations.
+Constant dt is used by all controllers tasks and comunication task. */
+#define dt      10
+#define dt_inv  100.0f
 
 void main_LIP_init(void);
 void main_LIP_run(void);
 
-// in main_LIP.c
+/* Defined in main_LIP.c */
 void LIPcreateTasks(void);
 
-// in cli_commands.c
+/* Defined in cli_commands.c */
 void vRegisterCLICommands(void);
 
 #endif /* LIP_MAIN */
