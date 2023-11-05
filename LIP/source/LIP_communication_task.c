@@ -14,9 +14,9 @@
 
 /* These are defined in LIP_tasks_common.c */
 extern float pend_angle[ 2 ];
-extern float pend_speed;
+extern float pend_speed[ 2 ];
 extern float cart_position[ 2 ];
-extern float cart_speed;
+extern float cart_speed[ 2 ];
 extern float *cart_position_setpoint_cm;
 
 void comTask( void *pvParameters )
@@ -37,10 +37,10 @@ void comTask( void *pvParameters )
                     "%f,%f,0,%f,%f,%f,%f,0,0\r\n",
                     // for pendulum
                     (double) pend_angle[ 0 ],
-                    (double) pend_speed,
+                    (double) pend_speed[ 0 ],
                     // for cart
                     (double) cart_position[ 0 ],
-                    (double) cart_speed,
+                    (double) cart_speed[ 0 ],
                     (double) *cart_position_setpoint_cm,
                     //
                     (double) dcm_get_output_voltage()

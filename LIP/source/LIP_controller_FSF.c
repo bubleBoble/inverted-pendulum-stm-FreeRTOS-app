@@ -24,9 +24,9 @@
 /* These are defined in LIP_tasks_common.c */
 extern volatile uint16_t adc_data_pot;
 extern float pend_angle[ 2 ];
-extern float pend_speed;
+extern float pend_speed[ 2 ];
 extern float cart_position[ 2 ];
-extern float cart_speed;
+extern float cart_speed[ 2 ];
 extern float *cart_position_setpoint_cm;
 
 void ctrlFSFTask( void *pvParameters )
@@ -61,9 +61,9 @@ void ctrlFSFTask( void *pvParameters )
     for( ;; )
     {
         cart_position_error = *cart_position_setpoint_cm - cart_position[0]; 
-        cart_speed_error    = - cart_speed;
+        cart_speed_error    = - cart_speed[ 0 ];
         pend_position_error = pend_angle_setpoint - pend_angle[ 0 ];
-        pend_speed_error    = - pend_speed;
+        pend_speed_error    = - pend_speed[ 0 ];
 
         /* controller update
         control signal = ( state_setpoint - state ) * ( F ) */

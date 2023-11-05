@@ -26,9 +26,9 @@
 
 /* These are defined in LIP_tasks_common.c */
 extern float pend_angle[ 2 ];
-extern float pend_speed;
+extern float pend_speed[ 2 ];
 extern float cart_position[ 2 ];
-extern float cart_speed;
+extern float cart_speed[ 2 ];
 extern float *cart_position_setpoint_cm;
 
 void rawComTask( void *pvParameters )
@@ -57,9 +57,9 @@ void rawComTask( void *pvParameters )
     {
         /* Message content */
         data.cart_pos       = cart_position[ 0 ];
-        data.cart_speed     = cart_speed;
+        data.cart_speed     = cart_speed[ 0 ];
         data.angle          = pend_angle[ 0 ];
-        data.pend_speed     = pend_speed;
+        data.pend_speed     = pend_speed[ 0 ];
         data.volt_setting   = dcm_get_output_voltage();
         data.cart_setpoint  = *cart_position_setpoint_cm;
         memcpy( tx_buff, &data, 24 );
