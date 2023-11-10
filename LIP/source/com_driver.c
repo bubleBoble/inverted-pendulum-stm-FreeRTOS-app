@@ -9,6 +9,6 @@
 extern UART_HandleTypeDef huart3;
 void com_send(char* message, uint8_t len)
 {
-    HAL_UART_Transmit_IT(&huart3, (uint8_t *)message, len);
-    // HAL_UART_Transmit(&huart3, (uint8_t *)message, len, 100);
+    // HAL_UART_Transmit_IT(&huart3, (uint8_t *)message, len);
+    HAL_UART_Transmit(&huart3, (uint8_t *)message, len, 100);
 }

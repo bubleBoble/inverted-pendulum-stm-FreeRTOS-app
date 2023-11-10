@@ -67,7 +67,7 @@ to exclude the API function. */
 #define INCLUDE_vTaskDelayUntil              1
 #define INCLUDE_vTaskDelay                   1
 #define INCLUDE_xTaskGetSchedulerState       1
-
+#define INCLUDE_eTaskGetState                1 
 /* The size of the global output buffer that is available for use when there
 are multiple command interpreters running at once (for example, one on a UART
 and one on TCP/IP).  This is done to prevent an output buffer being defined by

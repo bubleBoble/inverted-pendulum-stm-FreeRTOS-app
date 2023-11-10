@@ -28,6 +28,7 @@ void dcm_enc_zero_counter(void)
 float dcm_enc_get_cart_position_cm(void)
 {
 	enc_read_raw = enc_get_count();
-	cart_position = (float) enc_read_raw * 0.00724414303f; // / (float) ENC_MAX_CNT * TRACK_LEN_MAX_CM;
+	// cart_position = (float) enc_read_raw * 0.00724414303f; // div by (float) ENC_MAX_CNT mult by TRACK_LEN_MAX_CM;
+	cart_position = (float) enc_read_raw * ENCODER_MULTIPLIER; // div by (float) ENC_MAX_CNT mult by TRACK_LEN_MAX_CM;
 	return cart_position;
 }

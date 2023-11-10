@@ -50,6 +50,6 @@ void comTask( void *pvParameters )
         com_send( msg, strlen(msg) );
     
         /* Task delay */
-        vTaskDelayUntil( &xLastWakeTime, dt );
+        vTaskDelayUntil( &xLastWakeTime, dt_com );
     }
 }

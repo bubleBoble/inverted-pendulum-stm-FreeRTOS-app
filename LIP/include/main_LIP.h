@@ -30,11 +30,14 @@
 #include "filters_coeffs.h"
 #include "IIR_filter.h"
 #include "LIP_tasks_common.h"
+#include "SP_filter.h"
 
 /* Sampling period in milli seconds and its inverse used for calculations.
-Constant dt is used by all controllers tasks and comunication task. */
+Constant dt is used by all controllers tasks and states_and_common.c task. */
 #define dt      10
 #define dt_inv  100.0f
+/* dt_com is used as sampling period for communication task. */
+#define dt_com  50
 
 void main_LIP_init(void);
 void main_LIP_run(void);
