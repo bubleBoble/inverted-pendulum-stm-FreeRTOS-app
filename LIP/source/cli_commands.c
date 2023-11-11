@@ -22,6 +22,11 @@ static portBASE_TYPE prvHomeCommand( int8_t *pcWriteBuffer, size_t xWriteBufferL
 /* Command to turn on or off down position controller,
 command : dpc */
 static portBASE_TYPE prvDpcCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
+/* Command to clear console screen, at least for putty,
+command : clc */
+static portBASE_TYPE prvClcCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
+
+// '\033[3J'
 
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  * CLI commands definition structures & registration
@@ -58,6 +63,12 @@ static const CLI_Command_Definition_t commands_list[] =
         .pcCommand                      = ( const int8_t * const ) "dpc",
         .pcHelpString                   = ( const int8_t * const ) "dpc         :    Turn on/off down position controller, default cart pos. setpoint is home pos.\r\n",
         .pxCommandInterpreter           = prvDpcCommand,
+        .cExpectedNumberOfParameters    = 0
+    },
+    {
+        .pcCommand                      = ( const int8_t * const ) "clc",
+        .pcHelpString                   = ( const int8_t * const ) "clc         :    Clears console screen\r\n",    
+        .pxCommandInterpreter           = prvClcCommand,
         .cExpectedNumberOfParameters    = 0
     },
     {
@@ -153,6 +164,23 @@ static portBASE_TYPE prvDpcCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLe
     ( void ) pcCommandString;
     ( void ) xWriteBufferLen;
     configASSERT( pcWriteBuffer );
+
+    /* There is no more data to return after this single string, so return pdFALSE. */
+    return pdFALSE;
+}
+
+static portBASE_TYPE prvClcCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
+{
+    /* Remove compile time warnings about unused parameters, and check the
+    write buffer is not NULL.  NOTE - for simplicity, this example assumes the
+    write buffer length is adequate, so does not check for buffer overflows. */
+    ( void ) pcCommandString;
+    ( void ) xWriteBufferLen;
+    configASSERT( pcWriteBuffer );
+
+    /* Send clear screen char sequence. */
+    com_send("\e[1;1H\e[2J", 10);
+    // printf("\e[1;1H\e[2J");
 
     /* There is no more data to return after this single string, so return pdFALSE. */
     return pdFALSE;

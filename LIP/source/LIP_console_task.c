@@ -61,8 +61,11 @@ void vCommandConsoleTask( void *pvParameters )
     TickType_t xLastWakeTime = xTaskGetTickCount();
 
     vRegisterCLICommands();
-
-    printf( "============ FreeRTOS CLI ============ \r\n" );
+    
+    vTaskDelay(1000);
+    printf( "******************************************\r\n" );
+    printf( "*********** FreeRTOS based CLI ***********\r\n" );
+    printf( "******************************************\r\n" );
     
     prompt.promptStr = &promptStr;
     prompt.prePromptStr = "";
