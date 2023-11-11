@@ -43,11 +43,18 @@ void show_prompt(void)
     fflush(stdout);
 }
 
+/* CLI escape sequences to perform backspace operation in console.
+backspace, print blank and backspace again. */
+// uint8_t backspace[] = "\x08 \x08";
+uint8_t backspaceDeleteAction[] = "\b \b";
+
 // Source: https://www.freertos.org/FreeRTOS-Plus/FreeRTOS_Plus_CLI/FreeRTOS_Plus_CLI_IO_Interfacing_and_Task.html
 void vCommandConsoleTask( void *pvParameters )
 {
+    /* Keeps track of the number of input characters */
     int8_t cInputIndex = 0;
     BaseType_t xMoreDataToFollow;
+
     /* The input and output buffers are declared static to keep them off the stack. */
     static int8_t pcOutputString[ MAX_OUTPUT_LENGTH ], pcInputString[ MAX_INPUT_LENGTH ];
 
@@ -55,10 +62,10 @@ void vCommandConsoleTask( void *pvParameters )
 
     vRegisterCLICommands();
 
+    printf( "============ FreeRTOS CLI ============ \r\n" );
+    
     prompt.promptStr = &promptStr;
     prompt.prePromptStr = "";
-
-    printf( "============ FreeRTOS CLI ============ \r\n" );
     show_prompt();
 
     for( ;; )
@@ -104,15 +111,21 @@ void vCommandConsoleTask( void *pvParameters )
                 is received.  This else clause performs the processing if any other
                 character is received. */
 
-                if( cRxedChar ==  '\b' )
+                if( cRxedChar ==  '\b' ) // C escape character for backspace is '\x08' ('\x08' == 'b')
                 {
                     /* Backspace was pressed.  Erase the last character in the input
                     buffer - if there are any. */
                     if( cInputIndex > 0 )
                     {
                         cInputIndex--;
-                        pcInputString[ cInputIndex ] = '\0';
+                        // pcInputString[ cInputIndex ] = '\0';
+                        /* The deleted character is set to zero in case the user won't 
+                        type anything else after backspace. */
+                        memset(&pcInputString[cInputIndex], 0x00, 1);
+                        // printf("%s", (const uint8_t *) backspace );
+                        printf("%s", (const uint8_t *) backspaceDeleteAction );
                     }
+                    fflush(stdout);
                 }
                 else
                 {
@@ -125,7 +138,7 @@ void vCommandConsoleTask( void *pvParameters )
                         pcInputString[ cInputIndex ] = cRxedChar;
                         cInputIndex++;
                         printf( "%c", cRxedChar );
-                        fflush( stdout );
+                        // fflush( stdout );
                     }
                 }
             }

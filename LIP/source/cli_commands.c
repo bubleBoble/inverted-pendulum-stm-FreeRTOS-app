@@ -24,65 +24,54 @@ command : dpc */
 static portBASE_TYPE prvDpcCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
 
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- * CLI commands definition structures
+ * CLI commands definition structures & registration
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  */
 /* command : task-stats */
-static const CLI_Command_Definition_t prvTaskStatsCommandDefinition =
+static const CLI_Command_Definition_t commands_list[] = 
 {
-    ( const int8_t * const ) "task-stats",
-    ( const int8_t * const ) "task-stats  :    Displays a table showing the state of each FreeRTOS task\r\n                 (B)blocked, (R)Ready, (D)Deleted, (S)Suspended or block w/o timeout\r\n",
-    prvTaskStatsCommand,
-    0
+    {
+        .pcCommand                      = ( const int8_t * const ) "task-stats",
+        .pcHelpString                   = ( const int8_t * const ) "task-stats  :    Displays a table showing the state of each FreeRTOS task\r\n                 (B)blocked, (R)Ready, (D)Deleted, (S)Suspended or block w/o timeout\r\n",
+        .pxCommandInterpreter           = prvTaskStatsCommand,
+        .cExpectedNumberOfParameters    = 0
+    },
+    {
+        .pcCommand                      = ( const int8_t * const ) "",
+        .pcHelpString                   = ( const int8_t * const ) "<enter_key> :    Start / stop data streaming\r\n",
+        .pxCommandInterpreter           = prvComOnOffCommand,
+        .cExpectedNumberOfParameters    = 0
+    },
+    {
+        .pcCommand                      = ( const int8_t * const ) "zero",
+        .pcHelpString                   = ( const int8_t * const ) "zero        :    Go to zero cart positon, no controller used\r\n",
+        .pxCommandInterpreter           = prvZeroCommand,
+        .cExpectedNumberOfParameters    = 0
+    },
+    {
+        .pcCommand                      = ( const int8_t * const ) "home",
+        .pcHelpString                   = ( const int8_t * const ) "home        :    Go to home cart positon - center of the track, no controller used\r\n",
+        .pxCommandInterpreter           = prvHomeCommand,
+        .cExpectedNumberOfParameters    = 0
+    },
+    {
+        .pcCommand                      = ( const int8_t * const ) "dpc",
+        .pcHelpString                   = ( const int8_t * const ) "dpc         :    Turn on/off down position controller, default cart pos. setpoint is home pos.\r\n",
+        .pxCommandInterpreter           = prvDpcCommand,
+        .cExpectedNumberOfParameters    = 0
+    },
+    {
+        .pcCommand = NULL
+    }
 };
 
-/* command : ENTER_KEY */
-static const CLI_Command_Definition_t prvComOnOffCommandDefinition =
+void vRegisterCLICommands(void)
 {
-    ( const int8_t * const ) "",
-    ( const int8_t * const ) "<enter_key> :    Start / stop data streaming\r\n",
-    prvComOnOffCommand,
-    0
-};
-
-/* command : zero */
-static const CLI_Command_Definition_t prvZeroCommandDefinition =
-{
-    ( const int8_t * const ) "zero",
-    ( const int8_t * const ) "zero        :    Go to zero cart positon, no controller used\r\n",
-    prvZeroCommand,
-    0
-};
-
-/* command : home */
-static const CLI_Command_Definition_t prvHomeCommandDefinition =
-{
-    ( const int8_t * const ) "home",
-    ( const int8_t * const ) "home        :    Go to home cart positon - center of the track, no controller used\r\n",
-    prvHomeCommand,
-    0
-};
-
-/* command : dpc */
-static const CLI_Command_Definition_t prvDpcCommandDefinition =
-{
-    ( const int8_t * const ) "dpc",
-    ( const int8_t * const ) "dpc         :    Turn on/off down position controller, default cart pos. setpoint is home pos.\r\n",
-    prvDpcCommand,
-    0
-};
-
-/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- * CLI commands registration
- * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- */
-void vRegisterCLICommands()
-{
-    FreeRTOS_CLIRegisterCommand( &prvTaskStatsCommandDefinition ); // command : task-stats
-    FreeRTOS_CLIRegisterCommand( &prvComOnOffCommandDefinition );  // command : ENTER_KEY
-    FreeRTOS_CLIRegisterCommand( &prvZeroCommandDefinition );      // command : zero 
-    FreeRTOS_CLIRegisterCommand( &prvHomeCommandDefinition );      // command : home
-    FreeRTOS_CLIRegisterCommand( &prvDpcCommandDefinition );       // command : dpc
+    uint8_t command_index = 0;
+    while (commands_list[command_index].pcCommand != NULL)
+    {
+        FreeRTOS_CLIRegisterCommand(&commands_list[command_index++]);
+    }
 }
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  * CLI commands definitions
