@@ -32,9 +32,10 @@ void comTask( void *pvParameters )
     /* Task mainloop */
     for (;;)
     {
+        // if(  )
         /* Message content */
         sprintf( msg,
-                    "%f,%f,0,%f,%f,%f,%f,0,0\r\n",
+                    "%f,%f,0,%f,%f,%f,%f,0,%ld\r\n",
                     // for pendulum
                     (double) pend_angle[ 0 ],
                     (double) pend_speed[ 0 ],
@@ -43,13 +44,29 @@ void comTask( void *pvParameters )
                     (double) cart_speed[ 0 ],
                     (double) *cart_position_setpoint_cm,
                     //
-                    (double) dcm_get_output_voltage()
+                    (double) dcm_get_output_voltage(),
+                    xLastWakeTime
         );
 
         /* Serial send */
         com_send( msg, strlen(msg) );
     
-        /* Task delay */
-        vTaskDelayUntil( &xLastWakeTime, dt_com );
+        /* Problem with vTaskDelayUntil: 
+        vTaskDelayUntil uses xLastWakeTime argument to 
+        calculate next wakeup time, it increments its value internally.
+        If the task is suspended, value of xLastWakeTime doesn't get 
+        incremented, so when task gets resumed, tickCount maybe for eg.1000, 
+        and last saved xLastWakeTime might have value 100, 
+        with delay tick count of 100, then, vTaskDelayUntil
+        has to be called at least 10 times to increment xLastWakeTime to the
+        value of current tickCount. */  
+        // vTaskDelayUntil( &xLastWakeTime, dt_com );
+        
+        /* This delay function doesn't guarantee exact tick delay
+        eq. When tested with dt_com=50 (ms), messages were received
+        with frequency 18Hz (not 20Hz as expected). So use this 
+        function only if data logging rate    isn't a great concern. */
+        vTaskDelay( dt_com );
+        xLastWakeTime = xTaskGetTickCount();
     }
 }

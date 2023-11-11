@@ -32,12 +32,28 @@
 #include "LIP_tasks_common.h"
 #include "SP_filter.h"
 
-/* Sampling period in milli seconds and its inverse used for calculations.
-Constant dt is used by all controllers tasks and states_and_common.c task. */
-#define dt      10
-#define dt_inv  100.0f
-/* dt_com is used as sampling period for communication task. */
-#define dt_com  50
+/* Sampling period and freeRTOS tasks priorities definitions. */ 
+#define dt                  10      // Sampling period in ms for controllers and util tasks,
+#define dt_inv              100.0f  // multiply by dt_inv instead of dividing by dt.
+#define dt_watchdog         10      // Sampling period in ms for watchdog task.
+#define dt_console          50      // Sampling period in ms for console task.
+#define dt_com              50      // Sampling period in ms for communication task.
+
+#define PRIORITY_WATCHDOG   4       // Priority for watchdog task.
+#define PRIORITY_UTIL       3       // Priority for util task - has to be the same as for controler task.
+#define PRIORITY_CTRL       3       // Priority for any controller task.
+#define PRIORITY_CONSOLE    2       // Priority for console task. 
+#define PRIORITY_COM        1       // Priority for communication task.
+
+/* For freertos config.
+If time slicing was used, task "watchdog", "util" and "controler" could take 
+a little bit more time to execute in their 10ms time period becouse of 
+more frequent context switching - leaving no time for "com" and "console" tasks. 
+In setting with preemtion and no time slicing, context switching should happen
+only when one task with the same priority finished its work - less frequent.
+ANYWAY, BOTH WAYS WORK AS FOR NOW SO I'LL LEAVE TIME SLICING. LOL */
+#define RTOS_USE_PREEMPTION     1
+#define RTOS_USE_TIME_SLICING   0
 
 void main_LIP_init(void);
 void main_LIP_run(void);

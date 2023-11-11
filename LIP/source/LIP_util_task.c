@@ -45,7 +45,7 @@ extern float cart_position_setpoint_cm_cli_raw;
 extern float cart_position_setpoint_cm_cli;
 extern float pend_init_angle_offset;
 
-void stateEstimationTask( void *pvParameters )
+void utilTask( void *pvParameters )
 {
     /* For RTOS vTaskDelayUntil() */
     TickType_t xLastWakeTime = xTaskGetTickCount();

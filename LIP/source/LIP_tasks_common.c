@@ -48,10 +48,10 @@ resultant value is offset that has to subtracted from each angle reading */
 float pend_init_angle_offset;
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
-/* Start task */
-TaskHandle_t startTaskHandle = NULL;
-StackType_t startTask_STACKBUFFER[ STARTTASK_STACKDEPTH ];
-StaticTask_t startTask_TASKBUFFER_TCB;
+/* Watchdog task - protection for cart min and max positions and default always running task. */
+TaskHandle_t watchdogTaskHandle = NULL;
+StackType_t WATCHDOG_STACKBUFFER [ WATCHDOG_STACK_DEPTH ];
+StaticTask_t WATCHDOG_TASKBUFFER_TCB;
 
 /* Console task */
 TaskHandle_t consoleTaskHandle;
@@ -60,9 +60,9 @@ StaticTask_t console_TASKBUFFER_TCB;
 TickType_t time_at_which_consoleMutex_was_taken;
 
 /* State estimation task */
-TaskHandle_t stateEstimationTaskHandle = NULL;
-StackType_t stateEstimationTask_STACKBUFFER [ STATE_ESTIMATION_STACK_DEPTH ];
-StaticTask_t stateEstimationTask_TASKBUFFER_TCB;
+TaskHandle_t utilTaskHandle = NULL;
+StackType_t utilTask_STACKBUFFER [ UTIL_STACK_DEPTH ];
+StaticTask_t utilTask_TASKBUFFER_TCB;
 
 /* Communication task. */
 TaskHandle_t comTaskHandle = NULL;
@@ -114,32 +114,31 @@ StaticTask_t ctrl_5_FSF_uppos_TASKBUFFER_TCB;
 Should it be moved to main_LIP.c ? - yes if it will only create one task. */
 void LIPcreateTasks()
 {
-    /* ?????????? Basic start task. ?????????? */
-    // startTaskHandle = xTaskCreateStatic( startTask,
-    //                                      (const char*) "elo",
-    //                                      STARTTASK_STACKDEPTH,
-    //                                      (void *) 0,
-    //                                      tskIDLE_PRIORITY+1,
-    //                                      startTask_STACKBUFFER,
-    //                                      &startTask_TASKBUFFER_TCB );
+    watchdogTaskHandle = xTaskCreateStatic( watchdogTask,
+                                            (const char*) "WatchdogTask",
+                                            WATCHDOG_STACK_DEPTH,
+                                            (void *) 0,
+                                            tskIDLE_PRIORITY+PRIORITY_WATCHDOG,
+                                            WATCHDOG_STACKBUFFER,
+                                            &WATCHDOG_TASKBUFFER_TCB );
 
     /* Task that implements FreeRTOS console functionality */
     consoleTaskHandle = xTaskCreateStatic( vCommandConsoleTask,
                                            (const char*) "ConsoleTask",
                                            CONSOLE_STACKDEPTH,
                                            (void *) 0,
-                                           tskIDLE_PRIORITY+1,
+                                           tskIDLE_PRIORITY+PRIORITY_CONSOLE,
                                            console_STACKBUFFER,
                                            &console_TASKBUFFER_TCB );
 
     /* State variables are calculated here. */
-    stateEstimationTaskHandle = xTaskCreateStatic( stateEstimationTask,
-                                                   (const char*) "StateEstimTask",
-                                                   STATE_ESTIMATION_STACK_DEPTH,
-                                                   (void *) 0,
-                                                   tskIDLE_PRIORITY+3,
-                                                   stateEstimationTask_STACKBUFFER,
-                                                   &stateEstimationTask_TASKBUFFER_TCB );
+    utilTaskHandle = xTaskCreateStatic( utilTask,
+                                        (const char*) "UtilTask",
+                                        UTIL_STACK_DEPTH,
+                                        (void *) 0,
+                                        tskIDLE_PRIORITY+PRIORITY_UTIL,
+                                        utilTask_STACKBUFFER,
+                                        &utilTask_TASKBUFFER_TCB );
 
 
     /* Human readable communication - for serialoscilloscope. */
@@ -147,11 +146,24 @@ void LIPcreateTasks()
                                        (const char*) "CommunicationTask",
                                        COM_STACK_DEPTH,
                                        (void *) 0,
-                                       tskIDLE_PRIORITY+2,
+                                       tskIDLE_PRIORITY+PRIORITY_COM,
                                        COM_STACKBUFFER,
                                        &COM_TASKBUFFER_TCB );
     /* Data streaming is suspended right after task creation */
     vTaskSuspend( comTaskHandle );
+
+    /* Down position controller 3
+    Full state feedback down position ctrl-er with "tanh switching" deadzone compensation 
+    (nonlinear cart position gain). */
+    ctrl_3_FSF_downpos_task_handle = xTaskCreateStatic( ctrl_3_FSF_downpos_task,
+                                                        (const char*) "Controller3DownPosTask",
+                                                        CTRL_3_FSF_DOWNPOS_STACK_DEPTH,
+                                                        (void *) 0,
+                                                        tskIDLE_PRIORITY+PRIORITY_CTRL,
+                                                        ctrl_3_FSF_downpos_STACKBUFFER,
+                                                        &ctrl_3_FSF_downpos_TASKBUFFER_TCB );
+    /* All controller tasks are suspended right after thier creation */  
+    vTaskSuspend( ctrl_3_FSF_downpos_task_handle );
 
     /* Raw byte communication task. */
     // rawComTaskHandle = xTaskCreateStatic( rawComTask,
@@ -161,8 +173,9 @@ void LIPcreateTasks()
     //                                       tskIDLE_PRIORITY + 2,
     //                                       RAWCOM_STACKBUFFER,
     //                                       &RAWCOM_TASKBUFFER_TCB);
-    
-    /* Controllers test tasks */
+
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+    /* Down position controllers test tasks */
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
     /* Controller 1 task 
     Basic full state feedback down position, output voltage is zero in specified deadzone. */
@@ -188,13 +201,15 @@ void LIPcreateTasks()
     /* Controller 3 task
     Full state feedback down position with better deadzone compensation, 
     nonlinear cart position gain "tanh switching". */
-    ctrl_3_FSF_downpos_task_handle = xTaskCreateStatic( ctrl_3_FSF_downpos_task,
-                                                      (const char*) "Controller3DownPosTask",
-                                                      CTRL_3_FSF_DOWNPOS_STACK_DEPTH,
-                                                      (void *) 0,
-                                                      tskIDLE_PRIORITY+3,
-                                                      ctrl_3_FSF_downpos_STACKBUFFER,
-                                                      &ctrl_3_FSF_downpos_TASKBUFFER_TCB );
+    // ctrl_3_FSF_downpos_task_handle = xTaskCreateStatic( ctrl_3_FSF_downpos_task,
+    //                                                   (const char*) "Controller3DownPosTask",
+    //                                                   CTRL_3_FSF_DOWNPOS_STACK_DEPTH,
+    //                                                   (void *) 0,
+    //                                                   tskIDLE_PRIORITY+3,
+    //                                                   ctrl_3_FSF_downpos_STACKBUFFER,
+    //                                                   &ctrl_3_FSF_downpos_TASKBUFFER_TCB );
+    // /* Controller task is suspended right after task creation */  
+    // vTaskSuspend( ctrl_3_FSF_downpos_task_handle );
 
     /* Controller 4 task
     Full state feedback with integral action on cart position error */
@@ -206,7 +221,9 @@ void LIPcreateTasks()
     //                                                       ctrl_4_I_FSF_downpos_STACKBUFFER,
     //                                                       &ctrl_4_I_FSF_downpos_TASKBUFFER_TCB );
 
-        
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */    
+    /* UP position controllers test tasks */
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
     /* Controller 5 task
     Full state feedback up position with deadzone compensation, 
     nonlinear cart position gain "tanh switching". */

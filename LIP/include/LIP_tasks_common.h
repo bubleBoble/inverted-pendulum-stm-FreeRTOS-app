@@ -3,19 +3,19 @@
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 #include "main_LIP.h"
 
-/* Start task. */
-void startTask( void *pvParameters );
-#define STARTTASK_STACKDEPTH 500
+/* Watchdog task - protection for cart min and max positions. */
+void watchdogTask( void *pvParameters );
+#define WATCHDOG_STACK_DEPTH 500
 
 /* console task. */
 void vCommandConsoleTask( void *pvParameters );
 #define MAX_INPUT_LENGTH    50
-#define MAX_OUTPUT_LENGTH   100
+#define MAX_OUTPUT_LENGTH   500
 #define CONSOLE_STACKDEPTH  4000
 
-/* State estimation task. */
-void stateEstimationTask( void *pvParameters );
-#define STATE_ESTIMATION_STACK_DEPTH 500
+/* util task (State estimation & setpoint calc. task). */
+void utilTask( void *pvParameters );
+#define UTIL_STACK_DEPTH 500
 
 /* Communication task - for serialOscilloscope. */
 void comTask( void *pvParameters );

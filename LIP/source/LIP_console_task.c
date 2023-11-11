@@ -1,11 +1,47 @@
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  * This file contains task that implements freeRTOS cli
+ * Awesome tutorial on how to make freeRTOS console better:
+ *     https://www.edwinfairchild.com/p/making-freertos-cli-more-cli-ish_14.html
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  */
 #include "LIP_tasks_common.h"
 
 /* Defined in LIP_tasks_common.c */
 extern uint8_t cRxedChar;
+
+/* Prompt struct. */
+typedef struct{
+    /* Main prompt string. */
+    char *promptStr;
+    /* Preprompt string while in alternate prompt mode. */
+    char *prePromptStr;
+    /* Can be changed in command callback function or inside resumed task to indicate 
+    current program state, eg. controller used. */
+    uint8_t altPromptActive;
+    /* Pause prompt. */
+    uint8_t pausePrompt;
+}prompt_t;
+
+prompt_t prompt;
+char promptStr[] = ">>> ";
+// char prePromtStr[] = "(alt prompt on)";s
+
+void show_prompt(void)
+{
+    if( prompt.pausePrompt )
+    {
+        return;
+    }
+    if( prompt.altPromptActive )
+    {
+        printf("\r\n%s %s",prompt.prePromptStr, prompt.promptStr);
+    }
+    else
+    {
+        printf("\r\n%s", prompt.promptStr);
+    }
+    fflush(stdout);
+}
 
 // Source: https://www.freertos.org/FreeRTOS-Plus/FreeRTOS_Plus_CLI/FreeRTOS_Plus_CLI_IO_Interfacing_and_Task.html
 void vCommandConsoleTask( void *pvParameters )
@@ -15,9 +51,15 @@ void vCommandConsoleTask( void *pvParameters )
     /* The input and output buffers are declared static to keep them off the stack. */
     static int8_t pcOutputString[ MAX_OUTPUT_LENGTH ], pcInputString[ MAX_INPUT_LENGTH ];
 
+    TickType_t xLastWakeTime = xTaskGetTickCount();
+
     vRegisterCLICommands();
 
+    prompt.promptStr = &promptStr;
+    prompt.prePromptStr = "";
+
     printf( "============ FreeRTOS CLI ============ \r\n" );
+    show_prompt();
 
     for( ;; )
     {
@@ -54,6 +96,7 @@ void vCommandConsoleTask( void *pvParameters )
                 cInputIndex = 0;
                 memset( pcInputString, 0x00, MAX_INPUT_LENGTH );
                 memset( pcOutputString, 0x00, MAX_INPUT_LENGTH );
+                show_prompt();
             }
             else
             {
@@ -89,5 +132,6 @@ void vCommandConsoleTask( void *pvParameters )
             cRxedChar = 0x00;
             fflush( stdout );
         } // if (cRxedChar != 0x00)
+        vTaskDelayUntil( &xLastWakeTime, dt_console );
     } // for( ;; )
 } //vCommandConsoleTask
