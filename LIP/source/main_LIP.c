@@ -18,9 +18,9 @@ extern float pend_init_angle_offset;
 void main_LIP_init( void )
 {
 	SCB->CPACR |= ((3 << 10*2)|(3 << 11*2));     // FPU initialization
-                                             // FPU must be enabled before any FPU
-                                             // instruction is executed, otherwise
-                                             // hardware exception will be raised.
+                                                 // FPU must be enabled before any FPU
+                                                 // instruction is executed, otherwise
+                                                 // hardware exception will be raised.
     HAL_TIM_Base_Start( &htim2 );                // Start timer for ADC3 pot read
     HAL_ADC_Start_DMA(
         &hadc3, (uint32_t *) &adc_data_pot, 1 ); // init dma for adc

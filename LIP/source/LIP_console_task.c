@@ -1,5 +1,6 @@
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- * This file contains task that implements freeRTOS cli
+ * This file contains task that implements freeRTOS cli.
+ * With prompt and backspace support.
  * Awesome tutorial on how to make freeRTOS console better:
  *     https://www.edwinfairchild.com/p/making-freertos-cli-more-cli-ish_14.html
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -8,6 +9,9 @@
 
 /* Defined in LIP_tasks_common.c */
 extern uint8_t cRxedChar;
+extern enum lip_app_states app_current_state;
+
+char msg[100];
 
 /* Prompt struct. */
 typedef struct{
@@ -22,25 +26,40 @@ typedef struct{
     uint8_t pausePrompt;
 }prompt_t;
 
+/* Prompt instance. */
 prompt_t prompt;
+/* Main prompt. */
 char promptStr[] = ">>> ";
-// char prePromtStr[] = "(alt prompt on)";s
+/* Each state has its own preprompt. */
+char no_prePrompt[]              = "[       ?       ]";
+char uninitState_prePrompt[]     = "[ uninitialzied ]";
+char defaultState_prePrompt[]    = "[    default    ]";
+char dpcState_prePrompt[]        = "[      dpc      ]";
 
-void show_prompt(void)
+/* Function to print full prompt with preprompt string which indicates current app state. */
+void show_prompt( void )
 {
-    if( prompt.pausePrompt )
+    if( app_current_state == UNITIALIZED )
     {
-        return;
+        prompt.prePromptStr = uninitState_prePrompt;
     }
-    if( prompt.altPromptActive )
+    else if ( app_current_state == DEFAULT )
     {
-        printf("\r\n%s %s",prompt.prePromptStr, prompt.promptStr);
+        prompt.prePromptStr = defaultState_prePrompt;
+    }
+    else if ( app_current_state == DPC )
+    {
+        prompt.prePromptStr = dpcState_prePrompt;
     }
     else
     {
-        printf("\r\n%s", prompt.promptStr);
+        prompt.prePromptStr = no_prePrompt;
     }
-    fflush(stdout);
+    
+    sprintf( msg, "\r\n%s %s", prompt.prePromptStr, prompt.promptStr );
+    com_send( msg, strlen(msg) );
+    // printf( "\r\n%s %s", prompt.prePromptStr, prompt.promptStr );
+    // fflush( stdout );
 }
 
 /* CLI escape sequences to perform backspace operation in console.
@@ -63,12 +82,18 @@ void vCommandConsoleTask( void *pvParameters )
     vRegisterCLICommands();
     
     vTaskDelay(1000);
-    printf( "******************************************\r\n" );
-    printf( "*********** FreeRTOS based CLI ***********\r\n" );
-    printf( "******************************************\r\n" );
+
+    sprintf( msg, "\r\n******************************************\r\n" );
+    com_send( msg, strlen(msg) ); 
+    sprintf( msg,      "*********** FreeRTOS based CLI ***********\r\n" );
+    com_send( msg, strlen(msg) ); 
+    sprintf( msg,      "******************************************\r\n" );
+    com_send( msg, strlen(msg) ); 
+    // printf( "\r\n******************************************\r\n" );
+    // printf(     "*********** FreeRTOS based CLI ***********\r\n" );
+    // printf(     "******************************************\r\n" );
     
-    prompt.promptStr = &promptStr;
-    prompt.prePromptStr = "";
+    prompt.promptStr = promptStr;
     show_prompt();
 
     for( ;; )
@@ -77,8 +102,9 @@ void vCommandConsoleTask( void *pvParameters )
         {
             if( cRxedChar == '\n' || cRxedChar == '\r' )
             {
-                printf("\r\n");
-                fflush(stdout);
+                com_send("\r\n", 2);
+                // printf("\r\n");
+                // fflush(stdout);
 
                 /* The command interpreter is called repeatedly until it returns
                 pdFALSE.  See the "Implementing a command" documentation for an
@@ -97,8 +123,11 @@ void vCommandConsoleTask( void *pvParameters )
 
                     for ( int i = 0; i < ( xMoreDataToFollow == pdTRUE ? MAX_OUTPUT_LENGTH : strlen( ( const char * ) pcOutputString ) ); i++ )
                     {
-                        printf( "%c", *(pcOutputString + i) );
-                        fflush(stdout);
+                        sprintf( msg, "%c", *(pcOutputString + i) );
+                        com_send( msg, strlen(msg) );
+
+                        // printf( "%c", *(pcOutputString + i) );
+                        // fflush(stdout);
                     }
 
                 } while( xMoreDataToFollow != pdFALSE );
@@ -125,10 +154,13 @@ void vCommandConsoleTask( void *pvParameters )
                         /* The deleted character is set to zero in case the user won't 
                         type anything else after backspace. */
                         memset(&pcInputString[cInputIndex], 0x00, 1);
-                        // printf("%s", (const uint8_t *) backspace );
-                        printf("%s", (const uint8_t *) backspaceDeleteAction );
+                        
+                        sprintf( msg, "%s", (const uint8_t *) backspaceDeleteAction );
+                        com_send( msg, strlen( msg ) );
+
+                        // printf("%s", (const uint8_t *) backspaceDeleteAction );
                     }
-                    fflush(stdout);
+                    // fflush(stdout);
                 }
                 else
                 {
@@ -140,13 +172,16 @@ void vCommandConsoleTask( void *pvParameters )
                     {
                         pcInputString[ cInputIndex ] = cRxedChar;
                         cInputIndex++;
-                        printf( "%c", cRxedChar );
-                        // fflush( stdout );
+
+                        sprintf( msg, "%c", cRxedChar );
+                        com_send( msg, strlen( msg ) );
+
+                        // printf( "%c", cRxedChar );
                     }
                 }
             }
             cRxedChar = 0x00;
-            fflush( stdout );
+            // fflush( stdout );
         } // if (cRxedChar != 0x00)
         vTaskDelayUntil( &xLastWakeTime, dt_console );
     } // for( ;; )

@@ -7,10 +7,15 @@
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 #include "LIP_tasks_common.h"
 
+extern enum lip_app_states app_current_state;
+
 void watchdogTask( void * pvParameters )
 {
     /* For RTOS vTaskDelayUntil() */
     TickType_t xLastWakeTime = xTaskGetTickCount();
+
+    /* Set start app state to uninitialized. */
+    app_current_state = UNITIALIZED;
 
     /* Action for "zero" cli command.
     If cart is not in min position, "zero" command moves it there. */
@@ -24,6 +29,7 @@ void watchdogTask( void * pvParameters )
     for ( ;; )
     {
         /* Cart position protection functionality. */
+
 
         /* Task delay */
         vTaskDelayUntil( &xLastWakeTime, dt_watchdog );

@@ -1,6 +1,7 @@
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- * This file provides default LIPcreateTasks function that creates default tasks.
- * Global variables which are used by more than one task are defined here.
+ * This file provides global variables used by more than one task,
+ * All handles to tasks, its stackbuffers and its taskbuffers TCBs,
+ * definition of LIPcreateTasks function, which creates all app tasks.
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 #include "LIP_tasks_common.h"
 
@@ -46,11 +47,13 @@ position is assumed to be down position, from control/model perspective down
 position corresponds to PI radians, so PI has to be subtracted from initial reading and
 resultant value is offset that has to subtracted from each angle reading */
 float pend_init_angle_offset;
+/* lip_app_states enum instance, which indicates current LIP app state. */
+enum lip_app_states app_current_state; 
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
 /* Watchdog task - protection for cart min and max positions and default always running task. */
 TaskHandle_t watchdogTaskHandle = NULL;
-StackType_t WATCHDOG_STACKBUFFER [ WATCHDOG_STACK_DEPTH ];
+StackType_t WATCHDOG_STACKBUFFER[ WATCHDOG_STACK_DEPTH ];
 StaticTask_t WATCHDOG_TASKBUFFER_TCB;
 
 /* Console task */
@@ -74,7 +77,13 @@ TaskHandle_t rawComTaskHandle = NULL;
 StackType_t RAWCOM_STACKBUFFER [ RAWCOM_STACK_DEPTH ];
 StaticTask_t RAWCOM_TASKBUFFER_TCB;
 
-/* Controllers test tasks */
+/* Worker task - this task is only active when command "zero" or "home" is called.
+Its purpose is to move the cart without any controller. */
+TaskHandle_t WorkerTaskHandle = NULL;
+StackType_t WORKER_STACKBUFFER [ WORKER_STACK_DEPTH ];
+StaticTask_t WORKER_TASKBUFFER_TCB;
+
+/* Controllers tasks. */
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 /* Controller 1 task 
 Basic full state feedback down position, output voltage is zero in specified deadzone. */
@@ -110,8 +119,7 @@ StackType_t ctrl_5_FSF_uppos_STACKBUFFER [ CTRL_5_FSF_UPPOS_STACK_DEPTH ];
 StaticTask_t ctrl_5_FSF_uppos_TASKBUFFER_TCB;
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
-/* CREATE TASKS
-Should it be moved to main_LIP.c ? - yes if it will only create one task. */
+/* CREATE TASKS. */
 void LIPcreateTasks()
 {
     watchdogTaskHandle = xTaskCreateStatic( watchdogTask,
@@ -151,6 +159,16 @@ void LIPcreateTasks()
                                        &COM_TASKBUFFER_TCB );
     /* Data streaming is suspended right after task creation */
     vTaskSuspend( comTaskHandle );
+
+    /* Worker task - this tas is only active when command "zero" or "home" are called.
+    Its purpose is to move the cart without any controller. */
+    WorkerTaskHandle = xTaskCreateStatic( workerTask,
+                                       (const char*) "WorkerTask",
+                                       WORKER_STACK_DEPTH,
+                                       (void *) 0,
+                                       tskIDLE_PRIORITY+PRIORITY_WORKER,
+                                       WORKER_STACKBUFFER,
+                                       &WORKER_TASKBUFFER_TCB );
 
     /* Down position controller 3
     Full state feedback down position ctrl-er with "tanh switching" deadzone compensation 

@@ -1,7 +1,29 @@
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- * This file provides stuff related for LIP app tasks.
- * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+ * This file provides function prototypes and #defines related to LIP app tasks.
+ * Also provides prototype of LIPcreateTasks fucntion
+ * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ */
 #include "main_LIP.h"
+
+/* Enum which lists all implemented LIP app states. */
+#ifndef LIP_APP_STATES_ENUM
+#define LIP_APP_STATES_ENUM
+enum lip_app_states 
+{
+    /* Uninitialized state: app state before call to "zero" cli command.
+    This state indicates that current cart position reading is not correct,
+    pendulum cart has to be moved to zero position.
+    Available commands: zero, <enter_key> */
+    UNITIALIZED,
+    /* Default state: All sesnor readings should be correct in this app state.
+    Down position controller can be started.
+    Available commands: zero, home, dpc, sp, <enter_key> */
+    DEFAULT,
+    /* DPC state: Down Position Controller turned on.
+    Available commands: home, dpc, spcli, sppot, sp, swingup, <enter_key> */
+    DPC
+};
+#endif // LIP_APP_STATES_ENUM
 
 /* Watchdog task - protection for cart min and max positions. */
 void watchdogTask( void *pvParameters );
@@ -24,6 +46,11 @@ void comTask( void *pvParameters );
 /* Communication task - for raw bytes transmission. */
 void rawComTask( void *pvParameters );
 #define RAWCOM_STACK_DEPTH 500
+
+/* Worker task - this tas is only active when command "zero" or "home" are called.
+Its purpose is to move the cart without any controller. */
+void workerTask( void *pvParameters );
+#define WORKER_STACK_DEPTH 500
 
 /* Controllers tasks */
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
@@ -57,7 +84,6 @@ Full state feedback up position with deadzone compensation,
 nonlinear cart position gain "tanh switching". */
 void ctrl_5_FSF_uppos_task( void *pvParameters );
 #define CTRL_5_FSF_UPPOS_STACK_DEPTH 500
-
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
 /* Function to create tasks. */

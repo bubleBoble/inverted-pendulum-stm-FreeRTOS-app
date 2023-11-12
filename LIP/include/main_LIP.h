@@ -38,12 +38,14 @@
 #define dt_watchdog         10      // Sampling period in ms for watchdog task.
 #define dt_console          50      // Sampling period in ms for console task.
 #define dt_com              50      // Sampling period in ms for communication task.
+#define dt_worker           100     // Sampling period in ms for worker task.
 
 #define PRIORITY_WATCHDOG   4       // Priority for watchdog task.
 #define PRIORITY_UTIL       3       // Priority for util task - has to be the same as for controler task.
 #define PRIORITY_CTRL       3       // Priority for any controller task.
 #define PRIORITY_CONSOLE    2       // Priority for console task. 
 #define PRIORITY_COM        1       // Priority for communication task.
+#define PRIORITY_WORKER     1       // Priority for worker task.
 
 /* For freertos config.
 If time slicing was used, task "watchdog", "util" and "controler" could take 
