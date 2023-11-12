@@ -190,8 +190,8 @@ static portBASE_TYPE prvZeroCommand( int8_t *pcWriteBuffer, size_t xWriteBufferL
     ( void ) xWriteBufferLen;
     configASSERT( pcWriteBuffer );
 
-    /* This command will send notification to slave task that will take action based on notification value/index (?) */
-    
+    /* This command will send notification to worker task that will take action based on notification value/index (?) */
+    // xTaskNotify();
 
     /* There is no more data to return after this single string, so return pdFALSE. */
     return pdFALSE;
