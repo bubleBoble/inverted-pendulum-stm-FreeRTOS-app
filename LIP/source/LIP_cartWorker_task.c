@@ -1,25 +1,22 @@
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  * This file provides task that is only active when command "zero" or "home" is called.
  * Its purpose is to move the cart without any controller.
- * 
- * Priority : 3 
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 #include "LIP_tasks_common.h"
 #include "limits.h"
 
+/* This enum instance keeps track of current app state. */
 extern enum lip_app_states app_current_state;
-
 /* Global cart position variable, defined in LIP_tasks_common.c */
 extern float cart_position[ 2 ];
-
 /* Cart position setpoint, independent of currenlty selected setpoint source. 
 defined in LIP_tasks_common.c */
 extern float *cart_position_setpoint_cm;
 
-void workerTask( void * pvParameters )
+void cartWorkerTask( void * pvParameters )
 {
     /* For RTOS vTaskDelayUntil() */
-    TickType_t xLastWakeTime = xTaskGetTickCount();
+    // TickType_t xLastWakeTime = xTaskGetTickCount();
 
     uint32_t notif_value_received;
 
@@ -42,7 +39,7 @@ void workerTask( void * pvParameters )
             dcm_set_output_volatage( 2.0f );
             while( cart_position[ 0 ] < TRACK_LEN_MAX_CM/2 )
             {
-                vTaskDelay( dt_worker );
+                vTaskDelay( dt_cartworker );
             }
             dcm_set_output_volatage( 0.0f );
             app_current_state = DEFAULT;
@@ -54,7 +51,7 @@ void workerTask( void * pvParameters )
             dcm_set_output_volatage( -2.0f );
             while( cart_position[ 0 ] > TRACK_LEN_MAX_CM/2 )
             {
-                vTaskDelay( dt_worker );
+                vTaskDelay( dt_cartworker );
             }
             dcm_set_output_volatage( 0.0f );
         }
@@ -65,14 +62,14 @@ void workerTask( void * pvParameters )
             while( ! READ_ZERO_POSITION_REACHED )
             {
                 /* Go left until zero position reached. */
-                vTaskDelay( dt_worker );
+                vTaskDelay( dt_cartworker );
                 // vTaskDelay( 10 );
             }
             dcm_set_output_volatage( 2.0f );
             while( cart_position[ 0 ] < TRACK_LEN_MAX_CM/2.0f )
             {
                 /* Go to track center. */
-                vTaskDelay( dt_worker );
+                vTaskDelay( dt_cartworker );
                 // vTaskDelay( 10 );
             }
             dcm_set_output_volatage( 0.0f );
@@ -85,7 +82,9 @@ void workerTask( void * pvParameters )
         }
 
         /* Task delay */
-        vTaskDelayUntil( &xLastWakeTime, dt_worker );
-        // vTaskDelay( 10 );
+        // vTaskDelayUntil( &xLastWakeTime, dt_worker );
+        /* This task will be suspended in some of the app states,
+        so vTaskDelayUntil can't be used. */
+        vTaskDelay( dt_cartworker );
     }
 }

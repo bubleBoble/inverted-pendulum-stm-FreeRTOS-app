@@ -83,9 +83,9 @@ StaticTask_t RAWCOM_TASKBUFFER_TCB;
 
 /* Worker task - this task is only active when command "zero" or "home" is called.
 Its purpose is to move the cart without any controller. */
-TaskHandle_t WorkerTaskHandle = NULL;
-StackType_t WORKER_STACKBUFFER [ WORKER_STACK_DEPTH ];
-StaticTask_t WORKER_TASKBUFFER_TCB;
+TaskHandle_t cartWorkerTaskHandle = NULL;
+StackType_t CARTWORKER_STACKBUFFER [ CARTWORKER_STACK_DEPTH ];
+StaticTask_t CARTWORKER_TASKBUFFER_TCB;
 
 /* Controllers tasks. */
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
@@ -166,13 +166,13 @@ void LIPcreateTasks()
 
     /* Worker task - this tas is only active when command "zero" or "home" are called.
     Its purpose is to move the cart without any controller. */
-    WorkerTaskHandle = xTaskCreateStatic( workerTask,
-                                       (const char*) "WorkerTask",
-                                       WORKER_STACK_DEPTH,
+    cartWorkerTaskHandle = xTaskCreateStatic( cartWorkerTask,
+                                       (const char*) "CartWorkerTask",
+                                       CARTWORKER_STACK_DEPTH,
                                        (void *) 0,
-                                       tskIDLE_PRIORITY+PRIORITY_WORKER,
-                                       WORKER_STACKBUFFER,
-                                       &WORKER_TASKBUFFER_TCB );
+                                       tskIDLE_PRIORITY+PRIORITY_CARTWORKER,
+                                       CARTWORKER_STACKBUFFER,
+                                       &CARTWORKER_TASKBUFFER_TCB );
 
     /* Down position controller 3
     Full state feedback down position ctrl-er with "tanh switching" deadzone compensation 

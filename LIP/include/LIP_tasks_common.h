@@ -61,8 +61,8 @@ void rawComTask( void *pvParameters );
 
 /* Worker task - this tas is only active when command "zero" or "home" are called.
 Its purpose is to move the cart without any controller. */
-void workerTask( void *pvParameters );
-#define WORKER_STACK_DEPTH 500
+void cartWorkerTask( void *pvParameters );
+#define CARTWORKER_STACK_DEPTH 500
 
 /* Controllers tasks */
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */

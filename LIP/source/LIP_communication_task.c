@@ -28,7 +28,7 @@ void comTask( void *pvParameters )
      * For serial osciloscope - testing/debug purposes
      * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
     char msg[ 128 ]; // msg for uart data transfer
-
+    
     /* Task mainloop */
     for (;;)
     {
