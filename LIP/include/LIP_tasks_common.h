@@ -3,6 +3,9 @@
  * Also provides prototype of LIPcreateTasks fucntion
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  */
+#ifndef LIP_TASKS_COMMON
+#define LIP_TASKS_COMMON
+
 #include "main_LIP.h"
 
 /* Enum which lists all implemented LIP app states. */
@@ -14,16 +17,25 @@ enum lip_app_states
     This state indicates that current cart position reading is not correct,
     pendulum cart has to be moved to zero position.
     Available commands: zero, <enter_key> */
-    UNITIALIZED,
+    UNINITIALIZED,
     /* Default state: All sesnor readings should be correct in this app state.
     Down position controller can be started.
     Available commands: zero, home, dpc, sp, <enter_key> */
     DEFAULT,
     /* DPC state: Down Position Controller turned on.
     Available commands: home, dpc, spcli, sppot, sp, swingup, <enter_key> */
-    DPC
+    DPC,
+    /* UPC state: Up Position Controller turned on.
+    Available commands: home, upc, spcli, sppot, sp, swingdown, <enter_key> */
+    UPC
 };
 #endif // LIP_APP_STATES_ENUM
+
+/* These values are used as task notification value for
+worker task. */
+#define GO_RIGHT    0x01    /* Move cart to the right. */
+#define GO_LEFT     0x02    /* Move cart to the left. */
+#define SP_HOME     0x03    /* Change controler cart setpoint to home position. */
 
 /* Watchdog task - protection for cart min and max positions. */
 void watchdogTask( void *pvParameters );
@@ -89,3 +101,4 @@ void ctrl_5_FSF_uppos_task( void *pvParameters );
 /* Function to create tasks. */
 void LIPcreateTasks(void);
 
+#endif // LIP_TASKS_COMMON

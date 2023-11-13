@@ -1,37 +1,45 @@
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  * This file provides cli commands definitions and functionality
  *
- * Note: commands callback functions change app state, which is indicated by 
- * preprompt string in cli prompt ( (preprompt)>>> ). All logic related to 
- * LIP app state changes is contained in cli commands callback functions.   
+ * Note: commands callback functions change app state, which is indicated by
+ * preprompt string in cli prompt ( (preprompt)>>> ). All logic related to
+ * LIP app state changes is contained in cli commands callback functions.
  *
  * Note2: in FreeRTOSConfig.h, configTASK_NOTIFICATION_ARRAY_ENTRIES is set to 5
  * so max 5 notifications for a task.
- * 
+ *
  * All variables related to LIP app state are defined in file: LIP_tasks_common.c
- * 
- * FreeRTOS CLI demo: 
- * https://www.freertos.org/FreeRTOS-Plus/FreeRTOS_Plus_IO/Demo_Applications/LPCXpresso_LPC1769/NXP_LPC1769_Demo_Description.html 
+ *
+ * FreeRTOS CLI demo:
+ * https://www.freertos.org/FreeRTOS-Plus/FreeRTOS_Plus_IO/Demo_Applications/LPCXpresso_LPC1769/NXP_LPC1769_Demo_Description.html
  */
 #include "main_LIP.h"
 
+extern enum lip_app_states app_current_state;
+
+/* Tasks handles from LIP_tasks_common.c */
+extern TaskHandle_t watchdogTaskHandle;
+extern TaskHandle_t consoleTaskHandle;
+extern TaskHandle_t utilTaskHandle;
 extern TaskHandle_t comTaskHandle;
-extern enum lip_app_states app_current_state; 
+extern TaskHandle_t rawComTaskHandle;
+extern TaskHandle_t WorkerTaskHandle;
+extern TaskHandle_t ctrl_3_FSF_downpos_task_handle;
+
+/* Global cart position variable, defined in LIP_tasks_common.c */
+extern float cart_position[ 2 ];
 
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  * CLI commands prototypes
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  */
-/* This command shows task statistics - doesn't work XD, 
+/* This command shows task statistics
 command : task-stats */
 static portBASE_TYPE prvTaskStatsCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
-/* Command to turn communication on or off, 
+/* Command to turn communication on or off,
 command : ENTER_KEY */
 static portBASE_TYPE prvComOnOffCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
-/* Command to zero the cart position, performed by watchdog task
-command : zero */
-static portBASE_TYPE prvZeroCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
-/* Command to move cart to default position - center of the track, no controller is used, 
+/* Command to move cart to default position - center of the track, no controller is used,
 command : home */
 static portBASE_TYPE prvHomeCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
 /* Command to turn on or off down position controller,
@@ -57,7 +65,7 @@ static portBASE_TYPE prvSWINGUPCommand( int8_t *pcWriteBuffer, size_t xWriteBuff
  * CLI commands definition structures & registration
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  */
-static const CLI_Command_Definition_t commands_list[] = 
+static const CLI_Command_Definition_t commands_list[] =
 {
     {
         .pcCommand                      = ( const int8_t * const ) "task-stats",
@@ -69,12 +77,6 @@ static const CLI_Command_Definition_t commands_list[] =
         .pcCommand                      = ( const int8_t * const ) "",
         .pcHelpString                   = ( const int8_t * const ) "<enter_key> :    Start / stop data streaming.\r\n",
         .pxCommandInterpreter           = prvComOnOffCommand,
-        .cExpectedNumberOfParameters    = 0
-    },
-    {
-        .pcCommand                      = ( const int8_t * const ) "zero",
-        .pcHelpString                   = ( const int8_t * const ) "zero        :    Go to zero cart positon, no controller used.\r\n",
-        .pxCommandInterpreter           = prvZeroCommand,
         .cExpectedNumberOfParameters    = 0
     },
     {
@@ -91,7 +93,7 @@ static const CLI_Command_Definition_t commands_list[] =
     },
     {
         .pcCommand                      = ( const int8_t * const ) "clc",
-        .pcHelpString                   = ( const int8_t * const ) "clc         :    Clears console screen.\r\n",    
+        .pcHelpString                   = ( const int8_t * const ) "clc         :    Clears console screen.\r\n",
         .pxCommandInterpreter           = prvClcCommand,
         .cExpectedNumberOfParameters    = 0
     },
@@ -136,7 +138,7 @@ void vRegisterCLICommands(void)
  * CLI commands callback functions definitions
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  */
-/* [x] command: task-stats */
+/* command: task-stats */
 static portBASE_TYPE prvTaskStatsCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
 {
     const int8_t *const pcTaskTableHeader = ( int8_t * ) "Task          State  Priority  Stack	#\r\n******************************************\r\n";
@@ -157,7 +159,7 @@ static portBASE_TYPE prvTaskStatsCommand( int8_t *pcWriteBuffer, size_t xWriteBu
     return pdFALSE;
 }
 
-/* [x] command: <enter_key> (data logging on/off) */
+/* command: <enter_key> (data logging on/off) */
 static portBASE_TYPE prvComOnOffCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
 {
     /* Remove compile time warnings about unused parameters, and check the
@@ -180,23 +182,6 @@ static portBASE_TYPE prvComOnOffCommand( int8_t *pcWriteBuffer, size_t xWriteBuf
     return pdFALSE;
 }
 
-/* [ ] command: zero */
-static portBASE_TYPE prvZeroCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
-{
-    /* Remove compile time warnings about unused parameters, and check the
-    write buffer is not NULL.  NOTE - for simplicity, this example assumes the
-    write buffer length is adequate, so does not check for buffer overflows. */
-    ( void ) pcCommandString;
-    ( void ) xWriteBufferLen;
-    configASSERT( pcWriteBuffer );
-
-    /* This command will send notification to worker task that will take action based on notification value/index (?) */
-    // xTaskNotify();
-
-    /* There is no more data to return after this single string, so return pdFALSE. */
-    return pdFALSE;
-}
-
 /* [ ] command: home */
 static portBASE_TYPE prvHomeCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
 {
@@ -206,6 +191,87 @@ static portBASE_TYPE prvHomeCommand( int8_t *pcWriteBuffer, size_t xWriteBufferL
     ( void ) pcCommandString;
     ( void ) xWriteBufferLen;
     configASSERT( pcWriteBuffer );
+
+    /* This command will send notification to worker task that will take action based on notification value/index (?) */
+    char msg_buffer[70];
+
+    if( app_current_state == UNINITIALIZED )
+    {
+        /* App is in UNINITIALIZED state (right after uC powerup). 
+        Cart position can be arbitrary - so cart position have to be calibrated.
+        First the cart goes to min left position, then moves to the track center. */
+        if( READ_ZERO_POSITION_REACHED )
+        {
+            /* Cart is already in zero position.
+            Send notification to worker_task,
+            set notification bit 0 - go to the right until cart is in the middle. */
+            xTaskNotifyIndexed( WorkerTaskHandle,         /* Task to notify. */
+                                0,                        /* Notification index is 0. */
+                                GO_RIGHT,                 /* Used to update notification value. */
+                                eSetValueWithOverwrite ); /* Overwrite task notif. value even if it hasn't been read. */
+
+            sprintf( msg_buffer, "\r\nCart already in min position, going right.\r\n" ); // 44 chars
+            com_send( msg_buffer, strlen( msg_buffer ) );
+        }
+        else
+        {
+            /* CALIBRATION - Cart position is arbitrary.
+            Send notification to worker_task,
+            set notification bit 1 - go left until min position reached, then go right to track center. */
+            xTaskNotifyIndexed( WorkerTaskHandle,         /* Task to notify. */
+                                0,                        /* Notification index is 0. */
+                                GO_LEFT+GO_RIGHT,         /* Used to update notification value. */
+                                eSetValueWithOverwrite ); /* Overwrite task notif. value even if it hasn't been read. */
+
+            sprintf( msg_buffer, "\r\nCart position arbitrary, going left, then to track center.\r\n" ); // 59 chars
+            com_send( msg_buffer, strlen( msg_buffer ) );
+        }
+    }
+    else if( app_current_state == DEFAULT )
+    {
+        /* App is not in DEFAULT state - cart position should be calibrated. */
+        if( cart_position[ 0 ] < TRACK_LEN_MAX_CM/2 )
+        {
+            /* Cart is to the left of track center. */
+            xTaskNotifyIndexed( WorkerTaskHandle,         /* Task to notify. */
+                                0,                        /* Notification index is 0. */
+                                GO_RIGHT,                 /* Used to update notification value. */
+                                eSetValueWithOverwrite ); /* Overwrite task notif. value even if it hasn't been read. */
+
+            sprintf( msg_buffer, "\r\nGoing right\r\n" );
+            com_send( msg_buffer, strlen( msg_buffer ) );
+        }
+        else
+        {
+            /* Cart is to the right of track center. */
+            xTaskNotifyIndexed( WorkerTaskHandle,         /* Task to notify. */
+                                0,                        /* Notification index is 0. */
+                                GO_LEFT,                  /* Used to update notification value. */
+                                eSetValueWithOverwrite ); /* Overwrite task notif. value even if it hasn't been read. */
+
+            sprintf( msg_buffer, "\r\nGoing left\r\n" );
+            com_send( msg_buffer, strlen( msg_buffer ) );
+        }
+    }
+    else if( app_current_state == DPC || app_current_state == UPC )
+    {
+        /* App is not in DEFAULT or UNINITIALIZED state, 
+        its either in DOWN_POS_CONTROL(DPC) or UP_POSITION_CONTROL(UPC) state. While in either one of these two control states,
+        calling "home" command should change cart position setpoint to home position (center of the track). */
+        xTaskNotifyIndexed( WorkerTaskHandle,         /* Task to notify. */
+                            0,                        /* Notification index is 0. */
+                            SP_HOME,                  /* Used to update notification value. */
+                            eSetValueWithOverwrite ); /* Overwrite task notif. value even if it hasn't been read. */
+
+        sprintf( msg_buffer, "\r\nController cart setpoint changed to home position.\r\n" );
+        com_send( msg_buffer, strlen( msg_buffer ) );
+    }
+    else
+    {
+        /* App is in swingup state. */
+        sprintf( msg_buffer, "\r\nERROR: COMMAND NOT AVALIABLE IN SWINGUP STATE.\r\n" );
+        com_send( msg_buffer, strlen( msg_buffer ) );
+    }
 
     /* There is no more data to return after this single string, so return pdFALSE. */
     return pdFALSE;

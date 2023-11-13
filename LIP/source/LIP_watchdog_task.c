@@ -9,13 +9,17 @@
 
 extern enum lip_app_states app_current_state;
 
+/* from main_LIP.h, toggled in limit switch ISR. */
+extern uint8_t MAX_POSITION_REACHED;
+extern uint8_t ZERO_POSITION_REACHED;
+
 void watchdogTask( void * pvParameters )
 {
     /* For RTOS vTaskDelayUntil() */
     TickType_t xLastWakeTime = xTaskGetTickCount();
 
     /* Set start app state to uninitialized. */
-    app_current_state = UNITIALIZED;
+    app_current_state = UNINITIALIZED;
 
     /* Action for "zero" cli command.
     If cart is not in min position, "zero" command moves it there. */
@@ -30,6 +34,14 @@ void watchdogTask( void * pvParameters )
     {
         /* Cart position protection functionality. */
 
+        if( MAX_POSITION_REACHED || ZERO_POSITION_REACHED )
+        {
+            dcm_set_output_volatage( 0.0f );
+        }
+
+
+        MAX_POSITION_REACHED = 0;
+        ZERO_POSITION_REACHED = 0;
 
         /* Task delay */
         vTaskDelayUntil( &xLastWakeTime, dt_watchdog );

@@ -32,6 +32,10 @@
 #include "LIP_tasks_common.h"
 #include "SP_filter.h"
 
+/* Used inside limit switch ISR */
+#define READ_ZERO_POSITION_REACHED HAL_GPIO_ReadPin( limitSW_left_GPIO_Port, limitSW_left_Pin )
+#define READ_MAX_POSITION_REACHED HAL_GPIO_ReadPin( limitSW_right_GPIO_Port, limitSW_right_Pin )
+
 /* Sampling period and freeRTOS tasks priorities definitions. */ 
 #define dt                  10      // Sampling period in ms for controllers and util tasks,
 #define dt_inv              100.0f  // multiply by dt_inv instead of dividing by dt.

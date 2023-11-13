@@ -39,7 +39,7 @@ char dpcState_prePrompt[]        = "[      dpc      ]";
 /* Function to print full prompt with preprompt string which indicates current app state. */
 void show_prompt( void )
 {
-    if( app_current_state == UNITIALIZED )
+    if( app_current_state == UNINITIALIZED )
     {
         prompt.prePromptStr = uninitState_prePrompt;
     }
@@ -83,6 +83,8 @@ void vCommandConsoleTask( void *pvParameters )
     
     vTaskDelay(1000);
 
+    /* Clear screen before cli start. */
+    com_send("\e[1;1H\e[2J", 10);
     sprintf( msg, "\r\n******************************************\r\n" );
     com_send( msg, strlen(msg) ); 
     sprintf( msg,      "*********** FreeRTOS based CLI ***********\r\n" );

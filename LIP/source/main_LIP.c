@@ -3,9 +3,9 @@
 */
 #include "main_LIP.h"
 
-/* Used inside limit switch ISR */
-#define READ_ZERO_POSITION_REACHED HAL_GPIO_ReadPin( limitSW_left_GPIO_Port, limitSW_left_Pin )
-#define READ_MAX_POSITION_REACHED HAL_GPIO_ReadPin( limitSW_right_GPIO_Port, limitSW_right_Pin )
+// /* Used inside limit switch ISR */
+// #define READ_ZERO_POSITION_REACHED HAL_GPIO_ReadPin( limitSW_left_GPIO_Port, limitSW_left_Pin )
+// #define READ_MAX_POSITION_REACHED HAL_GPIO_ReadPin( limitSW_right_GPIO_Port, limitSW_right_Pin )
 
 extern ADC_HandleTypeDef hadc3;
 extern volatile uint16_t adc_data_pot;
@@ -47,14 +47,14 @@ void HAL_GPIO_EXTI_Callback( uint16_t GPIO_Pin )
     {
         ZERO_POSITION_REACHED = 1;
         MAX_POSITION_REACHED = 0;
-        dcm_set_output_volatage( 0.0f );
+        // dcm_set_output_volatage( 0.0f ); // moved to watchdog task
         dcm_enc_zero_counter();
     }
     if ( GPIO_Pin == limitSW_right_Pin ) // limit switch right
     {
         MAX_POSITION_REACHED = 1;
         ZERO_POSITION_REACHED = 0;
-        dcm_set_output_volatage( 0.0f );
+        // dcm_set_output_volatage( 0.0f ); // moved to watchdog task
     }
     if ( GPIO_Pin == blue_btn_Pin ) // built in blue button
     {

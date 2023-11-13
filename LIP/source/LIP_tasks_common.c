@@ -49,6 +49,10 @@ resultant value is offset that has to subtracted from each angle reading */
 float pend_init_angle_offset;
 /* lip_app_states enum instance, which indicates current LIP app state. */
 enum lip_app_states app_current_state; 
+/* Cart position calibrated flag indicated that cart has real position match cart sensor reading. 
+1 - calibrated,
+0 - not calibrated. */
+uint8_t cart_position_calibrated = 0;
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
 /* Watchdog task - protection for cart min and max positions and default always running task. */
@@ -180,7 +184,7 @@ void LIPcreateTasks()
                                                         tskIDLE_PRIORITY+PRIORITY_CTRL,
                                                         ctrl_3_FSF_downpos_STACKBUFFER,
                                                         &ctrl_3_FSF_downpos_TASKBUFFER_TCB );
-    /* All controller tasks are suspended right after thier creation */  
+    /* All controller tasks are suspended right after their creation */  
     vTaskSuspend( ctrl_3_FSF_downpos_task_handle );
 
     /* Raw byte communication task. */

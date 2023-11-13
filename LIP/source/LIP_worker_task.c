@@ -6,37 +6,86 @@
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 #include "LIP_tasks_common.h"
 #include "limits.h"
-// extern enum lip_app_states app_current_state;
+
+extern enum lip_app_states app_current_state;
+
+/* Global cart position variable, defined in LIP_tasks_common.c */
+extern float cart_position[ 2 ];
+
+/* Cart position setpoint, independent of currenlty selected setpoint source. 
+defined in LIP_tasks_common.c */
+extern float *cart_position_setpoint_cm;
 
 void workerTask( void * pvParameters )
 {
     /* For RTOS vTaskDelayUntil() */
     TickType_t xLastWakeTime = xTaskGetTickCount();
 
-    uint32_t notif_value_recived;
+    uint32_t notif_value_received;
 
     for ( ;; )
-    {
+    {   
         /* Wait for notification at index 0. */
-        xTaskNotifyWait( 0,                     /* Bits to clear on entry (before save to third arg). */ 
-                         ULONG_MAX,             /* Bits to clear on exit (after save to third arg). */
-                         &notif_value_recived,  /* Value of received notification. Can be set to NULL if not used. */
-                         portMAX_DELAY );       /* Block time (while waiting for notification). */
+        xTaskNotifyWaitIndexed( 0,                     /* Notification index */
+                                0x00,                  /* Bits to clear on entry (before save to third arg). */ 
+                                ULONG_MAX,             /* Bits to clear on exit (after save to third arg). */
+                                &notif_value_received, /* Value of received notification. Can be set to NULL if not used. */
+                                portMAX_DELAY );       /* Block time (while waiting for notification). */
 
-        if( ( notif_value_recived & 0x01 ) != 0 )
+        /* notif_value_received possible values: GO_RIGHT, GO_RIGHT+GO_LEFT, GO_LEFT, SP_HOME
+           cart_position_calibrated*/
+        if( notif_value_received == GO_RIGHT )
         {
-            /* Bit 0 was set (first bit)- process whichever event is represented by bit 0. */
+            /* App is uninitialized state and cart is already in zero position OR
+            app is in default state (cart position calibrated). 
+            Move cart to the right until track center reached. */
+            dcm_set_output_volatage( 2.0f );
+            while( cart_position[ 0 ] < TRACK_LEN_MAX_CM/2 )
+            {
+                vTaskDelay( dt_worker );
+            }
+            dcm_set_output_volatage( 0.0f );
+            app_current_state = DEFAULT;
         }
-        if ( ( notif_value_recived & 0x02 ) != 0 )
+        else if ( notif_value_received == GO_LEFT )
         {
-            /* Bit 1 was set (second bit) - process whichever event is represented by bit 1. */
+            /* App is in default state(cart position calibrated).
+            Move cart to the left until center position reached. */
+            dcm_set_output_volatage( -2.0f );
+            while( cart_position[ 0 ] > TRACK_LEN_MAX_CM/2 )
+            {
+                vTaskDelay( dt_worker );
+            }
+            dcm_set_output_volatage( 0.0f );
         }
-        if ( ( notif_value_recived & 0x04 ) != 0 )
+        else if( notif_value_received == GO_LEFT+GO_RIGHT )
         {
-            /* Bit 2 was set (third bit) - process whichever event is represented by bit 2. */
+            /* App is in uninitialized state and cart position has to be calibrated. */
+            dcm_set_output_volatage( -2.0f );
+            while( ! READ_ZERO_POSITION_REACHED )
+            {
+                /* Go left until zero position reached. */
+                vTaskDelay( dt_worker );
+                // vTaskDelay( 10 );
+            }
+            dcm_set_output_volatage( 2.0f );
+            while( cart_position[ 0 ] < TRACK_LEN_MAX_CM/2.0f )
+            {
+                /* Go to track center. */
+                vTaskDelay( dt_worker );
+                // vTaskDelay( 10 );
+            }
+            dcm_set_output_volatage( 0.0f );
+            app_current_state = DEFAULT;
+        }
+        else if( notif_value_received == SP_HOME )
+        {
+            /* App is in UPC or DPC state. Change setpoint to home postion. */
+            *cart_position_setpoint_cm = TRACK_LEN_MAX_CM/2.0f;
         }
 
         /* Task delay */
         vTaskDelayUntil( &xLastWakeTime, dt_worker );
+        // vTaskDelay( 10 );
     }
 }
