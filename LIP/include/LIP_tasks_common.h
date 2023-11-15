@@ -35,7 +35,7 @@ enum lip_app_states
 worker task. */
 #define GO_RIGHT    0x01    /* Move cart to the right. */
 #define GO_LEFT     0x02    /* Move cart to the left. */
-#define SP_HOME     0x03    /* Change controler cart setpoint to home position. */
+#define SP_HOME     0x04    /* Change controler cart setpoint to home position. */
 
 /* Watchdog task - protection for cart min and max positions. */
 void watchdogTask( void *pvParameters );

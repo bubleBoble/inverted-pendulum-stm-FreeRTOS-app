@@ -5,19 +5,19 @@
 #include "LIP_tasks_common.h"
 #include "limits.h"
 
-/* This enum instance keeps track of current app state. */
+/* Keeps track of current app state. */
 extern enum lip_app_states app_current_state;
+
 /* Global cart position variable, defined in LIP_tasks_common.c */
 extern float cart_position[ 2 ];
+
 /* Cart position setpoint, independent of currenlty selected setpoint source. 
 defined in LIP_tasks_common.c */
 extern float *cart_position_setpoint_cm;
 
 void cartWorkerTask( void * pvParameters )
 {
-    /* For RTOS vTaskDelayUntil() */
-    // TickType_t xLastWakeTime = xTaskGetTickCount();
-
+    /* Hold value retrieved from task notification. */
     uint32_t notif_value_received;
 
     for ( ;; )
@@ -77,14 +77,15 @@ void cartWorkerTask( void * pvParameters )
         }
         else if( notif_value_received == SP_HOME )
         {
-            /* App is in UPC or DPC state. Change setpoint to home postion. */
+            /* App is in UPC or DPC state. Change setpoint to home postion. 
+            cart_position_setpoint_cm should point to setpoint set by cli command
+            "spcli", otherwise cart behaviour maybe unexpected. This condition is
+            handled in "spcli" command callback function. */
             *cart_position_setpoint_cm = TRACK_LEN_MAX_CM/2.0f;
         }
 
         /* Task delay */
-        // vTaskDelayUntil( &xLastWakeTime, dt_worker );
-        /* This task will be suspended in some of the app states,
-        so vTaskDelayUntil can't be used. */
+        /* This task wont run all the time, so vTaskDelayUntil can't be used. */
         vTaskDelay( dt_cartworker );
     }
 }

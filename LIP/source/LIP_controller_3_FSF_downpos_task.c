@@ -31,11 +31,30 @@ extern float pend_speed[ 2 ];
 extern float cart_position[ 2 ];
 extern float cart_speed[ 2 ];
 extern float *cart_position_setpoint_cm;
+extern float pendulum_arm_angle_setpoint_rad;
+
+/* Angle setpoint for pendulum arm. Down position corresponds to 180 degrees or pi radians.
+Controller works with angle in radians. "BASE" postfix indicates that this setpoint is from
+base angle range [0, 2PI]. Because pendulum arm can make many full revolutions, 
+angles PI, 3PI, 5PI and so on, all correspond to the same down position, angle setpoint needs
+to be changed accordingly. */
+#define PENDULUM_ANGLE_DOWN_SETPOINT_BASE PI
 
 void ctrl_3_FSF_downpos_task( void *pvParameters )
 {
     /* For RTOS vTaskDelayUntil() */
     TickType_t xLastWakeTime = xTaskGetTickCount();
+
+    /* Holds number of pendulum full revolutions, negative number indicates
+    full revolution in counter clockwise direction. */
+    int32_t number_of_pendulumarm_revolutions = 0;
+
+    /* Holds pendulum arm angle in base range [0 2pi]. */
+    float pendulum_angle_in_base_range = 0.0f;
+
+    /* Controller should turn on only if the angle is in range [switch_angle_low, switch_angle_high]. */
+    float switch_angle_low  = 120.0f * PI / 180.0f;    // lower boundry in radians
+    float switch_angle_high = 240.0f * PI / 180.0f;    // upper boundry in radians
 
     /* Down position gains, u = F*(x_setpoint - x) 
     gains[0] - cart position error gain, units: V/cm
@@ -70,68 +89,90 @@ void ctrl_3_FSF_downpos_task( void *pvParameters )
 
     for( ;; )
     {
-        /* Calculate state varialbes errors */
-        cart_position_error = *cart_position_setpoint_cm - cart_position[0]; 
-        cart_speed_error    = - cart_speed[ 0 ];
-        pend_position_error = pend_angle_setpoint - pend_angle[ 0 ];
-        pend_speed_error    = - pend_speed[ 0 ];
+        /* Get number of revolutions. */
+        number_of_pendulumarm_revolutions = get_num_of_revolutions();
 
-        /* Calculate control signal contribution of each state variable error */
-        /* Deadzone protection nr. 3 "tanh switching" : non linear cart position gain.
-        When cart postion error is >0 linear feedback with offset +1V is used
-        to compensate for voltage deadzone, for <0 error, y-axis mirror is used.
-        graph: https://www.desmos.com/calculator/ycgnqpyy9y */
-        
-        /* Cart position error control signal component. */
-        if( cart_position_error > cart_position_allowed_error_cm )
+        /* Calculate pendulum arm angle in base range [0 2pi]. */
+        pendulum_angle_in_base_range = pend_angle[ 0 ] - ( float ) number_of_pendulumarm_revolutions * PI2;
+
+        if( switch_angle_low < pendulum_angle_in_base_range && switch_angle_high > pendulum_angle_in_base_range )
         {
-            ctrl_cart_position_error =   tanhf( 8.0f * cart_position_error ) * ( gains[0] * cart_position_error + voltage_deadzone );
-        } 
-        else if( cart_position_error < -cart_position_allowed_error_cm )
-        {
-            ctrl_cart_position_error = - tanhf( 8.0f * cart_position_error ) * ( gains[0] * cart_position_error - voltage_deadzone );
+            /* Controller should only work when pendulum arm angle is in range [switch_angle_low, pendulum_angle_in_base_range]. */
+         
+            /* Get number of pendulum revolutions. */
+            number_of_pendulumarm_revolutions = get_num_of_revolutions();
+
+            /* Calculate real pendulum angle setpoint from setpoint in base range [0, 2PI]. */
+            pend_angle_setpoint = PENDULUM_ANGLE_DOWN_SETPOINT_BASE + (float) number_of_pendulumarm_revolutions * PI2;
+            pendulum_arm_angle_setpoint_rad = pend_angle_setpoint; // This variable is only for communication task.
+
+            /* Calculate state varialbes errors */
+            cart_position_error =  *cart_position_setpoint_cm - cart_position[0]; 
+            cart_speed_error    = - cart_speed[ 0 ];
+            pend_position_error =   pend_angle_setpoint - pend_angle[ 0 ];
+            pend_speed_error    = - pend_speed[ 0 ];
+
+            /* Calculate control signal contribution of each state variable error */
+            /* Deadzone protection nr. 3 "tanh switching" : non linear cart position gain.
+            When cart postion error is >0 linear feedback with offset +1V is used
+            to compensate for voltage deadzone, for <0 error, y-axis mirror is used.
+            graph: https://www.desmos.com/calculator/ycgnqpyy9y */
+            
+            /* Cart position error control signal component. */
+            if( cart_position_error > cart_position_allowed_error_cm )
+            {
+                ctrl_cart_position_error =   tanhf( 8.0f * cart_position_error ) * ( gains[0] * cart_position_error + voltage_deadzone );
+            } 
+            else if( cart_position_error < -cart_position_allowed_error_cm )
+            {
+                ctrl_cart_position_error = - tanhf( 8.0f * cart_position_error ) * ( gains[0] * cart_position_error - voltage_deadzone );
+            }
+            else
+            {
+                ctrl_cart_position_error = 0;
+            }
+            
+            /* Pendulum angle error control signal component. */
+            if( pend_position_error < pend_position_allowed_error && pend_position_error > -pend_position_allowed_error)
+            {
+                ctrl_pend_angle_error = 0;
+            }
+            else
+            {
+                ctrl_pend_angle_error    = pend_position_error   * gains[1];
+            }
+            
+            /* Cart speed error control signal component. */
+            ctrl_cart_speed_error    = cart_speed_error      * gains[2];
+            
+            /* Pendulum speed error control signal component. */
+            ctrl_pend_speed_error    = pend_speed_error      * gains[3];
+            
+            /* Regular controller update - with constant gains
+            control signal = ( state_setpoint - state ) * ( F ) */
+            ctrl_signal = ctrl_cart_position_error + 
+                        ctrl_pend_angle_error    + 
+                        ctrl_cart_speed_error    + 
+                        ctrl_pend_speed_error;
+
+            /* Safety to not hit cart max and min positions */
+            if( ( cart_position[0] < 5.0f ) || ( cart_position[0] > (TRACK_LEN_MAX_CM-5.0f) ) )
+            {
+                /* divide control signal by const. to lower the voltage setting. */
+                ctrl_signal /= 3;
+            }
+
+            /* Additional ctrl signal saturation - for testing.
+            There is default saturaition pm12V */    
+            // sat( &ctrl_signal, -5.0f, 5.0f );
+
+            /* Set calculated output voltage */
+            dcm_set_output_volatage( ctrl_signal );
         }
         else
         {
-            ctrl_cart_position_error = 0;
+            dcm_set_output_volatage( 0.0f );
         }
-        
-        /* Pendulum angle error control signal component. */
-        if( pend_position_error < pend_position_allowed_error && pend_position_error > -pend_position_allowed_error)
-        {
-            ctrl_pend_angle_error = 0;
-        }
-        else
-        {
-            ctrl_pend_angle_error    = pend_position_error   * gains[1];
-        }
-        
-        /* Cart speed error control signal component. */
-        ctrl_cart_speed_error    = cart_speed_error      * gains[2];
-        
-        /* Pendulum speed error control signal component. */
-        ctrl_pend_speed_error    = pend_speed_error      * gains[3];
-        
-        /* Regular controller update - with constant gains
-        control signal = ( state_setpoint - state ) * ( F ) */
-        ctrl_signal = ctrl_cart_position_error + 
-                      ctrl_pend_angle_error    + 
-                      ctrl_cart_speed_error    + 
-                      ctrl_pend_speed_error;
-
-        /* Safety to not hit cart max and min positions */
-        if( ( cart_position[0] < 5.0f ) || ( cart_position[0] > (TRACK_LEN_MAX_CM-5.0f) ) )
-        {
-            /* divide control signal by 2 to lower the voltage ssetting */
-            ctrl_signal /= 3;
-        }
-
-        /* Additional ctrl signal saturation - for testing.
-        There is default saturaition pm12V */    
-        // sat( &ctrl_signal, -5.0f, 5.0f );
-
-        /* Set calculated output voltage */
-        dcm_set_output_volatage( ctrl_signal );
 
         /* Task delay */
         vTaskDelayUntil( &xLastWakeTime, dt );

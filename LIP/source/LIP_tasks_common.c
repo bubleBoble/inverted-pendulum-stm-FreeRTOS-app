@@ -29,30 +29,40 @@ float cart_position[ 2 ] = { 0.0f };
 float cart_speed[ 2 ];
 IIR_filter low_pass_IIR_cart;
 
-/* Cart position setpoint from adc reading, converetd to [0, 47] range in cm.
+/* Cart position setpoint from adc reading, converetd to [0, 40.7] range in cm.
 [ 0 ] is current, [ 1 ] is previous sample. */
 float cart_position_setpoint_cm_pot_raw; // raw read
 float cart_position_setpoint_cm_pot;     // low pass filtered
+
 /* Cart position setpoint set by cli command, range [0, 47] in cm.
 [ 0 ] is current, [ 1 ] is previous sample. */
-float cart_position_setpoint_cm_cli_raw; // raw read
-float cart_position_setpoint_cm_cli;     // low pass filtered
+float cart_position_setpoint_cm_cli_raw = TRACK_LEN_MAX_CM/2.0f; // raw read
+float cart_position_setpoint_cm_cli;                             // low pass filtered
+
 /* This variable points to cart position setpoint from selected source, so either
 cart_position_setpoint_cm_pot or cart_position_setpoint_cm_cli. This setpoint is used
-by controllers. By default it points to converted potentiometer reading. */
-float *cart_position_setpoint_cm = &cart_position_setpoint_cm_pot;
+by controllers. By default it points to setpoint set from cli by "spcli" command. */
+float *cart_position_setpoint_cm = &cart_position_setpoint_cm_cli;
+
+/* Setpoint for pendulum arm angle, this variable is used only in LIP_tasks_common.c for
+display purposes in serialoscilloscope. */
+float pendulum_arm_angle_setpoint_rad;
+
 /* Pendulum magnetic encoder reading at down position. Can sometimes be different if
 the pendulum shaft is forced to rotate inside a bearings. The default pendulum
 position is assumed to be down position, from control/model perspective down
 position corresponds to PI radians, so PI has to be subtracted from initial reading and
 resultant value is offset that has to subtracted from each angle reading */
 float pend_init_angle_offset;
+
 /* lip_app_states enum instance, which indicates current LIP app state. */
 enum lip_app_states app_current_state; 
+
 /* Cart position calibrated flag indicated that cart has real position match cart sensor reading. 
 1 - calibrated,
 0 - not calibrated. */
 uint8_t cart_position_calibrated = 0;
+
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
 /* Watchdog task - protection for cart min and max positions and default always running task. */

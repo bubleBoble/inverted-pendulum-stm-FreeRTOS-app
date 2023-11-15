@@ -90,7 +90,6 @@ float dcm_get_output_voltage( void )
 	return ( dutycycle / 1000.0f * MAX_INPUT_VOLTAGE_POSITIVE * voltage_sign );
 }
 
-
 /*
  * Sets dutycycle for ch1&ch2 pwm
  * dtc argument ranges between 0 and 1000 (ARR+1 ??? +1 czy nie?)

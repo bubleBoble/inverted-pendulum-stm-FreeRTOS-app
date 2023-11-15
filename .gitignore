@@ -29,3 +29,4 @@ FreeRTOS/Source/portable/MemMang/*
 !FreeRTOS/Source/portable/MemMang/heap_4.c
 
 notes_personal.md
+LIP/TODO.LOL.txt

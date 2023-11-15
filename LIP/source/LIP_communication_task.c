@@ -18,6 +18,7 @@ extern float pend_speed[ 2 ];
 extern float cart_position[ 2 ];
 extern float cart_speed[ 2 ];
 extern float *cart_position_setpoint_cm;
+extern float pendulum_arm_angle_setpoint_rad;
 
 void comTask( void *pvParameters )
 {
@@ -27,7 +28,7 @@ void comTask( void *pvParameters )
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
      * For serial osciloscope - testing/debug purposes
      * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-    char msg[ 128 ]; // msg for uart data transfer
+    char msg[ 256 ]; // msg for uart data transfer
     
     /* Task mainloop */
     for (;;)
@@ -35,17 +36,19 @@ void comTask( void *pvParameters )
         // if(  )
         /* Message content */
         sprintf( msg,
-                    "%f,%f,0,%f,%f,%f,%f,0,%ld\r\n",
-                    // for pendulum
-                    (double) pend_angle[ 0 ],
-                    (double) pend_speed[ 0 ],
-                    // for cart
-                    (double) cart_position[ 0 ],
-                    (double) cart_speed[ 0 ],
-                    (double) *cart_position_setpoint_cm,
-                    //
-                    (double) dcm_get_output_voltage(),
-                    xLastWakeTime
+                 "%f,%f,%f,%f,%f,%f,%f,%ld,%ld\r\n",
+                 // for pendulum
+                 (double) pend_angle[ 0 ],
+                 (double) pend_speed[ 0 ],
+                 (double) pendulum_arm_angle_setpoint_rad,
+                 // for cart
+                 (double) cart_position[ 0 ],
+                 (double) cart_speed[ 0 ],
+                 (double) *cart_position_setpoint_cm,
+                 //
+                 (double) dcm_get_output_voltage(),
+                 get_num_of_revolutions(),
+                 xLastWakeTime
         );
 
         /* Serial send */
