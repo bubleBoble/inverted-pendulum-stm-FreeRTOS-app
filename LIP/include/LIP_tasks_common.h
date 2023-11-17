@@ -27,9 +27,24 @@ enum lip_app_states
     DPC,
     /* UPC state: Up Position Controller turned on.
     Available commands: home, upc, spcli, sppot, sp, swingdown, <enter_key> */
-    UPC
+    UPC,
+    /* SWINGUP state. */
+    SWINGUP
 };
 #endif // LIP_APP_STATES_ENUM
+
+/* Enum for cart position zones. */
+#ifndef CART_POSITION_ZONE_FLAGS
+#define CART_POSITION_ZONE_FLAGS
+enum cart_position_zones
+{
+    FREEZING_ZONE_R,
+    DANGER_ZONE_R,
+    OK_ZONE,
+    DANGER_ZONE_L,
+    FREEZING_ZONE_L
+};
+#endif // CART_POSITION_ZONE_FLAGS
 
 /* These values are used as task notification value for
 worker task. */
@@ -96,6 +111,10 @@ Full state feedback up position with deadzone compensation,
 nonlinear cart position gain "tanh switching". */
 void ctrl_5_FSF_uppos_task( void *pvParameters );
 #define CTRL_5_FSF_UPPOS_STACK_DEPTH 500
+
+/* Swingup, trajopt. */
+void swingup_task( void *pvParameters );
+#define SWINGUP_STACK_DEPTH 500
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
 /* Function to create tasks. */

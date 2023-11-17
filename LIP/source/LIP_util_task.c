@@ -44,6 +44,7 @@ extern float cart_position_setpoint_cm_pot;
 extern float cart_position_setpoint_cm_cli_raw;
 extern float cart_position_setpoint_cm_cli;
 extern float pend_init_angle_offset;
+extern enum lip_app_states app_current_state;
 
 void utilTask( void *pvParameters )
 {
@@ -63,9 +64,9 @@ void utilTask( void *pvParameters )
 
     /* Low pass filter for cart position setpoint (pot and cli), 0.2sec time constant, 0dc gain. */
     LP_filter sp_filter_pot;
-    LP_init( &sp_filter_pot, 0.2f, dt*0.001 );
+    LP_init( &sp_filter_pot, 0.2f, dt*0.001f );
     LP_filter sp_filter_cli;
-    LP_init( &sp_filter_cli, 0.2f, dt*0.001 );
+    LP_init( &sp_filter_cli, 0.2f, dt*0.001f );
 
     /* Task main loop */
     for ( ;; )
@@ -128,6 +129,14 @@ void utilTask( void *pvParameters )
 
         LP_update( &sp_filter_cli, cart_position_setpoint_cm_cli_raw );
         cart_position_setpoint_cm_cli = sp_filter_cli.out[ 0 ];
+
+        if( app_current_state == DEFAULT )
+        {
+            /* While in DEFAULT state, value of cart_position_setpoint_cm_cli_raw should be constantly updated to
+            the value of current cart position to avoid discontinuity in cart position setpoint while 
+            turning on down position controller. */
+            cart_position_setpoint_cm_cli_raw = cart_position[ 0 ];
+        }
 
         /* Task delay */
         vTaskDelayUntil( &xLastWakeTime, dt );

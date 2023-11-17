@@ -50,9 +50,9 @@ void ctrl_4_I_FSF_downpos_task( void *pvParameters )
     /* Allowed error for cart position in centimeters (cm).
     There will always be some steady state error becouse of
     the presence of voltage deadzone in real pendulum. */
-    float cart_position_allowed_error_cm = 0.5f;
-    float pend_position_allowed_error    = 1.0f * PI/180.0f;
-    float voltage_deadzone = 0.75f;
+    // float cart_position_allowed_error_cm = 0.5f;
+    // float pend_position_allowed_error    = 1.0f * PI/180.0f;
+    // float voltage_deadzone = 0.75f;
 
     float ctrl_signal = 0.0f;
     float pend_angle_setpoint = PI;

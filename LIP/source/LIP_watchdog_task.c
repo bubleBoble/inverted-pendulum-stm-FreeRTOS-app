@@ -1,47 +1,132 @@
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- * This file provides task that is used for protection functionality for cart max/min 
- * positions, it is also the default entry point for LIP controller application and is 
- * always in the running state
+ * This file provides watchdog task which:
+ *     - is always in the running state
+ *     - is the default entry point for LIP controller application 
+ *     - is used for protection functionality for cart max/min positions
+ *           - set the cart zones based on current cart position
+ *           - set dc motor voltage to zero when any track limit is reached (gpio pooling) 
+ *     - is switching between controllers in swingup routine
+ *       (swingup task - up position control task)
  * 
- * Priority : 3 
+ * For safety reasons cart position zones were defined as:
+ * FREEZING_ZONE_L    |    DANGER_ZONE_L    |    OK_ZONE           |    DANGER_ZONE_R        |    FREEZING_ZONE_R
+ * (0cm - 4cm)	      |    (4cm - 6cm)      |    (6cm - 34.7cm)    |    (34.7cm - 36.7cm)    |    (36.7cm - 40.7cm)
+ *
+ * OK_ZONE           - Normal up/down controller working
+ * DANGER_ZONE_L/R   - Control signal lowered
+ * FREEZING_ZONE_L/R - Controller turned off
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 #include "LIP_tasks_common.h"
 
-extern enum lip_app_states app_current_state;
+/* Note: max cart run is 40.7cm */
+#define FREEZING_ZONE_L_LOWER_LIMIT     0.0f
+#define DANGER_ZONE_L_LOWER_LIMIT       4.0f
+#define OK_ZONE_LOWER_LIMIT             6.0f
+#define DANGER_ZONE_R_LOWER_LIMIT       34.7f
+#define FREEZING_ZONE_R_LOWER_LIMIT     36.7f
 
-/* from main_LIP.h, toggled in limit switch ISR. */
-extern uint8_t MAX_POSITION_REACHED;
-extern uint8_t ZERO_POSITION_REACHED;
+/* Defined in LIP_tasks_common.c */
+extern enum lip_app_states app_current_state;
+extern float cart_position[ 2 ]; 
+extern enum cart_position_zones cart_current_zone;
+
+extern TaskHandle_t ctrl_3_FSF_downpos_task_handle;
 
 void watchdogTask( void * pvParameters )
 {
+    uint8_t MAX_POSITION_REACHED_h;
+    uint8_t ZERO_POSITION_REACHED_h;
+
     /* For RTOS vTaskDelayUntil() */
     TickType_t xLastWakeTime = xTaskGetTickCount();
 
     /* Set start app state to uninitialized. */
     app_current_state = UNINITIALIZED;
 
-    /* Action for "zero" cli command.
-    If cart is not in min position, "zero" command moves it there. */
-    // if ( !READ_ZERO_POSITION_REACHED )
-    // {
-    //     /* Start moving cart to the left if it's not already there.
-    //     Left position has to be reached to reset cart position to zero. */
-    //     dcm_set_output_volatage( -2.0f );
-    // }
-
     for ( ;; )
     {
         /* Cart position protection functionality. */
 
-        if( MAX_POSITION_REACHED || ZERO_POSITION_REACHED )
+        /* Set flags for cart position zones while in DPC or UPC states. */
+        if( app_current_state == UPC || app_current_state == DPC || app_current_state == SWINGUP )
         {
+            if( cart_position[ 0 ] < DANGER_ZONE_L_LOWER_LIMIT )
+            {
+                /* FREEZING_ZONE_L */
+                cart_current_zone = FREEZING_ZONE_L;
+
+                /* Turn off controllers tasks. */
+                vTaskSuspend( ctrl_3_FSF_downpos_task_handle );
+                // vTaskSuspend( #UPC );
+                // vTaskSuspend( #SWINGUP );
+                
+                /* Clear output voltage from any previous control task. */
+                dcm_set_output_volatage( 0.0f );
+
+                /* Change app state back to DEFAULT. */
+                app_current_state = DEFAULT;
+            }
+            else if( cart_position[ 0 ] > DANGER_ZONE_L_LOWER_LIMIT && cart_position[ 0 ] < OK_ZONE_LOWER_LIMIT )
+            {
+                /* DANGER_ZONE_L */
+                cart_current_zone = DANGER_ZONE_L;
+            }
+            else if( cart_position[ 0 ] > OK_ZONE_LOWER_LIMIT && cart_position[ 0 ] < DANGER_ZONE_R_LOWER_LIMIT )
+            {
+                /* OK_ZONE */
+                cart_current_zone = OK_ZONE;
+            }
+            else if( cart_position[ 0 ] > DANGER_ZONE_R_LOWER_LIMIT && cart_position[ 0 ] < FREEZING_ZONE_R_LOWER_LIMIT)
+            {
+                /* DANGER_ZONE_R */
+                cart_current_zone = DANGER_ZONE_R;
+            }
+            else if( cart_position[ 0 ] > FREEZING_ZONE_R_LOWER_LIMIT )
+            {
+                /* FREEZING_ZONE_R */
+                cart_current_zone = FREEZING_ZONE_R;
+
+                /* Turn off controllers tasks. */
+                vTaskSuspend( ctrl_3_FSF_downpos_task_handle );
+                // vTaskSuspend( #UPC );
+                // vTaskSuspend( #SWINGUP );
+
+                /* Clear output voltage from any previous control task. */
+                dcm_set_output_volatage( 0.0f );
+                
+                /* Change app state back to DEFAULT. */
+                app_current_state = DEFAULT;
+            }
+        }
+        
+        /* Limit switches. */
+        if( READ_ZERO_POSITION_REACHED )
+        {
+            /* Leftmost position reached (zero position). */
+
+            ZERO_POSITION_REACHED_h = 1;
+            MAX_POSITION_REACHED_h  = 0;
+
+            /* Set output voltage to zero. */
+            dcm_set_output_volatage( 0.0f );
+
+            /* Leftmost switch was closed, zero cart position encoder. */
+            dcm_enc_zero_counter();
+        }
+        else if( READ_MAX_POSITION_REACHED )
+        {
+            /* Rightmost position reached (max position). */
+
+            MAX_POSITION_REACHED_h  = 1;
+            ZERO_POSITION_REACHED_h = 0;
+            
+            /* Set output voltage to zero. */
             dcm_set_output_volatage( 0.0f );
         }
 
 
-        MAX_POSITION_REACHED = 0;
-        ZERO_POSITION_REACHED = 0;
+        MAX_POSITION_REACHED_h  = 0;
+        ZERO_POSITION_REACHED_h = 0;
 
         /* Task delay */
         vTaskDelayUntil( &xLastWakeTime, dt_watchdog );

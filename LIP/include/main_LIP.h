@@ -36,25 +36,41 @@
 #define READ_ZERO_POSITION_REACHED HAL_GPIO_ReadPin( limitSW_left_GPIO_Port, limitSW_left_Pin )
 #define READ_MAX_POSITION_REACHED HAL_GPIO_ReadPin( limitSW_right_GPIO_Port, limitSW_right_Pin )
 
-/* Sampling period and freeRTOS tasks priorities definitions. */ 
-#define dt                  10      // Sampling period in ms for controllers and util tasks,
-#define dt_inv              100.0f  // multiply by dt_inv instead of dividing by dt.
-#define dt_watchdog         10      // Sampling period in ms for watchdog task.
-#define dt_console          50      // Sampling period in ms for console task.
-#define dt_com              50      // Sampling period in ms for communication task.
-#define dt_cartworker       100     // Sampling period in ms for worker task.
+/* Sampling period in ms for controllers and util tasks. */
+#define dt                  10
+/* multiply by dt_inv instead of dividing by dt. */
+#define dt_inv              100.0f
+/* Sampling period in ms for watchdog task. 
+Don't make this value less than 50, it works pretty well as limit switch debouncer XD. */
+#define dt_watchdog         50
+/* Sampling period in ms for console task. */
+#define dt_console          50
+/* Sampling period in ms for communication task. */
+#define dt_com              50
+/* Sampling period in ms for worker task. */
+#define dt_cartworker       50
+/* Sampling period in ms for swingup task. 
+Don't change this value or swingup routing will not work properly. 
+Swingup output voltage lookup table was calculated with 10ms sampling period. */
+#define dt_swingup          10
 
-#define PRIORITY_WATCHDOG   4       // Priority for watchdog task.
-#define PRIORITY_UTIL       3       // Priority for util task - has to be the same as for controler task.
-#define PRIORITY_CTRL       3       // Priority for any controller task.
-#define PRIORITY_CONSOLE    2       // Priority for console task. 
-#define PRIORITY_COM        1       // Priority for communication task.
-#define PRIORITY_CARTWORKER 1       // Priority for cartworker task.
+/* Priority for watchdog task. */
+#define PRIORITY_WATCHDOG   4 
+/* Priority for util task - has to be the same as for controler task. */
+#define PRIORITY_UTIL       3 
+/* Priority for any controller task. */
+#define PRIORITY_CTRL       3 
+/* Priority for console task. */
+#define PRIORITY_CONSOLE    2 
+/* Priority for communication task. */
+#define PRIORITY_COM        1 
+/* Priority for cartworker task. */
+#define PRIORITY_CARTWORKER 1 
 
 /* For freertos config.
-If time slicing was used, task "watchdog", "util" and "controler" could take 
-a little bit more time to execute in their 10ms time period becouse of 
-more frequent context switching - leaving no time for "com" and "console" tasks. 
+If time slicing was used, task "watchdog", "util" and "controler" could take
+a little bit more time to execute in their 10ms time period becouse of
+more frequent context switching - leaving no time for "com" and "console" tasks.
 In setting with preemtion and no time slicing, context switching should happen
 only when one task with the same priority finished its work - less frequent.
 ANYWAY, BOTH WAYS WORK AS FOR NOW SO I'LL LEAVE TIME SLICING. LOL */

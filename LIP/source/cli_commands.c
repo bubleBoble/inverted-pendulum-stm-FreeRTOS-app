@@ -59,18 +59,24 @@ extern TaskHandle_t comTaskHandle;
 extern TaskHandle_t rawComTaskHandle;
 extern TaskHandle_t cartWorkerTaskHandle;
 extern TaskHandle_t ctrl_3_FSF_downpos_task_handle;
+extern TaskHandle_t swingup_task_handle;
 
 /* Global cart position and pendulum angle, defined in LIP_tasks_common.c */
 extern float cart_position[ 2 ];
 extern float pend_angle[ 2 ];
 
 /* Defined in LIP_tasks_common.c. This variable hold setpoint for cart position set by cli command "spcli".
-It is the default setpoint source used by all controllers tasks. When turning on any controller (dpc or upc),
-for safety reasons, value under this variable should be set to current cart position. */
-extern float cart_position_setpoint_cm_cli; 
+It is the default setpoint source used by all controllers tasks. When turning on any controller (dpc or upc). */
+extern float cart_position_setpoint_cm_cli_raw; 
+extern float cart_position_setpoint_cm_cli;
 
-/* Defined in LIP_tasks_common.c. Value under this variable is used as cart postion setpoint by all controller tasks. */
+/* Defined in LIP_tasks_common.c. This variable hold setpoint for cart position set by external potentiometer (ADC reading). */
+extern float cart_position_setpoint_cm_pot; 
+
+/* Defined in LIP_tasks_common.c. This variable is used as cart postion setpoint by all controller tasks. */
 extern float *cart_position_setpoint_cm;
+
+extern enum cart_position_zones cart_current_zone;
 
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  * CLI commands prototypes
@@ -164,7 +170,7 @@ static const CLI_Command_Definition_t commands_list[] =
         .pcCommand                      = ( const int8_t * const ) "sp",
         .pcHelpString                   = ( const int8_t * const ) "sp          :    Change cart possition setpoint source to CLI\r\n                 When run with no arguemnt display current cart position setpoint\r\n",
         .pxCommandInterpreter           = prvSPCommand,
-        .cExpectedNumberOfParameters    = 0
+        .cExpectedNumberOfParameters    = 1
     },
     {
         .pcCommand                      = ( const int8_t * const ) "swingup",
@@ -357,6 +363,7 @@ static portBASE_TYPE prvHomeCommand( int8_t *pcWriteBuffer, size_t xWriteBufferL
     return pdFALSE;
 }
 
+/* ADD FLAG FROM WATCHDOG TASK - INDICATE THAT CONTROLLER TASK CAN BE RESUMED, CART IS IN OK OR DANGER ZONE */
 /* [x] command: dpc */
 static portBASE_TYPE prvDpcCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
 {
@@ -387,41 +394,49 @@ static portBASE_TYPE prvDpcCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLe
     }
     else if( !strcmp( ( const char * ) pcParameter1, "on" ) || !strcmp( ( const char * ) pcParameter1, "1" ) )
     {
-        /* Controller turn on case. */
-        /* Even if controller is turned on, it will only work if the pendulum angle is in range [switch_angle_low, switch_angle_high]. */
-
-        /* Ensure that setpoint for cart postion from cli is the same as the setpoint used by controller tasks.
-        If it's not true, this means that the user changed source of cart pos. setpoint for controllers. */
-        if( cart_position_setpoint_cm == &cart_position_setpoint_cm_cli )
+        if( cart_current_zone != FREEZING_ZONE_L || cart_current_zone != FREEZING_ZONE_R )
         {
-            /* Set starting setpoint for cart position to its current position, so that the cart won't 
-            instantly jump when the controller is turned on. Main cart position setpoint
-            used by any controller task has to be the same as cart position set point from cli */
-            cart_position_setpoint_cm_cli = cart_position[ 1 ];
-            
-            if( app_current_state == DEFAULT )
+            /* Controller turn on case. */
+            /* Even if controller is turned on, it will only work if the pendulum angle is in range [switch_angle_low, switch_angle_high]. */
+
+            /* Ensure that setpoint for cart postion from cli is the same as the setpoint used by controller tasks.
+            If it's not true, this means that the user changed source of cart pos. setpoint for controllers. 
+            ALL CONTROLLER TASKS SHOULD BE TURNING ON WITH CART POS. SETPOINT SOURCE SET TO CLI, OTHERWISE DON'T TURN ON CONTROLLER. */
+            if( cart_position_setpoint_cm == &cart_position_setpoint_cm_cli )
             {
-                /* This command should only turn on "down position controller" when app/pendulum is in the DEFAULT state.
-                This means that it's not possible to use this command while app is in UNINITIALIZED, SWINGUP or UPPOSITION CONTROLLER state. */
+                // /* Set starting setpoint for cart position to its current position, so that the cart won't 
+                // instantly jump when the controller is turned on. Main cart position setpoint
+                // used by any controller task has to be the same as cart position set point from cli */
+                // cart_position_setpoint_cm_cli_raw = cart_position[ 0 ];
                 
-                /* Turn on down position controller, "dcp on" / "dpc 1" are both valid commands. */
-                vTaskResume( ctrl_3_FSF_downpos_task_handle );
-                
-                /* Change app state to "down position controller" state. 
-                This will ensure that some cli commands can't be called. */
-                app_current_state = DPC;
+                if( app_current_state == DEFAULT )
+                {
+                    /* This command should only turn on "down position controller" when app/pendulum is in the DEFAULT state.
+                    This means that it's not possible to use this command while app is in UNINITIALIZED, SWINGUP or UPPOSITION CONTROLLER state. */
+                    
+                    /* Turn on down position controller, "dcp on" / "dpc 1" are both valid commands. */
+                    vTaskResume( ctrl_3_FSF_downpos_task_handle );
+                    
+                    /* Change app state to "down position controller" state. 
+                    This will ensure that some cli commands can't be called. */
+                    app_current_state = DPC;
+                }
+            }
+            else
+            {
+                /* Prompt the use to change setpoint source to cli with "spcli" command. */
+                strcpy( ( char * ) pcWriteBuffer, "\r\nERROR: SET CART POSITION SETPOINT SOURCE TO CLI WITH COMMAND: spcli\r\n" );
             }
         }
         else
         {
-            /* Prompt the use to change setpoint source to cli with "spcli" command. */
-            strcpy( ( char * ) pcWriteBuffer, "\r\nERROR: SET CART POSITION SETPOINT SOURCE TO CLI WITH COMMAND: spcli\r\n" );
+            strcpy( ( char * ) pcWriteBuffer, "\r\nERROR: CAN'T TURN ON DPC, CART TOO CLOSE TO TRACK LIMITS\r\n" );
         }
     }
     else
     {
-        /* Command arguments was neither "on", "1", "off" or "0". */
-        strcpy( ( char * ) pcWriteBuffer, "ERROR: INVALID ARGUMENT, SHOULD BE: on, 1, off, 0\r\n" );
+        /* Command parameters were neither "on", "1", "off" or "0". */
+        strcpy( ( char * ) pcWriteBuffer, "ERROR: INVALID PARAMETER VALUE, SHOULD BE: on, 1, off, 0\r\n" );
     }
 
     return pdFALSE;
@@ -441,32 +456,107 @@ static portBASE_TYPE prvClcCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLe
     return pdFALSE;
 }
 
-/* [ ] command: sppot */
+/* [x] command: sppot */
 static portBASE_TYPE prvSPPOTCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
 {
     ( void ) pcCommandString;
     ( void ) xWriteBufferLen;
     configASSERT( pcWriteBuffer );
 
+    /* Set cart position setpoint source to external potentiometer. */
+    cart_position_setpoint_cm = &cart_position_setpoint_cm_pot;
+        
     return pdFALSE;
 }
 
-/* [ ] command: spcli */
+/* [x] command: spcli */
 static portBASE_TYPE prvSPCLICommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
 {
     ( void ) pcCommandString;
     ( void ) xWriteBufferLen;
     configASSERT( pcWriteBuffer );
 
+    /* Set cart position setpoint source to external potentiometer. */
+    cart_position_setpoint_cm = &cart_position_setpoint_cm_cli;
+
     return pdFALSE;
 }
 
-/* [ ] command: sp */
+/* [x] command: sp */
 static portBASE_TYPE prvSPCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
 {
     ( void ) pcCommandString;
     ( void ) xWriteBufferLen;
     configASSERT( pcWriteBuffer );
+
+    int8_t *pcParameter1;
+    BaseType_t xParameter1StringLength;
+    char* errCheck;
+
+    /* New setpoint for cart position. */
+    float new_setpoint;
+    
+    /* Get first command parameter. */
+    pcParameter1 = ( int8_t * ) FreeRTOS_CLIGetParameter( pcCommandString,          /* The command string itself. */
+                                                        1,                          /* Which parameter to return. */
+                                                        &xParameter1StringLength);  /* Store the parameter string length. */
+    
+    /* Terminate arguemnt string. */
+    pcParameter1[ xParameter1StringLength ] = 0x00;
+
+    if( !strcmp( ( const char * ) pcParameter1, "." ) )
+    {
+        /* Command "setpoint" was called with "." argument. 
+        Display current setpoint. */
+        if( cart_position_setpoint_cm == &cart_position_setpoint_cm_cli )
+        {
+            sprintf( ( char * ) pcWriteBuffer, "\r\nCurrent setpoint is: %f\r\nSource: CLI\r\n", ( double ) *cart_position_setpoint_cm );  
+        }
+        else
+        {
+            sprintf( ( char * ) pcWriteBuffer, "\r\nCurrent setpoint is: %f\r\nSource: POT\r\n", ( double ) *cart_position_setpoint_cm );            
+        }
+    }
+    else
+    {
+        if( app_current_state == DPC || app_current_state == UPC )
+        {
+            /* User should be able to change cart position setpoint only while in DPC or UPC control states.
+            In any other state, calling "sp" command with numeric argument should not be allowed.
+            While in default state, the value of cart position setpoint is constantly updated in LIP_util_task.c to current cart position,
+            so that when the down controller is turned on there won't be a jump in setpoint value. (cart_position_setpoint_cm_cli_raw) */
+     
+            /* Parameter passed to "sp" command was not ".". */
+            if( cart_position_setpoint_cm == &cart_position_setpoint_cm_cli )
+            {
+                /* Cart position setpoint source for controllers is setpoint from cli. */
+                
+                /* Parameter string to float. */
+                new_setpoint = strtof( ( const char * ) pcParameter1, &errCheck );
+                if( ( int8_t * ) errCheck == pcParameter1 ) 
+                {
+                    /* Parameter passed is not a number. */
+                    strcpy( ( char * ) pcWriteBuffer, ( const char * ) "\r\nERROR: sp PARAMETER HAS TO BE A NUMBER OR \".\"\r\n" );
+                }
+                else
+                {
+                    /* Parameter passed is a number, display new setpoint. */
+                    sprintf( ( char * ) pcWriteBuffer, "\r\nNew cart setpoint: %f\r\n", (double) new_setpoint );
+
+                    /* Write new setpoint to _raw cli setpoint (unfiltered). 
+                    cart_position_setpoint_cm_cli_raw acts as input to cart_position_setpoint_cm_cli low-pass filter.
+                    Low-pass filter is used for both setpoint sources to smooth out discontinous input. */
+                    cart_position_setpoint_cm_cli_raw = new_setpoint;
+                }
+            }
+            else
+            {
+                /* Main cart position setpoint source for controllers isn't setpoint from cli, command 
+                should throw an error. */
+                strcpy( ( char * ) pcWriteBuffer, "\r\nERROR: TO USE THIS COMMAND, SET SETPOINT SOURCE TO CLI.\r\n" );
+            }
+        }
+    }
 
     return pdFALSE;
 }
@@ -477,6 +567,8 @@ static portBASE_TYPE prvSWINGUPCommand( int8_t *pcWriteBuffer, size_t xWriteBuff
     ( void ) pcCommandString;
     ( void ) xWriteBufferLen;
     configASSERT( pcWriteBuffer );
+
+    
 
     return pdFALSE;
 }
@@ -521,7 +613,7 @@ static portBASE_TYPE prvVolCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLe
         voltageSetting = strtof( ( const char * )pcParameter1, &errCheck );
         if( ( int8_t * ) errCheck == pcParameter1 ) 
         {
-            strcpy( ( char * ) pcWriteBuffer, ( const char * ) "\r\nERROR: ARGUMENT HAS TO BE A NUMBER\r\n" );
+            strcpy( ( char * ) pcWriteBuffer, ( const char * ) "\r\nERROR: PARAMETER HAS TO BE A NUMBER\r\n" );
         }
         else
         {
@@ -556,5 +648,11 @@ static portBASE_TYPE prvBrCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen
     /* Set dc motor input voltage to zero. */
     dcm_set_output_volatage( 0.0f );
 
+    /* Change app state to DEFAULT. */
+    app_current_state = DEFAULT;
+
     return pdFALSE;
 }
+
+/* [ ] command: upc */
+

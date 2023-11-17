@@ -37,7 +37,7 @@ float cart_position_setpoint_cm_pot;     // low pass filtered
 /* Cart position setpoint set by cli command, range [0, 47] in cm.
 [ 0 ] is current, [ 1 ] is previous sample. */
 float cart_position_setpoint_cm_cli_raw = TRACK_LEN_MAX_CM/2.0f; // raw read
-float cart_position_setpoint_cm_cli;                             // low pass filtered
+float cart_position_setpoint_cm_cli     = TRACK_LEN_MAX_CM/2.0f; // low pass filtered
 
 /* This variable points to cart position setpoint from selected source, so either
 cart_position_setpoint_cm_pot or cart_position_setpoint_cm_cli. This setpoint is used
@@ -48,11 +48,10 @@ float *cart_position_setpoint_cm = &cart_position_setpoint_cm_cli;
 display purposes in serialoscilloscope. */
 float pendulum_arm_angle_setpoint_rad;
 
-/* Pendulum magnetic encoder reading at down position. Can sometimes be different if
-the pendulum shaft is forced to rotate inside a bearings. The default pendulum
-position is assumed to be down position, from control/model perspective down
+/* Pendulum magnetic encoder reading at down position. The default pendulum
+position is assumed to be down position, from control/model perspective, down
 position corresponds to PI radians, so PI has to be subtracted from initial reading and
-resultant value is offset that has to subtracted from each angle reading */
+resultant value is offset that has to subtracted from each angle reading. */
 float pend_init_angle_offset;
 
 /* lip_app_states enum instance, which indicates current LIP app state. */
@@ -63,8 +62,10 @@ enum lip_app_states app_current_state;
 0 - not calibrated. */
 uint8_t cart_position_calibrated = 0;
 
-/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+/* cart_position_zones enum instance, which indicates current cart position zone. */
+enum cart_position_zones cart_current_zone;
 
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 /* Watchdog task - protection for cart min and max positions and default always running task. */
 TaskHandle_t watchdogTaskHandle = NULL;
 StackType_t WATCHDOG_STACKBUFFER[ WATCHDOG_STACK_DEPTH ];
@@ -131,6 +132,11 @@ nonlinear cart position gain "tanh switching". */
 TaskHandle_t ctrl_5_FSF_uppos_task_handle = NULL;
 StackType_t ctrl_5_FSF_uppos_STACKBUFFER [ CTRL_5_FSF_UPPOS_STACK_DEPTH ];
 StaticTask_t ctrl_5_FSF_uppos_TASKBUFFER_TCB;
+
+/* Swingup, trajopt. */
+TaskHandle_t swingup_task_handle = NULL;
+StackType_t swingup_STACKBUFFER [ SWINGUP_STACK_DEPTH ];
+StaticTask_t swingup_TASKBUFFER_TCB;
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
 /* CREATE TASKS. */
@@ -188,15 +194,25 @@ void LIPcreateTasks()
     Full state feedback down position ctrl-er with "tanh switching" deadzone compensation 
     (nonlinear cart position gain). */
     ctrl_3_FSF_downpos_task_handle = xTaskCreateStatic( ctrl_3_FSF_downpos_task,
-                                                        (const char*) "Controller3DownPosTask",
+                                                        ( const char* ) "Controller3DownPosTask",
                                                         CTRL_3_FSF_DOWNPOS_STACK_DEPTH,
-                                                        (void *) 0,
+                                                        ( void * ) 0,
                                                         tskIDLE_PRIORITY+PRIORITY_CTRL,
                                                         ctrl_3_FSF_downpos_STACKBUFFER,
                                                         &ctrl_3_FSF_downpos_TASKBUFFER_TCB );
     /* All controller tasks are suspended right after their creation */  
     vTaskSuspend( ctrl_3_FSF_downpos_task_handle );
 
+    swingup_task_handle = xTaskCreateStatic( swingup_task,
+                                             ( const char * ) "trajOptSwingup", 
+                                             SWINGUP_STACK_DEPTH,
+                                             ( void * ) 0,
+                                             tskIDLE_PRIORITY+PRIORITY_CTRL,
+                                             swingup_STACKBUFFER,
+                                             &swingup_TASKBUFFER_TCB);
+    /* All controller tasks are suspended right after their creation */  
+    vTaskSuspend( swingup_task_handle );
+    
     /* Raw byte communication task. */
     // rawComTaskHandle = xTaskCreateStatic( rawComTask,
     //                                       (const char*) "RawCommunicationTask",
