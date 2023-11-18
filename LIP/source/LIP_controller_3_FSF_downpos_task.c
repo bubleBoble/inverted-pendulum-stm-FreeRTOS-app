@@ -22,7 +22,7 @@
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  */
 #include "LIP_tasks_common.h"
-#include "math.h"
+#include <math.h>
 
 /* These are defined in LIP_tasks_common.c */
 extern volatile uint16_t adc_data_pot;
@@ -33,6 +33,8 @@ extern float cart_speed[ 2 ];
 extern float *cart_position_setpoint_cm;
 extern float pendulum_arm_angle_setpoint_rad;
 extern enum cart_position_zones cart_current_zone;
+extern float number_of_pendulumarm_revolutions_dpc;
+extern float pendulum_angle_in_base_range_dpc;
 
 /* Angle setpoint for pendulum arm. Down position corresponds to 180 degrees or pi radians.
 Controller works with angle in radians. "BASE" postfix indicates that this setpoint is from
@@ -45,13 +47,6 @@ void ctrl_3_FSF_downpos_task( void *pvParameters )
 {
     /* For RTOS vTaskDelayUntil() */
     TickType_t xLastWakeTime = xTaskGetTickCount();
-
-    /* Holds number of pendulum full revolutions, negative number indicates
-    full revolution in counter clockwise direction. */
-    int32_t number_of_pendulumarm_revolutions = 0;
-
-    /* Holds pendulum arm angle in base range [0 2pi]. */
-    float pendulum_angle_in_base_range = 0.0f;
 
     /* Controller should turn on only if the angle is in range [switch_angle_low, switch_angle_high]. */
     float switch_angle_low  = 120.0f * PI / 180.0f;    // lower boundry in radians
@@ -75,7 +70,6 @@ void ctrl_3_FSF_downpos_task( void *pvParameters )
     float voltage_deadzone = 0.75f;
 
     float ctrl_signal = 0.0f;
-    float pend_angle_setpoint = PI;
 
     float cart_position_error = 0.0f;
     float cart_speed_error    = 0.0f;
@@ -90,27 +84,17 @@ void ctrl_3_FSF_downpos_task( void *pvParameters )
 
     for( ;; )
     {
-        /* Get number of revolutions. */
-        number_of_pendulumarm_revolutions = get_num_of_revolutions();
+        /* Calculate real pendulum angle setpoint from setpoint in base range [0, 2PI]. */
+        pendulum_arm_angle_setpoint_rad = PENDULUM_ANGLE_DOWN_SETPOINT_BASE + number_of_pendulumarm_revolutions_dpc * PI2;
 
-        /* Calculate pendulum arm angle in base range [0 2pi]. */
-        pendulum_angle_in_base_range = pend_angle[ 0 ] - ( float ) number_of_pendulumarm_revolutions * PI2;
-
-        if( switch_angle_low < pendulum_angle_in_base_range && switch_angle_high > pendulum_angle_in_base_range )
+        if( switch_angle_low < pendulum_angle_in_base_range_dpc && switch_angle_high > pendulum_angle_in_base_range_dpc )
         {
-            /* Controller should only work when pendulum arm angle is in range [switch_angle_low, pendulum_angle_in_base_range]. */
+            /* Controller should only work when pendulum arm angle is in range [switch_angle_low, switch_angle_high]. */
 
-            /* Get number of pendulum revolutions. */
-            number_of_pendulumarm_revolutions = get_num_of_revolutions();
-
-            /* Calculate real pendulum angle setpoint from setpoint in base range [0, 2PI]. */
-            pend_angle_setpoint = PENDULUM_ANGLE_DOWN_SETPOINT_BASE + (float) number_of_pendulumarm_revolutions * PI2;
-            pendulum_arm_angle_setpoint_rad = pend_angle_setpoint; // This variable is only for communication task.
-
-            /* Calculate state varialbes errors */
+            /* Calculate state variables errors. */
             cart_position_error =  *cart_position_setpoint_cm - cart_position[0];
             cart_speed_error    = - cart_speed[ 0 ];
-            pend_position_error =   pend_angle_setpoint - pend_angle[ 0 ];
+            pend_position_error =   pendulum_arm_angle_setpoint_rad - pend_angle[ 0 ];
             pend_speed_error    = - pend_speed[ 0 ];
 
             /* Calculate control signal contribution of each state variable error */
@@ -157,10 +141,10 @@ void ctrl_3_FSF_downpos_task( void *pvParameters )
                         ctrl_pend_speed_error;
 
             /* Lower control signal when cart in danger zone. */
-            if( cart_current_zone == DANGER_ZONE_L || cart_current_zone == DANGER_ZONE_R )
-            {
-                ctrl_signal /= 3;
-            }
+            // if( cart_current_zone == DANGER_ZONE_L || cart_current_zone == DANGER_ZONE_R )
+            // {
+            //     ctrl_signal /= 3;
+            // }
             // if( ( cart_position[0] < 5.0f ) || ( cart_position[0] > (TRACK_LEN_MAX_CM-5.0f) ) )
 
             /* Set calculated output voltage */
@@ -168,6 +152,7 @@ void ctrl_3_FSF_downpos_task( void *pvParameters )
         }
         else
         {
+            /* Angle not in specified range, output zero voltage. */
             dcm_set_output_volatage( 0.0f );
         }
 

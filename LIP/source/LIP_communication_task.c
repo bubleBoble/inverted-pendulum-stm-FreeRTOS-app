@@ -19,6 +19,10 @@ extern float cart_position[ 2 ];
 extern float cart_speed[ 2 ];
 extern float *cart_position_setpoint_cm;
 extern float pendulum_arm_angle_setpoint_rad;
+extern float number_of_pendulumarm_revolutions_dpc;
+extern float pendulum_angle_in_base_range_dpc;
+extern float number_of_pendulumarm_revolutions_upc;
+extern float pendulum_angle_in_base_range_upc;
 
 void comTask( void *pvParameters )
 {
@@ -33,21 +37,32 @@ void comTask( void *pvParameters )
     /* Task mainloop */
     for (;;)
     {
-        // if(  )
+        
+        /* 
+        number_of_pendulumarm_revolutions_dpc
+        pendulum_angle_in_base_range_dpc
+        number_of_pendulumarm_revolutions_upc
+        pendulum_angle_in_base_range_upc
+        pendulum_arm_angle_setpoint_rad
+        */
+
         /* Message content */
         sprintf( msg,
-                 "%f,%f,%f,%f,%f,%f,%f,%ld,%ld\r\n",
+                 "%f,%f,%f,%f,%f,%f,%f,%ld\r\n",
                  // for pendulum
-                 (double) pend_angle[ 0 ],
-                 (double) pend_speed[ 0 ],
-                 (double) pendulum_arm_angle_setpoint_rad,
+                 ( double ) pend_angle[ 0 ],
+                 ( double ) pendulum_arm_angle_setpoint_rad,
+                //  ( double ) pendulum_angle_in_base_range_upc,
+                //  ( double ) pendulum_angle_in_base_range_dpc,
+                 ( double ) pend_speed[ 0 ],
                  // for cart
-                 (double) cart_position[ 0 ],
-                 (double) cart_speed[ 0 ],
-                 (double) *cart_position_setpoint_cm,
+                 ( double ) cart_position[ 0 ],
+                 ( double ) cart_speed[ 0 ],
+                 ( double ) *cart_position_setpoint_cm,
                  //
-                 (double) dcm_get_output_voltage(),
-                 get_num_of_revolutions(),
+                 ( double ) dcm_get_output_voltage(),
+                //  ( double ) number_of_pendulumarm_revolutions_upc,
+                //  ( double ) number_of_pendulumarm_revolutions_dpc,
                  xLastWakeTime
         );
 

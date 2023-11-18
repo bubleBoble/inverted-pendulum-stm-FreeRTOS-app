@@ -9,8 +9,8 @@
  *       (swingup task - up position control task)
  * 
  * For safety reasons cart position zones were defined as:
- * FREEZING_ZONE_L    |    DANGER_ZONE_L    |    OK_ZONE           |    DANGER_ZONE_R        |    FREEZING_ZONE_R
- * (0cm - 4cm)	      |    (4cm - 6cm)      |    (6cm - 34.7cm)    |    (34.7cm - 36.7cm)    |    (36.7cm - 40.7cm)
+ * FREEZING_ZONE_L    |      OK_ZONE             |      FREEZING_ZONE_R
+ * (0cm - 4cm)	      |      (6cm - 34.7cm)      |      (36.7cm - 40.7cm)
  *
  * OK_ZONE           - Normal up/down controller working
  * DANGER_ZONE_L/R   - Control signal lowered
@@ -20,17 +20,23 @@
 
 /* Note: max cart run is 40.7cm */
 #define FREEZING_ZONE_L_LOWER_LIMIT     0.0f
-#define DANGER_ZONE_L_LOWER_LIMIT       4.0f
 #define OK_ZONE_LOWER_LIMIT             6.0f
-#define DANGER_ZONE_R_LOWER_LIMIT       34.7f
-#define FREEZING_ZONE_R_LOWER_LIMIT     36.7f
+#define FREEZING_ZONE_R_LOWER_LIMIT     (40.07f - 6.0f)
 
 /* Defined in LIP_tasks_common.c */
 extern enum lip_app_states app_current_state;
 extern float cart_position[ 2 ]; 
 extern enum cart_position_zones cart_current_zone;
+extern uint32_t bounceoff_resumed;
 
 extern TaskHandle_t ctrl_3_FSF_downpos_task_handle;
+extern TaskHandle_t bounceoff_task_handle;
+extern TaskHandle_t swingup_task_handle;
+
+extern uint32_t bounce_off_action_on;
+
+/* Defined in LIP_tasks_common.c. This flag indicates that the swingup task is running. */
+extern uint32_t swingup_task_resumed;
 
 void watchdogTask( void * pvParameters )
 {
@@ -50,7 +56,7 @@ void watchdogTask( void * pvParameters )
         /* Set flags for cart position zones while in DPC or UPC states. */
         if( app_current_state == UPC || app_current_state == DPC || app_current_state == SWINGUP )
         {
-            if( cart_position[ 0 ] < DANGER_ZONE_L_LOWER_LIMIT )
+            if( cart_position[ 0 ] < OK_ZONE_LOWER_LIMIT )
             {
                 /* FREEZING_ZONE_L */
                 cart_current_zone = FREEZING_ZONE_L;
@@ -58,28 +64,29 @@ void watchdogTask( void * pvParameters )
                 /* Turn off controllers tasks. */
                 vTaskSuspend( ctrl_3_FSF_downpos_task_handle );
                 // vTaskSuspend( #UPC );
-                // vTaskSuspend( #SWINGUP );
+                vTaskSuspend( swingup_task_handle );
                 
-                /* Clear output voltage from any previous control task. */
-                dcm_set_output_volatage( 0.0f );
+                if( bounce_off_action_on )
+                {
+                    /* Resume bounce off task. */
+                    if( ! bounceoff_resumed )
+                    {
+                        bounceoff_resumed = 1;
+                        vTaskResume( bounceoff_task_handle );
+                    }
+                }
+                else
+                {
+                    dcm_set_output_volatage( 0.0f );
+                }
 
                 /* Change app state back to DEFAULT. */
                 app_current_state = DEFAULT;
             }
-            else if( cart_position[ 0 ] > DANGER_ZONE_L_LOWER_LIMIT && cart_position[ 0 ] < OK_ZONE_LOWER_LIMIT )
-            {
-                /* DANGER_ZONE_L */
-                cart_current_zone = DANGER_ZONE_L;
-            }
-            else if( cart_position[ 0 ] > OK_ZONE_LOWER_LIMIT && cart_position[ 0 ] < DANGER_ZONE_R_LOWER_LIMIT )
+            else if( cart_position[ 0 ] > OK_ZONE_LOWER_LIMIT && cart_position[ 0 ] < FREEZING_ZONE_R_LOWER_LIMIT )
             {
                 /* OK_ZONE */
                 cart_current_zone = OK_ZONE;
-            }
-            else if( cart_position[ 0 ] > DANGER_ZONE_R_LOWER_LIMIT && cart_position[ 0 ] < FREEZING_ZONE_R_LOWER_LIMIT)
-            {
-                /* DANGER_ZONE_R */
-                cart_current_zone = DANGER_ZONE_R;
             }
             else if( cart_position[ 0 ] > FREEZING_ZONE_R_LOWER_LIMIT )
             {
@@ -89,11 +96,22 @@ void watchdogTask( void * pvParameters )
                 /* Turn off controllers tasks. */
                 vTaskSuspend( ctrl_3_FSF_downpos_task_handle );
                 // vTaskSuspend( #UPC );
-                // vTaskSuspend( #SWINGUP );
+                vTaskSuspend( swingup_task_handle );
 
-                /* Clear output voltage from any previous control task. */
-                dcm_set_output_volatage( 0.0f );
-                
+                if( bounce_off_action_on )
+                {
+                    /* Resume bounce off task. */
+                    if( ! bounceoff_resumed )
+                    {
+                        bounceoff_resumed = 1;
+                        vTaskResume( bounceoff_task_handle );
+                    }
+                }
+                else
+                {
+                    dcm_set_output_volatage( 0.0f );
+                }
+
                 /* Change app state back to DEFAULT. */
                 app_current_state = DEFAULT;
             }
@@ -127,6 +145,12 @@ void watchdogTask( void * pvParameters )
 
         MAX_POSITION_REACHED_h  = 0;
         ZERO_POSITION_REACHED_h = 0;
+
+        // /* Switching from swingup to up position controller. */
+        // if( swingup_task_resumed )
+        // {
+
+        // }
 
         /* Task delay */
         vTaskDelayUntil( &xLastWakeTime, dt_watchdog );

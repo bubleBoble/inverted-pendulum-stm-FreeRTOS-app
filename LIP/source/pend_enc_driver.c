@@ -82,11 +82,13 @@ int32_t pend_enc_get_cumulative_count( void )
     if ( ( last_count > 2048 ) && ( angle_raw < (last_count - 2048) ) )
     {
         cumulative_count = cumulative_count + 4096 - last_count + angle_raw;
+        // REMOVE IT
         num_of_revolutions += 1;
     }
     else if ( ( angle_raw > 2048 ) && ( last_count < ( angle_raw - 2048 ) ) )
     {
         cumulative_count = cumulative_count - 4096 - last_count + angle_raw;
+        // REMOVE IT
         num_of_revolutions -= 1;
     }
     else
@@ -98,7 +100,14 @@ int32_t pend_enc_get_cumulative_count( void )
     return cumulative_count;
 }
 
+int32_t pend_enc_get_base_count( void )
+{
+    as5600_get_raw_angle(&gs_handle, &angle_raw);
+    return angle_raw;
+}
+
 /* Get number of full pendulum revolutions, negative number indicates negative revolution. */
+// REMOVE IT
 int32_t get_num_of_revolutions( void )
 {
     return num_of_revolutions;

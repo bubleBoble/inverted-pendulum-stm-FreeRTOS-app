@@ -21,6 +21,7 @@
  *     dpc              -    Turn on/off down position controller, default cart pos. setpoint is current cart position
  *     upc              -    Turn on/off up position controller ??????????????????????????????????????????????????????
  *     swingup          -    Turn on pendulum swingup procedure
+ *     bounceoff        -    Turn on or off cart min max bounce off protection    
  * 
  * Note: commands callback functions change app state, which is indicated by
  * preprompt string in cli prompt ( (preprompt)>>> ). All logic related to
@@ -45,8 +46,9 @@
  * https://www.freertos.org/FreeRTOS-Plus/FreeRTOS_Plus_IO/Demo_Applications/LPCXpresso_LPC1769/NXP_LPC1769_Demo_Description.html
  */
 #include "main_LIP.h"
-#include "stdlib.h"     /* For strtox functions (string to float). */
+#include <stdlib.h>     /* For strtox functions (string to float). */
 #include <errno.h>      /* error numbers */
+#include "math.h"
 
 /* Keeps track of current app state, defined in LIP_tasks_common.c */
 extern enum lip_app_states app_current_state;
@@ -60,6 +62,7 @@ extern TaskHandle_t rawComTaskHandle;
 extern TaskHandle_t cartWorkerTaskHandle;
 extern TaskHandle_t ctrl_3_FSF_downpos_task_handle;
 extern TaskHandle_t swingup_task_handle;
+extern TaskHandle_t ctrl_5_FSF_uppos_task_handle;
 
 /* Global cart position and pendulum angle, defined in LIP_tasks_common.c */
 extern float cart_position[ 2 ];
@@ -76,7 +79,14 @@ extern float cart_position_setpoint_cm_pot;
 /* Defined in LIP_tasks_common.c. This variable is used as cart postion setpoint by all controller tasks. */
 extern float *cart_position_setpoint_cm;
 
+/* Defined in LIP_tasks_common.c. cart_position_zones enum instance, which indicates current cart position zone. */
 extern enum cart_position_zones cart_current_zone;
+
+/* Defined in LIP_tasks_common.c. This flag indicates that bounce off action on track min/max is on. */
+extern uint32_t bounce_off_action_on;
+
+/* Defined in LIP_tasks_common.c. This flag indicates that the swingup task is running. */
+extern uint32_t swingup_task_resumed;
 
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  * CLI commands prototypes
@@ -94,6 +104,9 @@ static portBASE_TYPE prvHomeCommand( int8_t *pcWriteBuffer, size_t xWriteBufferL
 /* Command to turn on or off down position controller,
 command : dpc */
 static portBASE_TYPE prvDpcCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
+/* Command to turn on or off up position controller,
+command : up */
+static portBASE_TYPE prvUpcCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
 /* Command to clear console screen, at least for putty,
 command : clc */
 static portBASE_TYPE prvClcCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
@@ -118,6 +131,8 @@ static portBASE_TYPE prvVolCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLe
 /* Command to brake the cart, sets dc motor output voltage instantly to zero,
 command: br <voltage_setting> */
 static portBASE_TYPE prvBrCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
+/* command: bounceoff */
+static portBASE_TYPE prvBounceOffCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  * CLI commands definition structures & registration
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -146,6 +161,12 @@ static const CLI_Command_Definition_t commands_list[] =
         .pcCommand                      = ( const int8_t * const ) "dpc",
         .pcHelpString                   = ( const int8_t * const ) "dpc         :    Turn on/off down position controller, default cart pos. setpoint is current cart position\r\n                 dpc on/off, or dpc 1/0, available only in DEFAULT state\r\n",
         .pxCommandInterpreter           = prvDpcCommand,
+        .cExpectedNumberOfParameters    = 1
+    },
+    {
+        .pcCommand                      = ( const int8_t * const ) "upc",
+        .pcHelpString                   = ( const int8_t * const ) "upc         :    Turn on/off up position controller, default cart pos. setpoint is current cart position\r\n                 dpc on/off, or dpc 1/0, available only in DEFAULT state\r\n",
+        .pxCommandInterpreter           = prvUpcCommand,
         .cExpectedNumberOfParameters    = 1
     },
     {
@@ -201,6 +222,12 @@ static const CLI_Command_Definition_t commands_list[] =
         .pcHelpString                   = ( const int8_t * const ) "br          :    Brake, sets output voltage to zero, suspend any active control task\r\n",
         .pxCommandInterpreter           = prvBrCommand,
         .cExpectedNumberOfParameters    = 0
+    },
+    {
+        .pcCommand                      = ( const int8_t * const ) "bo", 
+        .pcHelpString                   = ( const int8_t * const ) "bo          :    Turn on or off cart min max bounce off protection\r\n",
+        .pxCommandInterpreter           = prvBounceOffCommand,
+        .cExpectedNumberOfParameters    = 1
     },
     {
         .pcCommand = NULL
@@ -442,6 +469,84 @@ static portBASE_TYPE prvDpcCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLe
     return pdFALSE;
 }
 
+/* [ ] command: upc */
+static portBASE_TYPE prvUpcCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
+{
+    ( void ) pcCommandString;
+    ( void ) xWriteBufferLen;
+    configASSERT( pcWriteBuffer );
+
+    int8_t *pcParameter1;
+    BaseType_t xParameter1StringLength;
+
+    /* Get first command arguemnt. */
+    pcParameter1 = ( int8_t * ) FreeRTOS_CLIGetParameter( pcCommandString,            /* The command string itself. */
+                                                          1,                          /* Which parameter to return. */
+                                                          &xParameter1StringLength);  /* Store the parameter string length. */
+    
+    /* Terminate arguemnt string. */
+    pcParameter1[ xParameter1StringLength ] = 0x00;
+
+    if( !strcmp( ( const char * ) pcParameter1, "off" ) || !strcmp( ( const char * ) pcParameter1, "0" ) )
+    {
+        /* Controller Turn off case. */
+        /* Turn off controller, "upc off" / "upc 0" are both valid commands. */
+        vTaskSuspend( ctrl_5_FSF_uppos_task_handle );
+        dcm_set_output_volatage( 0.0f );
+        
+        /* Change current app state back to DEFAULT. */
+        app_current_state = DEFAULT;
+    }
+    else if( !strcmp( ( const char * ) pcParameter1, "on" ) || !strcmp( ( const char * ) pcParameter1, "1" ) )
+    {
+        if( cart_current_zone != FREEZING_ZONE_L || cart_current_zone != FREEZING_ZONE_R )
+        {
+            /* Controller turn on case. */
+            /* Even if controller is turned on, it will only work if the pendulum angle is in range [switch_angle_low, switch_angle_high]. */
+
+            /* Ensure that setpoint for cart postion from cli is the same as the setpoint used by controller tasks.
+            If it's not true, this means that the user changed source of cart pos. setpoint for controllers. 
+            ALL CONTROLLERS TASKS SHOULD BE TURNING ON WITH CART POS. SETPOINT SOURCE SET TO CLI, OTHERWISE DON'T TURN ON CONTROLLER. */
+            if( cart_position_setpoint_cm == &cart_position_setpoint_cm_cli )
+            {
+                // /* Set starting setpoint for cart position to its current position, so that the cart won't 
+                // instantly jump when the controller is turned on. Main cart position setpoint
+                // used by any controller task has to be the same as cart position set point from cli */
+                // cart_position_setpoint_cm_cli_raw = cart_position[ 0 ];
+                
+                if( app_current_state == DEFAULT )
+                {
+                    /* This command should only turn on "up position controller" when app is in the DEFAULT state.
+                    This means that it's not possible to use this command while app is in UNINITIALIZED, SWINGUP or DOWN POSITION CONTROLLER state. */
+                    
+                    /* Turn on up position controller, "upc on" / "upc 1" are both valid commands. */
+                    vTaskResume( ctrl_5_FSF_uppos_task_handle );
+                    
+                    /* Change app state to "down position controller" state. 
+                    This will ensure that some cli commands can't be called. */
+                    app_current_state = UPC;
+                }
+            }
+            else
+            {
+                /* Prompt the use to change setpoint source to cli with "spcli" command. */
+                strcpy( ( char * ) pcWriteBuffer, "\r\nERROR: SET CART POSITION SETPOINT SOURCE TO CLI WITH COMMAND: spcli\r\n" );
+            }
+        }
+        else
+        {
+            strcpy( ( char * ) pcWriteBuffer, "\r\nERROR: CAN'T TURN ON UPC, CART TOO CLOSE TO TRACK LIMITS\r\n" );
+        }
+    }
+    else
+    {
+        /* Command parameters were neither "on", "1", "off" or "0". */
+        strcpy( ( char * ) pcWriteBuffer, "ERROR: INVALID PARAMETER VALUE, SHOULD BE: on, 1, off, 0\r\n" );
+    }
+
+    return pdFALSE;
+}
+
 /* [x] command: clc */
 static portBASE_TYPE prvClcCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
 {
@@ -568,7 +673,20 @@ static portBASE_TYPE prvSWINGUPCommand( int8_t *pcWriteBuffer, size_t xWriteBuff
     ( void ) xWriteBufferLen;
     configASSERT( pcWriteBuffer );
 
-    
+    if( app_current_state == DEFAULT && fabs( cart_position[ 0 ] - 20 ) < 1 )
+    {
+        /* App is in DEFAULT STATE and cart position is at position 20cm pm 1cm.
+        Swingup can be started. */
+        vTaskResume( swingup_task_handle );
+        swingup_task_resumed = 1;
+        
+        /* Change app state to swingup. */
+        app_current_state = SWINGUP;
+    }
+    else
+    {
+        strcpy( ( char * ) pcWriteBuffer, "ERROR: APP NOT IN DEFAULT STATE OR CART POSITION NOT 20cm\r\n" );
+    }
 
     return pdFALSE;
 }
@@ -639,11 +757,11 @@ static portBASE_TYPE prvBrCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen
     configASSERT( pcWriteBuffer );
 
     /* Suspend any control task. Calls to vTaskSuspend are not cumulative 
-    so it can be used with task which is already suspended and one vTaskResume will
+    so it can be used on task which is already suspended and one vTaskResume will
     be enoguh to bring that task back to work. */
     vTaskSuspend( ctrl_3_FSF_downpos_task_handle );
-    // vTaskSuspend( UP_POSITION_CONTROL_TASK );
-    // vTaskSuspend( SWINGUP_TASK );
+    vTaskSuspend( ctrl_5_FSF_uppos_task_handle );
+    vTaskSuspend( swingup_task_handle );
 
     /* Set dc motor input voltage to zero. */
     dcm_set_output_volatage( 0.0f );
@@ -654,5 +772,35 @@ static portBASE_TYPE prvBrCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen
     return pdFALSE;
 }
 
-/* [ ] command: upc */
+/* [x] command: bo (bounceoff) 
+Avaliable in: ALL STATES. */
+static portBASE_TYPE prvBounceOffCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
+{
+    ( void ) pcCommandString;
+    ( void ) xWriteBufferLen;
+    configASSERT( pcWriteBuffer );
+
+    int8_t *pcParameter1;
+    BaseType_t xParameter1StringLength;
+
+    /* Get first command argument. */
+    pcParameter1 = ( int8_t * ) FreeRTOS_CLIGetParameter( pcCommandString,            /* The command string itself. */
+                                                          1,                          /* Which parameter to return. */
+                                                          &xParameter1StringLength);  /* Store the parameter string length. */
+    
+    /* Terminate argumesnt string. */
+    pcParameter1[ xParameter1StringLength ] = 0x00;
+
+    if( !strcmp( ( const char * ) pcParameter1, "off" ) || !strcmp( ( const char * ) pcParameter1, "0" ) )
+    {
+        bounce_off_action_on = 0;
+    }
+    else if( !strcmp( ( const char * ) pcParameter1, "on" ) || !strcmp( ( const char * ) pcParameter1, "1" ) )
+    {
+        bounce_off_action_on = 1;
+    }
+
+    return pdFALSE;
+}
+
 

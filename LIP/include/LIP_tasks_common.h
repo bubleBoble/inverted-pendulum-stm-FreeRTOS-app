@@ -39,9 +39,7 @@ enum lip_app_states
 enum cart_position_zones
 {
     FREEZING_ZONE_R,
-    DANGER_ZONE_R,
     OK_ZONE,
-    DANGER_ZONE_L,
     FREEZING_ZONE_L
 };
 #endif // CART_POSITION_ZONE_FLAGS
@@ -116,6 +114,10 @@ void ctrl_5_FSF_uppos_task( void *pvParameters );
 void swingup_task( void *pvParameters );
 #define SWINGUP_STACK_DEPTH 500
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
+/* Bounce off task. */
+void bounceoff_task( void *pvParameters );
+#define BOUNCEOFF_STACK_DEPTH 500
 
 /* Function to create tasks. */
 void LIPcreateTasks(void);

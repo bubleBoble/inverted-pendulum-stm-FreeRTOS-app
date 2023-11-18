@@ -41,7 +41,7 @@
 /* multiply by dt_inv instead of dividing by dt. */
 #define dt_inv              100.0f
 /* Sampling period in ms for watchdog task. 
-Don't make this value less than 50, it works pretty well as limit switch debouncer XD. */
+Don't make this value less than 100, it works pretty well as limit switch debouncer XD. */
 #define dt_watchdog         50
 /* Sampling period in ms for console task. */
 #define dt_console          50

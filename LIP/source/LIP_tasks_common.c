@@ -48,6 +48,15 @@ float *cart_position_setpoint_cm = &cart_position_setpoint_cm_cli;
 display purposes in serialoscilloscope. */
 float pendulum_arm_angle_setpoint_rad;
 
+/* Holds number of pendulum full revolutions, negative number indicates
+full revolution in counter clockwise direction. */
+float number_of_pendulumarm_revolutions_dpc; // for dpc
+float number_of_pendulumarm_revolutions_upc; // for upc
+
+/* Pendulum arm angle in base range [0, 2pi]. */
+float pendulum_angle_in_base_range_dpc; // for dpc
+float pendulum_angle_in_base_range_upc; // for upc
+
 /* Pendulum magnetic encoder reading at down position. The default pendulum
 position is assumed to be down position, from control/model perspective, down
 position corresponds to PI radians, so PI has to be subtracted from initial reading and
@@ -65,6 +74,14 @@ uint8_t cart_position_calibrated = 0;
 /* cart_position_zones enum instance, which indicates current cart position zone. */
 enum cart_position_zones cart_current_zone;
 
+/* This flag indicates that bounceoff task was resumed and is probably running. */
+uint32_t bounceoff_resumed = 0;
+
+/* This flag indicates that bounce off action on track min/max is on. */
+uint32_t bounce_off_action_on = 0;
+
+/* This flah indicates that the swingup task is running. */
+uint32_t swingup_task_resumed = 0;
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 /* Watchdog task - protection for cart min and max positions and default always running task. */
 TaskHandle_t watchdogTaskHandle = NULL;
@@ -137,13 +154,19 @@ StaticTask_t ctrl_5_FSF_uppos_TASKBUFFER_TCB;
 TaskHandle_t swingup_task_handle = NULL;
 StackType_t swingup_STACKBUFFER [ SWINGUP_STACK_DEPTH ];
 StaticTask_t swingup_TASKBUFFER_TCB;
+
+/* Bounce off task */
+TaskHandle_t bounceoff_task_handle = NULL;
+StackType_t bounceoff_STACKBUFFER [ BOUNCEOFF_STACK_DEPTH ];
+StaticTask_t bounceoff_TASKBUFFER_TCB;
+
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
 /* CREATE TASKS. */
 void LIPcreateTasks()
 {
     watchdogTaskHandle = xTaskCreateStatic( watchdogTask,
-                                            (const char*) "WatchdogTask",
+                                            (const char*) "Watchdog",
                                             WATCHDOG_STACK_DEPTH,
                                             (void *) 0,
                                             tskIDLE_PRIORITY+PRIORITY_WATCHDOG,
@@ -152,7 +175,7 @@ void LIPcreateTasks()
 
     /* Task that implements FreeRTOS console functionality */
     consoleTaskHandle = xTaskCreateStatic( vCommandConsoleTask,
-                                           (const char*) "ConsoleTask",
+                                           (const char*) "Console",
                                            CONSOLE_STACKDEPTH,
                                            (void *) 0,
                                            tskIDLE_PRIORITY+PRIORITY_CONSOLE,
@@ -161,7 +184,7 @@ void LIPcreateTasks()
 
     /* State variables are calculated here. */
     utilTaskHandle = xTaskCreateStatic( utilTask,
-                                        (const char*) "UtilTask",
+                                        (const char*) "Util",
                                         UTIL_STACK_DEPTH,
                                         (void *) 0,
                                         tskIDLE_PRIORITY+PRIORITY_UTIL,
@@ -171,7 +194,7 @@ void LIPcreateTasks()
 
     /* Human readable communication - for serialoscilloscope. */
     comTaskHandle = xTaskCreateStatic( comTask,
-                                       (const char*) "CommunicationTask",
+                                       (const char*) "Communication",
                                        COM_STACK_DEPTH,
                                        (void *) 0,
                                        tskIDLE_PRIORITY+PRIORITY_COM,
@@ -183,7 +206,7 @@ void LIPcreateTasks()
     /* Worker task - this tas is only active when command "zero" or "home" are called.
     Its purpose is to move the cart without any controller. */
     cartWorkerTaskHandle = xTaskCreateStatic( cartWorkerTask,
-                                       (const char*) "CartWorkerTask",
+                                       (const char*) "CartWorker",
                                        CARTWORKER_STACK_DEPTH,
                                        (void *) 0,
                                        tskIDLE_PRIORITY+PRIORITY_CARTWORKER,
@@ -194,25 +217,45 @@ void LIPcreateTasks()
     Full state feedback down position ctrl-er with "tanh switching" deadzone compensation 
     (nonlinear cart position gain). */
     ctrl_3_FSF_downpos_task_handle = xTaskCreateStatic( ctrl_3_FSF_downpos_task,
-                                                        ( const char* ) "Controller3DownPosTask",
+                                                        ( const char* ) "DownPosCtrl",
                                                         CTRL_3_FSF_DOWNPOS_STACK_DEPTH,
                                                         ( void * ) 0,
                                                         tskIDLE_PRIORITY+PRIORITY_CTRL,
                                                         ctrl_3_FSF_downpos_STACKBUFFER,
                                                         &ctrl_3_FSF_downpos_TASKBUFFER_TCB );
-    /* All controller tasks are suspended right after their creation */  
+    /* All controller tasks are suspended right after their creation. */  
     vTaskSuspend( ctrl_3_FSF_downpos_task_handle );
 
     swingup_task_handle = xTaskCreateStatic( swingup_task,
-                                             ( const char * ) "trajOptSwingup", 
+                                             ( const char * ) "SwingupOpt", 
                                              SWINGUP_STACK_DEPTH,
                                              ( void * ) 0,
                                              tskIDLE_PRIORITY+PRIORITY_CTRL,
                                              swingup_STACKBUFFER,
                                              &swingup_TASKBUFFER_TCB);
-    /* All controller tasks are suspended right after their creation */  
+    /* All controller tasks are suspended right after their creation. */  
     vTaskSuspend( swingup_task_handle );
+
+    bounceoff_task_handle = xTaskCreateStatic( bounceoff_task,
+                                               ( const char * ) "BounceOff", 
+                                               BOUNCEOFF_STACK_DEPTH,
+                                               ( void * ) 0,
+                                               tskIDLE_PRIORITY+PRIORITY_CTRL,
+                                               bounceoff_STACKBUFFER,
+                                               &bounceoff_TASKBUFFER_TCB);
+    /* Bounce off task is resumed only in case of emergency. */  
+    vTaskSuspend( bounceoff_task_handle );
     
+    ctrl_5_FSF_uppos_task_handle = xTaskCreateStatic( ctrl_5_FSF_uppos_task,
+                                                      (const char*) "UpPosCtrl",
+                                                      CTRL_5_FSF_UPPOS_STACK_DEPTH,
+                                                      (void *) 0,
+                                                      tskIDLE_PRIORITY+3,
+                                                      ctrl_5_FSF_uppos_STACKBUFFER,
+                                                      &ctrl_5_FSF_uppos_TASKBUFFER_TCB );
+    /* All controller tasks are suspended right after their creation. */  
+    vTaskSuspend( ctrl_5_FSF_uppos_task_handle );
+
     /* Raw byte communication task. */
     // rawComTaskHandle = xTaskCreateStatic( rawComTask,
     //                                       (const char*) "RawCommunicationTask",

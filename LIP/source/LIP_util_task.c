@@ -3,21 +3,28 @@
  * linear inverted pendulum. Controller keeps pendulum in down position
  *
  * This task is used to:
- *    1. Read dcm encoder,
- *    2. Read pendulum magnetic encoder
- *    3. Calculate derivatives of cart position and pend angular position
- *    4. Calculate cart position setpoint from adc potentiometer reading
+ *     1. Read dcm encoder,
+ *     2. Read pendulum magnetic encoder
+ *     3. Calculate derivatives of cart position and pend angular position
+ *     4. Calculate cart position setpoint from adc potentiometer reading
+ *     5. Calculate number of pendulum arm full revolutions
  *
+ * Note about modulus:
+ *     Calculate pendulum arm angle in base range [0 2pi]. This method uses modulus operation but implemented as
+ *     "floored division" rather than "truncated division" implemented in math.h in mod, fmod, fmodf etc. 
+ *     More info about modulus operation: https://en.wikipedia.org/wiki/Modulo#In_programming_languages 
+ *     Graph: https://www.desmos.com/calculator/qaacl2m3cu 
+ * 
  * This task writes to the following global variables:
- *         state variable              |  variable name in prog         |  unit
- *         --------------------------------------------------------------------------------
- *         Cart position:              |  cart_position[ 0 ]            |  cm
- *         Cart speed:                 |  cart_speed (filtered)         |  cm/sec
- *         Pendulum angle:             |  angle[ 0 ]                    |  rad
- *         Pendulum speed:             |  pend_speed (filtered)         |  rad/sec
- *         --------------------------------------------------------------------------------
- *         cart position setpoint pot  |  cart_position_cm_setpoint_pot |  cm
- *         cart position setpoint cli  |  cart_position_cm_setpoint_cli |  cm
+ *     state variable              |  variable name in prog         |  unit
+ *     --------------------------------------------------------------------------------
+ *     Cart position:              |  cart_position[ 0 ]            |  cm
+ *     Cart speed:                 |  cart_speed (filtered)         |  cm/sec
+ *     Pendulum angle:             |  angle[ 0 ]                    |  rad
+ *     Pendulum speed:             |  pend_speed (filtered)         |  rad/sec
+ *     --------------------------------------------------------------------------------
+ *     cart position setpoint pot  |  cart_position_cm_setpoint_pot |  cm
+ *     cart position setpoint cli  |  cart_position_cm_setpoint_cli |  cm
  *
  * Poll the pnedulum encoder at least 3 times per full revolution
  *
@@ -30,6 +37,7 @@
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  */
 #include "LIP_tasks_common.h"
+#include <math.h>
 
 /* These are defined in LIP_tasks_common.c */
 extern volatile uint16_t adc_data_pot;
@@ -45,6 +53,10 @@ extern float cart_position_setpoint_cm_cli_raw;
 extern float cart_position_setpoint_cm_cli;
 extern float pend_init_angle_offset;
 extern enum lip_app_states app_current_state;
+extern float number_of_pendulumarm_revolutions_dpc;
+extern float pendulum_angle_in_base_range_dpc;
+extern float number_of_pendulumarm_revolutions_upc;
+extern float pendulum_angle_in_base_range_upc;
 
 void utilTask( void *pvParameters )
 {
@@ -73,7 +85,8 @@ void utilTask( void *pvParameters )
     {
         /* Pendulum magnetic encoder reading */
         pend_angle[ 1 ] = pend_angle[ 0 ];
-        pend_angle[ 0 ] = (float) pend_enc_get_cumulative_count() / 4096.0f * PI2 - pend_init_angle_offset;
+        pend_angle[ 0 ] = ( float ) pend_enc_get_cumulative_count() / 4096.0f * PI2 - pend_init_angle_offset;
+        // pend_angle[ 0 ] = ( float ) pend_enc_get_base_count() / 4096.0f * PI2 - pend_init_angle_offset;
 
         /* --------- Derivatives --------- */
         /* Pendulum angular speed calculation - backward Euler method */
@@ -137,6 +150,42 @@ void utilTask( void *pvParameters )
             turning on down position controller. */
             cart_position_setpoint_cm_cli_raw = cart_position[ 0 ];
         }
+
+        /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+         * For DPC - Angle switching in up position - switching in down position would generate
+         * discontinuities in values of angle setpoint. 
+         * 
+         * This method uses modulus operation but implemented as
+         * "floored division" rather than "truncated division" implemented in math.h in mod, fmod, fmodf etc. 
+         * More info about modulus operation: https://en.wikipedia.org/wiki/Modulo#In_programming_languages 
+         * Graph: https://www.desmos.com/calculator/qaacl2m3cu  
+         * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+         */
+
+        /* Calculate number of revolutions with floored division. */
+        number_of_pendulumarm_revolutions_dpc = floorf( pend_angle[ 0 ] / PI2 );
+        
+        /* Calculate pendulum angle in base range [0, 2PI].
+        This range stays the same as original range in the model, so that pendulum angle of 180 degree
+        or PI radians still corresponds to down position. */
+        pendulum_angle_in_base_range_dpc = pend_angle[ 0 ] - PI2 * number_of_pendulumarm_revolutions_dpc;
+
+
+        /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+         * For UPC - Angle switching in down position - switching on top would generate
+         * discontinuities in values of angle setpoint. 
+         * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+         */
+    
+        /* Calculate number of revolutions with floored division. 
+        Note: +1 because when pendulum starts in down position, transition to up position in CCW direction
+        counts as negative revolution adding one compensates for that. */
+        number_of_pendulumarm_revolutions_upc = floorf( ( pend_angle[ 0 ] - PI ) / PI2 ) + 1;
+        
+        /* Calculate pendulum angle in base range [-PI, PI]. 
+        This range is changed to [-PI, PI], so that pendulum angle of zero degree corresponds to up position
+        and there is no discontinuity around zero degree angle. */
+        pendulum_angle_in_base_range_upc = pend_angle[ 0 ] - PI2 * number_of_pendulumarm_revolutions_upc;
 
         /* Task delay */
         vTaskDelayUntil( &xLastWakeTime, dt );

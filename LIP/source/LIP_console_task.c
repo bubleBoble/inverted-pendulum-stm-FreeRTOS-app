@@ -35,6 +35,8 @@ char no_prePrompt[]              = "[       ?       ]";
 char uninitState_prePrompt[]     = "[ uninitialzied ]";
 char defaultState_prePrompt[]    = "[    default    ]";
 char dpcState_prePrompt[]        = "[      dpc      ]";
+char upcState_prePrompt[]        = "[      upc      ]";
+char swingupState_prePrompt[]    = "[    swingup    ]";
 
 /* Function to print full prompt with preprompt string which indicates current app state. */
 void show_prompt( void )
@@ -50,6 +52,14 @@ void show_prompt( void )
     else if ( app_current_state == DPC )
     {
         prompt.prePromptStr = dpcState_prePrompt;
+    }
+    else if ( app_current_state == UPC )
+    {
+        prompt.prePromptStr = upcState_prePrompt;
+    }
+    else if ( app_current_state == SWINGUP )
+    {
+        prompt.prePromptStr = swingupState_prePrompt;
     }
     else
     {

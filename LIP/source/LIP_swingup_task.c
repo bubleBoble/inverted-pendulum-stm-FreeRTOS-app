@@ -27,13 +27,13 @@ extern enum cart_position_zones cart_current_zone;
 /* Keeps track of current app state, defined in LIP_tasks_common.c */
 extern enum lip_app_states app_current_state;
 
+/* Defined in LIP_tasks_common.c. This flag indicates that the swingup task is running. */
+extern uint32_t swingup_task_resumed;
+
 void swingup_task( void *pvParameters )
 {
     /* For RTOS vTaskDelayUntil(). */
     TickType_t xLastWakeTime = xTaskGetTickCount();
-
-    // /* Flag to indicate first iteration of task main loop. */
-    // uint32_t first_loop_iter = 1;
 
     /* Index for swingup_control lookup table. */
     uint32_t lookup_index = 0;
@@ -42,6 +42,7 @@ void swingup_task( void *pvParameters )
     {
         if( lookup_index < 301 )
         {
+            xLastWakeTime = xTaskGetTickCount();
             /* Use the values from swingup_control lookup table to set
             dc motor voltage. */
             dcm_set_output_volatage( swingup_control[ lookup_index ] );
@@ -53,9 +54,17 @@ void swingup_task( void *pvParameters )
         else
         {
             /* No more data in lookup table.
-            set zero voltage, reset lookup_index to zero and suspend this task. */
+            set zero voltage. */
             dcm_set_output_volatage( 0.0f );
+            
+            /* Reset lookup_index so that it can be used later again. */
             lookup_index = 0;
+
+            /* If this task wasn't suspended ealier it means that up position controller didn't take over control 
+            and app is in DEFAULT state. */
+            app_current_state = DEFAULT;
+
+            /* Suspend this task. */
             vTaskSuspend( NULL );
         }
     }
