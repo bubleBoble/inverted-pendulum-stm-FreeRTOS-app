@@ -31,17 +31,17 @@ extern float pend_speed[ 2 ];
 extern float cart_position[ 2 ];
 extern float cart_speed[ 2 ];
 extern float *cart_position_setpoint_cm;
-extern float pendulum_arm_angle_setpoint_rad;
 extern enum cart_position_zones cart_current_zone;
 extern float number_of_pendulumarm_revolutions_dpc;
 extern float pendulum_angle_in_base_range_dpc;
+extern float pendulum_arm_angle_setpoint_rad_dpc;
 
-/* Angle setpoint for pendulum arm. Down position corresponds to 180 degrees or pi radians.
-Controller works with angle in radians. "BASE" postfix indicates that this setpoint is from
-base angle range [0, 2PI]. Because pendulum arm can make many full revolutions,
-angles PI, 3PI, 5PI and so on, all correspond to the same down position, angle setpoint needs
-to be changed accordingly. */
-#define PENDULUM_ANGLE_DOWN_SETPOINT_BASE PI
+#ifdef COM_SEND_CTRL_DEBUG
+    extern float ctrl_xw;
+    extern float ctrl_th;
+    extern float ctrl_Dx;
+    extern float ctrl_Dt;
+#endif
 
 void ctrl_3_FSF_downpos_task( void *pvParameters )
 {
@@ -49,8 +49,8 @@ void ctrl_3_FSF_downpos_task( void *pvParameters )
     TickType_t xLastWakeTime = xTaskGetTickCount();
 
     /* Controller should turn on only if the angle is in range [switch_angle_low, switch_angle_high]. */
-    float switch_angle_low  = 120.0f * PI / 180.0f;    // lower boundry in radians
-    float switch_angle_high = 240.0f * PI / 180.0f;    // upper boundry in radians
+    float switch_angle_low  = 110.0f * PI / 180.0f;    // lower boundry in radians
+    float switch_angle_high = 250.0f * PI / 180.0f;    // upper boundry in radians
 
     /* Down position gains, u = F*(x_setpoint - x)
     gains[0] - cart position error gain, units: V/cm
@@ -84,9 +84,6 @@ void ctrl_3_FSF_downpos_task( void *pvParameters )
 
     for( ;; )
     {
-        /* Calculate real pendulum angle setpoint from setpoint in base range [0, 2PI]. */
-        pendulum_arm_angle_setpoint_rad = PENDULUM_ANGLE_DOWN_SETPOINT_BASE + number_of_pendulumarm_revolutions_dpc * PI2;
-
         if( switch_angle_low < pendulum_angle_in_base_range_dpc && switch_angle_high > pendulum_angle_in_base_range_dpc )
         {
             /* Controller should only work when pendulum arm angle is in range [switch_angle_low, switch_angle_high]. */
@@ -94,7 +91,7 @@ void ctrl_3_FSF_downpos_task( void *pvParameters )
             /* Calculate state variables errors. */
             cart_position_error =  *cart_position_setpoint_cm - cart_position[0];
             cart_speed_error    = - cart_speed[ 0 ];
-            pend_position_error =   pendulum_arm_angle_setpoint_rad - pend_angle[ 0 ];
+            pend_position_error =   pendulum_arm_angle_setpoint_rad_dpc - pend_angle[ 0 ];
             pend_speed_error    = - pend_speed[ 0 ];
 
             /* Calculate control signal contribution of each state variable error */
@@ -132,6 +129,13 @@ void ctrl_3_FSF_downpos_task( void *pvParameters )
 
             /* Pendulum speed error control signal component. */
             ctrl_pend_speed_error    = pend_speed_error * gains[3];
+
+            #ifdef COM_SEND_CTRL_DEBUG
+                ctrl_xw = ctrl_cart_position_error;
+                ctrl_th = ctrl_pend_angle_error;
+                ctrl_Dx = ctrl_cart_speed_error;
+                ctrl_Dt = ctrl_pend_speed_error;
+            #endif
 
             /* Regular controller update - with constant gains
             control signal = ( state_setpoint - state ) * ( F ) */

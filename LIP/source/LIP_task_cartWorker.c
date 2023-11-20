@@ -6,18 +6,18 @@
 #include "limits.h"
 
 /* Voltage value used to move cart without any controller. */
-#define IDLE_MOVEMENTS_VOLTAGE 2.0f
+#define IDLE_MOVEMENTS_VOLTAGE 1.65f
 
-/* Keeps track of current app state. */
+/* Defined in LIP_tasks_common.c */
 extern enum lip_app_states app_current_state;
-
-/* Global cart position variable, defined in LIP_tasks_common.c */
 extern float cart_position[ 2 ];
-
-/* Cart position setpoint, independent of currenlty selected setpoint source. 
-defined in LIP_tasks_common.c */
 extern float *cart_position_setpoint_cm;
 extern float cart_position_setpoint_cm_cli_raw;
+extern uint32_t reset_home;
+
+extern TaskHandle_t cartWorkerTaskHandle;
+
+void set_output_voltage_nobounce( float voltage );
 
 void cartWorkerTask( void * pvParameters )
 {
@@ -40,7 +40,10 @@ void cartWorkerTask( void * pvParameters )
             /* App is uninitialized state and cart is already in zero position OR
             app is in default state (cart position calibrated). 
             Move cart to the right until track center reached. */
-            dcm_set_output_volatage( IDLE_MOVEMENTS_VOLTAGE );
+            
+            /* Debouncing. */
+            set_output_voltage_nobounce( IDLE_MOVEMENTS_VOLTAGE );
+            
             while( cart_position[ 0 ] < TRACK_LEN_MAX_CM/2 * 0.98f )
             {
                 vTaskDelay( dt_cartworker );
@@ -54,7 +57,10 @@ void cartWorkerTask( void * pvParameters )
         {
             /* App is in default state(cart position calibrated).
             Move cart to the left until center position reached. */
-            dcm_set_output_volatage( -IDLE_MOVEMENTS_VOLTAGE );
+            
+            /* Debouncing. */
+            set_output_voltage_nobounce( -IDLE_MOVEMENTS_VOLTAGE );
+            
             while( cart_position[ 0 ] > TRACK_LEN_MAX_CM/2 * 1.02f )
             {
                 vTaskDelay( dt_cartworker );
@@ -65,15 +71,20 @@ void cartWorkerTask( void * pvParameters )
         {
             // com_send( "\r\ngowno nie dziala\r\n", 20 ); // message used for debugging, in polish it means: "this shit doesn't work"
             /* App is in uninitialized state and cart position has to be calibrated. */
-            dcm_set_output_volatage( -IDLE_MOVEMENTS_VOLTAGE );
+            
+            /* Debouncing. */
+            set_output_voltage_nobounce( -IDLE_MOVEMENTS_VOLTAGE );
+            
             while( ! READ_ZERO_POSITION_REACHED )
             {
                 /* Go left until zero position reached. */
                 vTaskDelay( dt_cartworker );
-                // vTaskDelay( 10 );
             }
             app_current_state = DEFAULT;
-            dcm_set_output_volatage( IDLE_MOVEMENTS_VOLTAGE );
+            
+            /* Debouncing. */
+            set_output_voltage_nobounce( IDLE_MOVEMENTS_VOLTAGE );
+
             while( cart_position[ 0 ] < TRACK_LEN_MAX_CM/2.0f )
             {
                 /* Go to track center. */
@@ -85,14 +96,30 @@ void cartWorkerTask( void * pvParameters )
         else if( notif_value_received == SP_HOME )
         {
             /* App is in UPC or DPC state. Change setpoint to home postion. Write new setpoint to
-            _raw cli setpoint (unfiltered). cart_position_setpoint_cm_cli_raw acts as input to 
+            *_raw cli setpoint (unfiltered). cart_position_setpoint_cm_cli_raw acts as input to 
             cart_position_setpoint_cm_cli low-pass filter. Low-pass filter is used for both setpoint 
             sources to smooth out discontinous input. */
             cart_position_setpoint_cm_cli_raw = TRACK_LEN_MAX_CM/2.0f;
         }
 
-        /* Task delay */
-        /* This task wont run all the time, so vTaskDelayUntil can't be used. */
+        /* Task delay.
+        This task wont run all the time, so vTaskDelayUntil can't be used. */
         vTaskDelay( dt_cartworker );
     }
+}
+
+void set_output_voltage_nobounce( float voltage )
+{
+    /* Not elegant way of doing debouncing but for now it works. */
+    dcm_set_output_volatage( voltage );
+    vTaskDelay(10);
+    dcm_set_output_volatage( voltage );
+    vTaskDelay(10);
+    dcm_set_output_volatage( voltage );
+    vTaskDelay(10);
+    dcm_set_output_volatage( voltage );
+    vTaskDelay(10);
+    dcm_set_output_volatage( voltage );
+    vTaskDelay(10);
+    dcm_set_output_volatage( voltage );
 }

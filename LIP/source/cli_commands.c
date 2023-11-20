@@ -19,8 +19,10 @@
  *     sppot            -    Change cart possition setpoint source to potentiometer
  *     spcli            -    Change cart possition setpoint source to CLI
  *     dpc              -    Turn on/off down position controller, default cart pos. setpoint is current cart position
+ *     dpci             -    Turn on/off down position controller with integral action on cart position error
  *     upc              -    Turn on/off up position controller ??????????????????????????????????????????????????????
  *     swingup          -    Turn on pendulum swingup procedure
+ *     swingdown
  *     bounceoff        -    Turn on or off cart min max bounce off protection    
  * 
  * Note: commands callback functions change app state, which is indicated by
@@ -45,15 +47,27 @@
  * FreeRTOS CLI demo:
  * https://www.freertos.org/FreeRTOS-Plus/FreeRTOS_Plus_IO/Demo_Applications/LPCXpresso_LPC1769/NXP_LPC1769_Demo_Description.html
  */
-#include "main_LIP.h"
 #include <stdlib.h>     /* For strtox functions (string to float). */
-#include <errno.h>      /* error numbers */
+#include <errno.h>      /* error codes. */
 #include "math.h"
 
-/* Keeps track of current app state, defined in LIP_tasks_common.c */
-extern enum lip_app_states app_current_state;
+#include "main_LIP.h"
 
-/* Tasks handles, defined in LIP_tasks_common.c */
+/* Defined in LIP_tasks_common.c */
+extern float cart_position[ 2 ];
+extern float pend_angle[ 2 ];
+extern float cart_position_setpoint_cm_cli_raw; 
+extern float cart_position_setpoint_cm_cli;
+extern float cart_position_setpoint_cm_pot; 
+extern float *cart_position_setpoint_cm;
+extern enum cart_position_zones cart_current_zone;
+extern uint32_t bounce_off_action_on;
+extern uint32_t swingup_task_resumed;
+extern enum lip_app_states app_current_state;
+extern uint32_t reset_lookup_index;
+extern uint32_t reset_swingdown;
+extern uint32_t reset_home;
+
 extern TaskHandle_t watchdogTaskHandle;
 extern TaskHandle_t consoleTaskHandle;
 extern TaskHandle_t utilTaskHandle;
@@ -61,32 +75,10 @@ extern TaskHandle_t comTaskHandle;
 extern TaskHandle_t rawComTaskHandle;
 extern TaskHandle_t cartWorkerTaskHandle;
 extern TaskHandle_t ctrl_3_FSF_downpos_task_handle;
-extern TaskHandle_t swingup_task_handle;
+extern TaskHandle_t ctrl_4_I_FSF_downpos_task_handle;
 extern TaskHandle_t ctrl_5_FSF_uppos_task_handle;
-
-/* Global cart position and pendulum angle, defined in LIP_tasks_common.c */
-extern float cart_position[ 2 ];
-extern float pend_angle[ 2 ];
-
-/* Defined in LIP_tasks_common.c. This variable hold setpoint for cart position set by cli command "spcli".
-It is the default setpoint source used by all controllers tasks. When turning on any controller (dpc or upc). */
-extern float cart_position_setpoint_cm_cli_raw; 
-extern float cart_position_setpoint_cm_cli;
-
-/* Defined in LIP_tasks_common.c. This variable hold setpoint for cart position set by external potentiometer (ADC reading). */
-extern float cart_position_setpoint_cm_pot; 
-
-/* Defined in LIP_tasks_common.c. This variable is used as cart postion setpoint by all controller tasks. */
-extern float *cart_position_setpoint_cm;
-
-/* Defined in LIP_tasks_common.c. cart_position_zones enum instance, which indicates current cart position zone. */
-extern enum cart_position_zones cart_current_zone;
-
-/* Defined in LIP_tasks_common.c. This flag indicates that bounce off action on track min/max is on. */
-extern uint32_t bounce_off_action_on;
-
-/* Defined in LIP_tasks_common.c. This flag indicates that the swingup task is running. */
-extern uint32_t swingup_task_resumed;
+extern TaskHandle_t swingup_task_handle;
+extern TaskHandle_t swingdown_task_handle;
 
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  * CLI commands prototypes
@@ -104,6 +96,9 @@ static portBASE_TYPE prvHomeCommand( int8_t *pcWriteBuffer, size_t xWriteBufferL
 /* Command to turn on or off down position controller,
 command : dpc */
 static portBASE_TYPE prvDpcCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
+/* Command to turn on/off down position controller with integral action on cart position error,
+command : dpci */
+static portBASE_TYPE prvDpcICommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
 /* Command to turn on or off up position controller,
 command : up */
 static portBASE_TYPE prvUpcCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
@@ -122,6 +117,9 @@ static portBASE_TYPE prvSPCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen
 /* Command to start swingup action,
 command: swingup */
 static portBASE_TYPE prvSWINGUPCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
+/* Command to start swingdown action,
+command: swingdown */
+static portBASE_TYPE prvSWINGDOWNCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
 /* Command to reset uC,
 command: reset */
 static portBASE_TYPE prvRstUCCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
@@ -152,6 +150,12 @@ static const CLI_Command_Definition_t commands_list[] =
         .cExpectedNumberOfParameters    = 0
     },
     {
+        .pcCommand                      = ( const int8_t * const ) "q",
+        .pcHelpString                   = ( const int8_t * const ) "q :              Start / stop data streaming\r\n",
+        .pxCommandInterpreter           = prvComOnOffCommand,
+        .cExpectedNumberOfParameters    = 0
+    },
+    {
         .pcCommand                      = ( const int8_t * const ) "home",
         .pcHelpString                   = ( const int8_t * const ) "home        :    Go to home cart positon - center of the track, no controller used\r\n",
         .pxCommandInterpreter           = prvHomeCommand,
@@ -161,6 +165,12 @@ static const CLI_Command_Definition_t commands_list[] =
         .pcCommand                      = ( const int8_t * const ) "dpc",
         .pcHelpString                   = ( const int8_t * const ) "dpc         :    Turn on/off down position controller, default cart pos. setpoint is current cart position\r\n                 dpc on/off, or dpc 1/0, available only in DEFAULT state\r\n",
         .pxCommandInterpreter           = prvDpcCommand,
+        .cExpectedNumberOfParameters    = 1
+    },
+    {
+        .pcCommand                      = ( const int8_t * const ) "dpci",
+        .pcHelpString                   = ( const int8_t * const ) "dpci        :    Turn on/off down position controller with integral action on cart position error\r\n                 dpc on/off, or dpc 1/0, available only in DEFAULT state\r\n",
+        .pxCommandInterpreter           = prvDpcICommand,
         .cExpectedNumberOfParameters    = 1
     },
     {
@@ -197,6 +207,12 @@ static const CLI_Command_Definition_t commands_list[] =
         .pcCommand                      = ( const int8_t * const ) "swingup",
         .pcHelpString                   = ( const int8_t * const ) "swingup     :    Start pendulum swingup routine.\r\n",
         .pxCommandInterpreter           = prvSWINGUPCommand,
+        .cExpectedNumberOfParameters    = 0
+    },
+    {
+        .pcCommand                      = ( const int8_t * const ) "swingdown",
+        .pcHelpString                   = ( const int8_t * const ) "swingdown   :    Start pendulum swingdown routine.\r\n",
+        .pxCommandInterpreter           = prvSWINGDOWNCommand,
         .cExpectedNumberOfParameters    = 0
     },
     {
@@ -246,8 +262,7 @@ void vRegisterCLICommands(void)
  * CLI commands callback functions definitions
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  */
-/* [x] command: task-stats 
-Availabe in all states. */
+/* command: task-stats */
 static portBASE_TYPE prvTaskStatsCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
 {
     const int8_t *const pcTaskTableHeader = ( int8_t * ) "Task          State  Priority  Stack	#\r\n******************************************\r\n";
@@ -264,8 +279,7 @@ static portBASE_TYPE prvTaskStatsCommand( int8_t *pcWriteBuffer, size_t xWriteBu
     return pdFALSE;
 }
 
-/* [x] command: <enter_key> (data logging on/off)
-Availabe in all states. */
+/* command: <enter_key> (data logging on/off) */
 static portBASE_TYPE prvComOnOffCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
 {
     ( void ) pcCommandString;
@@ -284,16 +298,17 @@ static portBASE_TYPE prvComOnOffCommand( int8_t *pcWriteBuffer, size_t xWriteBuf
     return pdFALSE;
 }
 
-/* [x] command: home
-Available in all states except swingup state. */
+/* command: home */
 static portBASE_TYPE prvHomeCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
 {
+    /* This command will send notification to worker task that will take action based on notification value. */
+
     ( void ) pcCommandString;
     ( void ) xWriteBufferLen;
     configASSERT( pcWriteBuffer );
 
-    // /* This command will send notification to worker task that will take action based on notification value/index (?) */
-    // char msg_buffer[70];
+    /* Set reset_home flag to 1, it should be reset to 0 in cart_worker task. */
+    reset_home = 1;
 
     if( app_current_state == UNINITIALIZED )
     {
@@ -390,8 +405,7 @@ static portBASE_TYPE prvHomeCommand( int8_t *pcWriteBuffer, size_t xWriteBufferL
     return pdFALSE;
 }
 
-/* ADD FLAG FROM WATCHDOG TASK - INDICATE THAT CONTROLLER TASK CAN BE RESUMED, CART IS IN OK OR DANGER ZONE */
-/* [x] command: dpc */
+/* command: dpc */
 static portBASE_TYPE prvDpcCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
 {
     ( void ) pcCommandString;
@@ -469,7 +483,85 @@ static portBASE_TYPE prvDpcCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLe
     return pdFALSE;
 }
 
-/* [ ] command: upc */
+/* command: dpci */
+static portBASE_TYPE prvDpcICommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
+{
+    ( void ) pcCommandString;
+    ( void ) xWriteBufferLen;
+    configASSERT( pcWriteBuffer );
+
+    int8_t *pcParameter1;
+    BaseType_t xParameter1StringLength;
+
+    /* Get first command arguemnt. */
+    pcParameter1 = ( int8_t * ) FreeRTOS_CLIGetParameter( pcCommandString,            /* The command string itself. */
+                                                          1,                          /* Which parameter to return. */
+                                                          &xParameter1StringLength);  /* Store the parameter string length. */
+    
+    /* Terminate arguemnt string. */
+    pcParameter1[ xParameter1StringLength ] = 0x00;
+
+    if( !strcmp( ( const char * ) pcParameter1, "off" ) || !strcmp( ( const char * ) pcParameter1, "0" ) )
+    {
+        /* Controller Turn off case. */
+        /* Turn off down position controller, "dcp off" / "dpc 0" are both valid commands. */
+        vTaskSuspend( ctrl_4_I_FSF_downpos_task_handle );
+        dcm_set_output_volatage( 0.0f );
+        
+        /* Change current app state back to DEFAULT. */
+        app_current_state = DEFAULT;
+    }
+    else if( !strcmp( ( const char * ) pcParameter1, "on" ) || !strcmp( ( const char * ) pcParameter1, "1" ) )
+    {
+        if( cart_current_zone != FREEZING_ZONE_L || cart_current_zone != FREEZING_ZONE_R )
+        {
+            /* Controller turn on case. */
+            /* Even if controller is turned on, it will only work if the pendulum angle is in range [switch_angle_low, switch_angle_high]. */
+
+            /* Ensure that setpoint for cart postion from cli is the same as the setpoint used by controller tasks.
+            If it's not true, this means that the user changed source of cart pos. setpoint for controllers. 
+            ALL CONTROLLER TASKS SHOULD BE TURNING ON WITH CART POS. SETPOINT SOURCE SET TO CLI, OTHERWISE DON'T TURN ON CONTROLLER. */
+            if( cart_position_setpoint_cm == &cart_position_setpoint_cm_cli )
+            {
+                // /* Set starting setpoint for cart position to its current position, so that the cart won't 
+                // instantly jump when the controller is turned on. Main cart position setpoint
+                // used by any controller task has to be the same as cart position set point from cli */
+                // cart_position_setpoint_cm_cli_raw = cart_position[ 0 ];
+                
+                if( app_current_state == DEFAULT )
+                {
+                    /* This command should only turn on "down position controller" when app/pendulum is in the DEFAULT state.
+                    This means that it's not possible to use this command while app is in UNINITIALIZED, SWINGUP or UPPOSITION CONTROLLER state. */
+                    
+                    /* Turn on down position controller, "dcp on" / "dpc 1" are both valid commands. */
+                    vTaskResume( ctrl_4_I_FSF_downpos_task_handle );
+                    
+                    /* Change app state to "down position controller" state. 
+                    This will ensure that some cli commands can't be called. */
+                    app_current_state = DPC;
+                }
+            }
+            else
+            {
+                /* Prompt the use to change setpoint source to cli with "spcli" command. */
+                strcpy( ( char * ) pcWriteBuffer, "\r\nERROR: SET CART POSITION SETPOINT SOURCE TO CLI WITH COMMAND: spcli\r\n" );
+            }
+        }
+        else
+        {
+            strcpy( ( char * ) pcWriteBuffer, "\r\nERROR: CAN'T TURN ON DPC, CART TOO CLOSE TO TRACK LIMITS\r\n" );
+        }
+    }
+    else
+    {
+        /* Command parameters were neither "on", "1", "off" or "0". */
+        strcpy( ( char * ) pcWriteBuffer, "ERROR: INVALID PARAMETER VALUE, SHOULD BE: on, 1, off, 0\r\n" );
+    }
+
+    return pdFALSE;
+}
+
+/* command: upc */
 static portBASE_TYPE prvUpcCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
 {
     ( void ) pcCommandString;
@@ -547,7 +639,7 @@ static portBASE_TYPE prvUpcCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLe
     return pdFALSE;
 }
 
-/* [x] command: clc */
+/* command: clc */
 static portBASE_TYPE prvClcCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
 {
     ( void ) pcCommandString;
@@ -561,7 +653,7 @@ static portBASE_TYPE prvClcCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLe
     return pdFALSE;
 }
 
-/* [x] command: sppot */
+/* command: sppot */
 static portBASE_TYPE prvSPPOTCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
 {
     ( void ) pcCommandString;
@@ -574,7 +666,7 @@ static portBASE_TYPE prvSPPOTCommand( int8_t *pcWriteBuffer, size_t xWriteBuffer
     return pdFALSE;
 }
 
-/* [x] command: spcli */
+/* command: spcli */
 static portBASE_TYPE prvSPCLICommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
 {
     ( void ) pcCommandString;
@@ -587,7 +679,7 @@ static portBASE_TYPE prvSPCLICommand( int8_t *pcWriteBuffer, size_t xWriteBuffer
     return pdFALSE;
 }
 
-/* [x] command: sp */
+/* command: sp */
 static portBASE_TYPE prvSPCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
 {
     ( void ) pcCommandString;
@@ -666,22 +758,30 @@ static portBASE_TYPE prvSPCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen
     return pdFALSE;
 }
 
-/* [ ] command: swingup */
+/* command: swingup */
 static portBASE_TYPE prvSWINGUPCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
 {
     ( void ) pcCommandString;
     ( void ) xWriteBufferLen;
     configASSERT( pcWriteBuffer );
 
-    if( app_current_state == DEFAULT && fabs( cart_position[ 0 ] - 20 ) < 1 )
+    if( app_current_state == DEFAULT )
     {
         /* App is in DEFAULT STATE and cart position is at position 20cm pm 1cm.
         Swingup can be started. */
-        vTaskResume( swingup_task_handle );
+        
+        /* Reset lookup_index in swingup task for loop. */
+        reset_lookup_index = 1;
+
+        /* Global flag to indicate that swingup is running and to tell watchdog task to
+        start keeping track of pendulum angle to switch between swingup and up position controller. */
         swingup_task_resumed = 1;
         
         /* Change app state to swingup. */
         app_current_state = SWINGUP;
+        
+        /* Resume swingup task. */
+        vTaskResume( swingup_task_handle );
     }
     else
     {
@@ -691,8 +791,36 @@ static portBASE_TYPE prvSWINGUPCommand( int8_t *pcWriteBuffer, size_t xWriteBuff
     return pdFALSE;
 }
 
-/* [x] command: reset
-Available in: ALL STATES. */
+/* command: swingdown */
+static portBASE_TYPE prvSWINGDOWNCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
+{
+    ( void ) pcCommandString;
+    ( void ) xWriteBufferLen;
+    configASSERT( pcWriteBuffer );
+
+    if( app_current_state == UPC )
+    {
+        /* App is in DEFAULT STATE and cart position is at position 20cm pm 1cm.
+        Swingup can be started. */
+        
+        /* Reset lookup_index in swingup task for loop. */
+        reset_swingdown = 1;
+
+        /* Change app state to swingup. */
+        app_current_state = DPC;
+        
+        /* Resume swingup task. */
+        vTaskResume( swingdown_task_handle );
+    }
+    else
+    {
+        strcpy( ( char * ) pcWriteBuffer, "ERROR: APP NOT IN DEFAULT STATE OR CART POSITION NOT 20cm\r\n" );
+    }
+
+    return pdFALSE;
+}
+
+/* command: reset */
 static portBASE_TYPE prvRstUCCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
 {
     ( void ) pcCommandString;
@@ -706,7 +834,7 @@ static portBASE_TYPE prvRstUCCommand( int8_t *pcWriteBuffer, size_t xWriteBuffer
     return pdFALSE;
 }
 
-/* [x] command: vol
+/* command: vol
 Available in: UNINITIALIZED and DEFAULT states. */
 static portBASE_TYPE prvVolCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )  
 {
@@ -748,32 +876,36 @@ static portBASE_TYPE prvVolCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLe
     return pdFALSE;
 }
 
-/* [x] command: br 
-Avaliable in: ALL STATES. */
+/* command: br */
 static portBASE_TYPE prvBrCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
 {
     ( void ) pcCommandString;
     ( void ) xWriteBufferLen;
     configASSERT( pcWriteBuffer );
 
-    /* Suspend any control task. Calls to vTaskSuspend are not cumulative 
-    so it can be used on task which is already suspended and one vTaskResume will
-    be enoguh to bring that task back to work. */
-    vTaskSuspend( ctrl_3_FSF_downpos_task_handle );
-    vTaskSuspend( ctrl_5_FSF_uppos_task_handle );
-    vTaskSuspend( swingup_task_handle );
-
     /* Set dc motor input voltage to zero. */
     dcm_set_output_volatage( 0.0f );
 
-    /* Change app state to DEFAULT. */
-    app_current_state = DEFAULT;
+    /* Change app state to DEFAULT or stay in UNINITIALIZED (if it was the last state). */
+    if( app_current_state != UNINITIALIZED )
+    {
+        app_current_state = DEFAULT;
+
+        /* Suspend any control task. Calls to vTaskSuspend are not cumulative 
+        so it can be used on task which is already suspended and one vTaskResume will
+        be enoguh to bring that task back to work. */
+        vTaskSuspend( ctrl_3_FSF_downpos_task_handle );
+        vTaskSuspend( ctrl_5_FSF_uppos_task_handle );
+        vTaskSuspend( swingup_task_handle );
+    }
+
+    /* Set dc motor input voltage to zero again :). */
+    dcm_set_output_volatage( 0.0f );
 
     return pdFALSE;
 }
 
-/* [x] command: bo (bounceoff) 
-Avaliable in: ALL STATES. */
+/* command: bo (bounceoff) */
 static portBASE_TYPE prvBounceOffCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
 {
     ( void ) pcCommandString;

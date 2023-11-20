@@ -41,7 +41,8 @@
 #define configUSE_16_BIT_TICKS                   0
 #define configUSE_MUTEXES                        1
 #define configQUEUE_REGISTRY_SIZE                8
-#define configUSE_PORT_OPTIMISED_TASK_SELECTION  1
+#define configUSE_PORT_OPTIMISED_TASK_SELECTION  1  
+// #define configCHECK_FOR_STACK_OVERFLOW           1 
 
 /* Task notifications */
 #define configUSE_TASK_NOTIFICATIONS             1
@@ -75,7 +76,6 @@ and one on TCP/IP).  This is done to prevent an output buffer being defined by
 each implementation - which would waste RAM.  In this case, there is only one
 command interpreter running. */
 #define configCOMMAND_INT_MAX_OUTPUT_SIZE 2096
-// #define configCOMMAND_INT_MAX_OUTPUT_SIZE 1 // z tutoriala
 
 // DEBUG use only for debugging
 #define configUSE_STATS_FORMATTING_FUNCTIONS 1 

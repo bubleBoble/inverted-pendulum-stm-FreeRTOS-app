@@ -1,0 +1,72 @@
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ * This file provides task that pendulum swingdown routine. This task should run 
+ * with sampling period of 10ms.
+ * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ */
+#include "LIP_tasks_common.h"
+#include <math.h>
+
+/* Globals defined in LIP_tasks_common.c */
+extern float pend_angle[ 2 ];
+extern float pend_speed[ 2 ];
+extern float cart_position[ 2 ];
+extern float cart_speed[ 2 ];
+extern float *cart_position_setpoint_cm;
+extern float pendulum_arm_angle_setpoint_rad;
+extern enum cart_position_zones cart_current_zone;
+extern uint32_t reset_swingdown;
+extern float cart_position_setpoint_cm_cli_raw;
+extern float pendulum_angle_in_base_range_upc;
+
+extern enum lip_app_states app_current_state;
+extern uint32_t swingup_task_resumed;
+
+extern TaskHandle_t ctrl_3_FSF_downpos_task_handle;
+extern TaskHandle_t ctrl_5_FSF_uppos_task_handle;
+
+void swingdown_task( void *pvParameters )
+{
+    /* For RTOS vTaskDelayUntil(). */
+    TickType_t xLastWakeTime = xTaskGetTickCount();
+
+    // char msg[128];
+
+    for( ;; )
+    {
+        xLastWakeTime = xTaskGetTickCount();
+        
+        if( reset_swingdown )
+        {   
+            /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+            vTaskSuspend( ctrl_5_FSF_uppos_task_handle );
+            
+            if( pendulum_angle_in_base_range_upc < 0.0f ){
+                dcm_set_output_volatage( 2.0f );
+                vTaskDelay( 100 );
+                dcm_set_output_volatage( 0.0f );
+
+                vTaskResume( ctrl_3_FSF_downpos_task_handle );
+                app_current_state = DPC;
+
+                reset_swingdown = 0;
+                vTaskSuspend( NULL );
+            }
+            else if( pendulum_angle_in_base_range_upc > 0.0f ){
+                dcm_set_output_volatage( -2.0f );
+                vTaskDelay( 100 );
+                dcm_set_output_volatage( 0.0f );
+
+                vTaskResume( ctrl_3_FSF_downpos_task_handle );
+                app_current_state = DPC;
+
+                reset_swingdown = 0;
+                vTaskSuspend( NULL );
+            }
+        }
+
+        vTaskDelayUntil( &xLastWakeTime, dt );
+    }
+}
+
+
+

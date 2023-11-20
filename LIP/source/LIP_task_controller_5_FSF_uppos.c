@@ -30,17 +30,17 @@ extern float pend_speed[ 2 ];
 extern float cart_position[ 2 ];
 extern float cart_speed[ 2 ];
 extern float *cart_position_setpoint_cm;
-extern float pendulum_arm_angle_setpoint_rad;
 extern enum cart_position_zones cart_current_zone;
 extern float number_of_pendulumarm_revolutions_upc;
 extern float pendulum_angle_in_base_range_upc;
+extern float pendulum_arm_angle_setpoint_rad_upc;
 
-/* Angle setpoint for pendulum arm. Up position corresponds to 0 degrees or 0 radians.
-Controller works with angle in radians. "BASE" postfix indicates that this setpoint is from
-base angle range [0, 2PI]. Because pendulum arm can make many full revolutions,
-angles 0, 2PI, 4PI and so on, all correspond to the same up position, angle setpoint needs
-to be changed accordingly. */
-#define PENDULUM_ANGLE_UP_SETPOINT_BASE 0.0f
+#ifdef COM_SEND_CTRL_DEBUG
+    extern float ctrl_xw;
+    extern float ctrl_th;
+    extern float ctrl_Dx;
+    extern float ctrl_Dt;
+#endif
 
 void ctrl_5_FSF_uppos_task( void *pvParameters )
 {
@@ -48,8 +48,8 @@ void ctrl_5_FSF_uppos_task( void *pvParameters )
     TickType_t xLastWakeTime = xTaskGetTickCount();
 
     /* Controller should turn on only if the angle is in range [switch_angle_low, switch_angle_high]. */
-    float switch_angle_low  = -15.0f * PI / 180.0f;    // lower boundry in radians
-    float switch_angle_high =  15.0f * PI / 180.0f;    // upper boundry in radians
+    float switch_angle_low  = -27.0f * PI / 180.0f;    // lower boundry in radians
+    float switch_angle_high =  27.0f * PI / 180.0f;    // upper boundry in radians
 
     /* Down position gains, u = F*(x_setpoint - x) 
     gains[0] - cart position error gain, units: V/cm
@@ -83,9 +83,6 @@ void ctrl_5_FSF_uppos_task( void *pvParameters )
 
     for( ;; )
     {
-        /* Calculate real pendulum angle setpoint from setpoint in base range [0, 2PI]. */
-        pendulum_arm_angle_setpoint_rad = PENDULUM_ANGLE_UP_SETPOINT_BASE + number_of_pendulumarm_revolutions_upc * PI2;
-
         /* Note: this angle switching range is different from switching angle range from swingup to upc, set up
         if watchdog task. */
         if( switch_angle_low < pendulum_angle_in_base_range_upc && switch_angle_high > pendulum_angle_in_base_range_upc )
@@ -95,7 +92,7 @@ void ctrl_5_FSF_uppos_task( void *pvParameters )
             /* Calculate state varialbes errors */
             cart_position_error =  *cart_position_setpoint_cm - cart_position[0]; 
             cart_speed_error    = - cart_speed[ 0 ];
-            pend_position_error =   pendulum_arm_angle_setpoint_rad - pend_angle[ 0 ];
+            pend_position_error =   pendulum_arm_angle_setpoint_rad_upc - pend_angle[ 0 ];
             pend_speed_error    = - pend_speed[ 0 ];
 
             /* Calculate control signal contribution of each state variable error */
@@ -106,17 +103,32 @@ void ctrl_5_FSF_uppos_task( void *pvParameters )
             /* Default cart position error gain is gains[0] */
             if( cart_position_error > 0 )
             {
-                ctrl_cart_position_error =   tanhf( 2.24f * cart_position_error ) * ( gains[ 1 ] * cart_position_error + voltage_deadzone );
+                ctrl_cart_position_error =   tanhf( 7.0f * cart_position_error ) * ( gains[ 0 ] * cart_position_error + voltage_deadzone );
+                // if( ctrl_cart_position_error < voltage_deadzone )
+                // {
+                //     ctrl_cart_position_error = 0.0f;
+                // }
             } 
-            else if( cart_position_error < 0 )
+            else if( cart_position_error < - 0 )
             {
-                ctrl_cart_position_error = - tanhf( 2.24f * cart_position_error ) * ( gains[ 2 ] * cart_position_error - voltage_deadzone );
+                ctrl_cart_position_error = - tanhf( 7.0f * cart_position_error ) * ( gains[ 0 ] * cart_position_error - voltage_deadzone );
+                // if( ctrl_cart_position_error > -voltage_deadzone )
+                // {
+                //     ctrl_cart_position_error = 0.0f;
+                // }
             }
             // ctrl_cart_position_error = cart_position_error   * gains[ 0 ];
             ctrl_pend_angle_error    = pend_position_error   * gains[ 1 ];
             ctrl_cart_speed_error    = cart_speed_error      * gains[ 2 ];
             ctrl_pend_speed_error    = pend_speed_error      * gains[ 3 ];
-        
+
+            #ifdef COM_SEND_CTRL_DEBUG
+                ctrl_xw = ctrl_cart_position_error;
+                ctrl_th = ctrl_pend_angle_error;
+                ctrl_Dx = ctrl_cart_speed_error;
+                ctrl_Dt = ctrl_pend_speed_error;
+            #endif
+
             /* Regular controller update - with constant gains
             control signal = ( state_setpoint - state ) * ( F ) */
             ctrl_signal = ctrl_cart_position_error + 
@@ -124,7 +136,7 @@ void ctrl_5_FSF_uppos_task( void *pvParameters )
                           ctrl_cart_speed_error    + 
                           ctrl_pend_speed_error;
         
-            /* Set calculated output voltage */
+            /* Set calculated output voltage / control signal. */
             dcm_set_output_volatage( ctrl_signal );
         }
         else

@@ -32,6 +32,29 @@
 #include "LIP_tasks_common.h"
 #include "SP_filter.h"
 
+/* Note: define only one COM_SEND_* */ 
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
+/* If defined communication task will send components of LQR controller control signal. 
+Send: 
+    ctrl error cart position, ctrl error pendulum angle, 0,  
+    ctrl error cart speed, ctrl error pendulum speed, 0 */
+// #define COM_SEND_CTRL_DEBUG
+
+/* If defained communication task will send default info. 
+Send: pend angle, pend speed, 0,
+      cart position, cart speed, cart position setpoint,
+      output voltage, tick time */
+#define COM_SEND_DEFAULT
+
+/* If defined communication task will send angle setpoint for upc. */
+// #define COM_SEND_UPC
+
+/* If defined communication task will send angle setpoint for dpc. */
+// #define COM_SEND_DPC
+
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
 /* Used inside limit switch ISR */
 #define READ_ZERO_POSITION_REACHED HAL_GPIO_ReadPin( limitSW_left_GPIO_Port, limitSW_left_Pin )
 #define READ_MAX_POSITION_REACHED HAL_GPIO_ReadPin( limitSW_right_GPIO_Port, limitSW_right_Pin )
@@ -40,13 +63,13 @@
 #define dt                  10
 /* multiply by dt_inv instead of dividing by dt. */
 #define dt_inv              100.0f
-/* Sampling period in ms for watchdog task. 
-Don't make this value less than 100, it works pretty well as limit switch debouncer XD. */
-#define dt_watchdog         50
+/* Sampling period in ms for watchdog task. */
+#define dt_watchdog         25
 /* Sampling period in ms for console task. */
 #define dt_console          50
 /* Sampling period in ms for communication task. */
-#define dt_com              50
+#define dt_com              10
+// #define dt_com              10 // used for tests
 /* Sampling period in ms for worker task. */
 #define dt_cartworker       50
 /* Sampling period in ms for swingup task. 

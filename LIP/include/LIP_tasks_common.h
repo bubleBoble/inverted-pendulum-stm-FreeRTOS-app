@@ -11,7 +11,7 @@
 /* Enum which lists all implemented LIP app states. */
 #ifndef LIP_APP_STATES_ENUM
 #define LIP_APP_STATES_ENUM
-enum lip_app_states 
+enum lip_app_states
 {
     /* Uninitialized state: app state before call to "zero" cli command.
     This state indicates that current cart position reading is not correct,
@@ -52,17 +52,18 @@ worker task. */
 
 /* Watchdog task - protection for cart min and max positions. */
 void watchdogTask( void *pvParameters );
-#define WATCHDOG_STACK_DEPTH 500
+#define WATCHDOG_STACK_DEPTH 2000
 
 /* console task. */
 void vCommandConsoleTask( void *pvParameters );
 #define MAX_INPUT_LENGTH    50
 #define MAX_OUTPUT_LENGTH   500
-#define CONSOLE_STACKDEPTH  4000
+// #define CONSOLE_STACKDEPTH  4000
+#define CONSOLE_STACKDEPTH  6000
 
 /* util task (State estimation & setpoint calc. task). */
 void utilTask( void *pvParameters );
-#define UTIL_STACK_DEPTH 500
+#define UTIL_STACK_DEPTH 1000
 
 /* Communication task - for serialOscilloscope. */
 void comTask( void *pvParameters );
@@ -79,20 +80,20 @@ void cartWorkerTask( void *pvParameters );
 
 /* Controllers tasks */
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-/* Controller 1 task 
+/* Controller 1 task
 Basic full state feedback, pendulum down position, \
 output voltage is zero in specified deadzone (pm 1V). */
 void ctrl_FSF_downpos_task( void *pvParameters );
 #define CTRL_FSF_DOWNPOS_STACK_DEPTH 500
 
 /* Controller 2 task
-Full state feedback with better deadzone compensation, 
+Full state feedback with better deadzone compensation,
 pendulum down position, nonlinear cart position gain "hard switching". */
 void ctrl_2_FSF_downpos_task( void *pvParameters );
 #define CTRL_2_FSF_DOWNPOS_STACK_DEPTH 500
 
-/* Controller 3 task - USE THIS ONE
-Full state feedback Full state feedback with better deadzone compensation, 
+/* Controller 3 task
+Full state feedback Full state feedback with better deadzone compensation,
 pendulum down position, nonlinear cart position gain "tanh switching".
 (smoothed hard switching) */
 void ctrl_3_FSF_downpos_task( void *pvParameters );
@@ -105,19 +106,23 @@ void ctrl_4_I_FSF_downpos_task( void *pvParameters );
 #define CTRL_4_I_FSF_DOWNPOS_STACK_DEPTH 500
 
 /* Controller 5 task
-Full state feedback up position with deadzone compensation, 
+Full state feedback up position with deadzone compensation,
 nonlinear cart position gain "tanh switching". */
 void ctrl_5_FSF_uppos_task( void *pvParameters );
 #define CTRL_5_FSF_UPPOS_STACK_DEPTH 500
 
 /* Swingup, trajopt. */
 void swingup_task( void *pvParameters );
-#define SWINGUP_STACK_DEPTH 500
+#define SWINGUP_STACK_DEPTH 1000
+
+/* Swingdown */
+void swingdown_task( void *pvParameters );
+#define SWINGDOWN_STACK_DEPTH 1000
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
 /* Bounce off task. */
 void bounceoff_task( void *pvParameters );
-#define BOUNCEOFF_STACK_DEPTH 500
+#define BOUNCEOFF_STACK_DEPTH 1000
 
 /* Function to create tasks. */
 void LIPcreateTasks(void);

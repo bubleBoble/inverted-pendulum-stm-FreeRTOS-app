@@ -107,3 +107,7 @@ void vApplicationGetIdleTaskMemory( StaticTask_t **ppxIdleTaskTCBBuffer,
     *pulIdleTaskStackSize = configMINIMAL_STACK_SIZE;
 }
 
+// void vApplicationStackOverflowHook( TaskHandle_t xTask, char *pcTaskName )
+// {
+//     printf( "\r\nELO\r\n" );
+// }

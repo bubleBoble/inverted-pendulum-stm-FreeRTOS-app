@@ -17,31 +17,40 @@
  * FREEZING_ZONE_L/R - Controller turned off
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 #include "LIP_tasks_common.h"
+#include <math.h>
 
 /* Note: max cart run is 40.7cm */
 #define FREEZING_ZONE_L_LOWER_LIMIT     0.0f
-#define OK_ZONE_LOWER_LIMIT             6.0f
-#define FREEZING_ZONE_R_LOWER_LIMIT     (40.07f - 6.0f)
+#define OK_ZONE_LOWER_LIMIT             3.0f
+#define FREEZING_ZONE_R_LOWER_LIMIT     (40.07f - OK_ZONE_LOWER_LIMIT)
 
-/* Defined in LIP_tasks_common.c */
+/* Globals defined in LIP_tasks_common.c */
+extern float cart_position[ 2 ];
+extern float pend_angle[ 2 ];
 extern enum lip_app_states app_current_state;
 extern float cart_position[ 2 ]; 
 extern enum cart_position_zones cart_current_zone;
 extern uint32_t bounceoff_resumed;
+extern float number_of_pendulumarm_revolutions_dpc;
+extern float pendulum_angle_in_base_range_dpc;
+extern float number_of_pendulumarm_revolutions_upc;
+extern float pendulum_angle_in_base_range_upc;
+extern float pendulum_arm_angle_setpoint_rad_dpc;
+extern float pendulum_arm_angle_setpoint_rad_upc;
+
+extern uint32_t bounce_off_action_on;
+extern uint32_t swingup_task_resumed;
 
 extern TaskHandle_t ctrl_3_FSF_downpos_task_handle;
 extern TaskHandle_t bounceoff_task_handle;
 extern TaskHandle_t swingup_task_handle;
+extern TaskHandle_t ctrl_5_FSF_uppos_task_handle;
 
-extern uint32_t bounce_off_action_on;
-
-/* Defined in LIP_tasks_common.c. This flag indicates that the swingup task is running. */
-extern uint32_t swingup_task_resumed;
 
 void watchdogTask( void * pvParameters )
 {
-    uint8_t MAX_POSITION_REACHED_h;
-    uint8_t ZERO_POSITION_REACHED_h;
+    // uint8_t MAX_POSITION_REACHED_h;
+    // uint8_t ZERO_POSITION_REACHED_h;
 
     /* For RTOS vTaskDelayUntil() */
     TickType_t xLastWakeTime = xTaskGetTickCount();
@@ -53,19 +62,20 @@ void watchdogTask( void * pvParameters )
     {
         /* Cart position protection functionality. */
 
-        /* Set flags for cart position zones while in DPC or UPC states. */
-        if( app_current_state == UPC || app_current_state == DPC || app_current_state == SWINGUP )
+        /* Set flags for cart position zones while in DPC or UPC states.
+        Perform cart bounceoff (if enabled) or freeze in danger zone (if bounceoff disabled). */
+        if( app_current_state == UPC || app_current_state == DPC )
         {
             if( cart_position[ 0 ] < OK_ZONE_LOWER_LIMIT )
             {
                 /* FREEZING_ZONE_L */
                 cart_current_zone = FREEZING_ZONE_L;
 
-                /* Turn off controllers tasks. */
+                /* Suspend controller tasks. */
                 vTaskSuspend( ctrl_3_FSF_downpos_task_handle );
-                // vTaskSuspend( #UPC );
-                vTaskSuspend( swingup_task_handle );
-                
+                vTaskSuspend( ctrl_5_FSF_uppos_task_handle );
+                // vTaskSuspend( swingup_task_handle );
+
                 if( bounce_off_action_on )
                 {
                     /* Resume bounce off task. */
@@ -80,7 +90,8 @@ void watchdogTask( void * pvParameters )
                     dcm_set_output_volatage( 0.0f );
                 }
 
-                /* Change app state back to DEFAULT. */
+                /* UPC or DPC controller was on, this means that app was already initialized (in default state).
+                Change app state back to default. */
                 app_current_state = DEFAULT;
             }
             else if( cart_position[ 0 ] > OK_ZONE_LOWER_LIMIT && cart_position[ 0 ] < FREEZING_ZONE_R_LOWER_LIMIT )
@@ -93,10 +104,10 @@ void watchdogTask( void * pvParameters )
                 /* FREEZING_ZONE_R */
                 cart_current_zone = FREEZING_ZONE_R;
 
-                /* Turn off controllers tasks. */
+                /* Suspend controller tasks. */
                 vTaskSuspend( ctrl_3_FSF_downpos_task_handle );
-                // vTaskSuspend( #UPC );
-                vTaskSuspend( swingup_task_handle );
+                vTaskSuspend( ctrl_5_FSF_uppos_task_handle );
+                // vTaskSuspend( swingup_task_handle );
 
                 if( bounce_off_action_on )
                 {
@@ -112,7 +123,8 @@ void watchdogTask( void * pvParameters )
                     dcm_set_output_volatage( 0.0f );
                 }
 
-                /* Change app state back to DEFAULT. */
+                /* UPC or DPC controller was on, this means that app was already initialized (in default state).
+                Change app state back to default. */
                 app_current_state = DEFAULT;
             }
         }
@@ -122,35 +134,75 @@ void watchdogTask( void * pvParameters )
         {
             /* Leftmost position reached (zero position). */
 
-            ZERO_POSITION_REACHED_h = 1;
-            MAX_POSITION_REACHED_h  = 0;
+            // ZERO_POSITION_REACHED_h = 1;
+            // MAX_POSITION_REACHED_h  = 0;
 
             /* Set output voltage to zero. */
             dcm_set_output_volatage( 0.0f );
 
+            /* Suspend controller tasks. */
+            vTaskSuspend( ctrl_3_FSF_downpos_task_handle );
+            vTaskSuspend( ctrl_5_FSF_uppos_task_handle );
+
+            /* Set output voltage to zero again in case any controller task 
+            managed to set any output voltage. */
+            dcm_set_output_volatage( 0.0f );
+
             /* Leftmost switch was closed, zero cart position encoder. */
             dcm_enc_zero_counter();
+
+            /* UPC or DPC controller was on, this means that app was already initialized (in default state).
+            Change app state back to default. */
+            app_current_state = DEFAULT;
         }
         else if( READ_MAX_POSITION_REACHED )
         {
             /* Rightmost position reached (max position). */
 
-            MAX_POSITION_REACHED_h  = 1;
-            ZERO_POSITION_REACHED_h = 0;
+            // MAX_POSITION_REACHED_h  = 1;
+            // ZERO_POSITION_REACHED_h = 0;
             
             /* Set output voltage to zero. */
             dcm_set_output_volatage( 0.0f );
+
+            /* Suspend controller tasks. */
+            vTaskSuspend( ctrl_3_FSF_downpos_task_handle );
+            vTaskSuspend( ctrl_5_FSF_uppos_task_handle );
+
+            /* Set output voltage to zero again in case any controller task 
+            managed to set any output voltage. */
+            dcm_set_output_volatage( 0.0f );
+
+            /* UPC or DPC controller was on, this means that app was already initialized (in default state).
+            Change app state back to default. */
+            if( app_current_state != UNINITIALIZED )
+            {
+                app_current_state = DEFAULT;
+            }
         }
 
+        // MAX_POSITION_REACHED_h  = 0;
+        // ZERO_POSITION_REACHED_h = 0;
 
-        MAX_POSITION_REACHED_h  = 0;
-        ZERO_POSITION_REACHED_h = 0;
+        /* SWINGUP to UPC hard switching. */
+        if( app_current_state == SWINGUP )
+        {
+            /* App is in swingup state. */
+            
+            if( fabsf( pendulum_arm_angle_setpoint_rad_upc - pend_angle[ 0 ] ) < 25.0f*PI/180.0f ) 
+            {
+                /* Pendulum angle error is within pm. 25 degrees from up position. */
 
-        // /* Switching from swingup to up position controller. */
-        // if( swingup_task_resumed )
-        // {
-
-        // }
+                /* Suspend swingup task. */
+                vTaskSuspend( swingup_task_handle );
+                // app_current_state = DEFAULT;
+                /* Resume UPC. */
+                vTaskResume( ctrl_5_FSF_uppos_task_handle );    
+                
+                /* Change app state to UPC. */
+                app_current_state = UPC;
+            }
+        }
 
         /* Task delay */
         vTaskDelayUntil( &xLastWakeTime, dt_watchdog );
