@@ -63,7 +63,7 @@ void comTask( void *pvParameters )
 
         #ifdef COM_SEND_UPC
             sprintf( msg,
-                    "%f,%f,%f,%f,%f,%f,%f,%f,%f\r\n",
+                    "%f,%f,%f,%f,%f,%f,%f,%f,%ld\r\n",
                     // for pendulum
                     ( double ) pend_angle[ 0 ],
                     ( double ) pend_speed[ 0 ],

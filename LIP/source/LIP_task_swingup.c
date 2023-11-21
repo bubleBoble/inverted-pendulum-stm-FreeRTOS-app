@@ -38,6 +38,7 @@ extern TaskHandle_t ctrl_3_FSF_downpos_task_handle;
 // #define N_LOOKUP_SAMPLES 300
 // #define LOOKUP_TABLE swingup_control_1
 // extern float LOOKUP_TABLE[ 301 ];
+
 /* swingup_control_2 lookup table. */
 // #define SWINGUP_START_POSITION 6.0f
 #define SWINGUP_START_POSITION 11.0f

@@ -49,8 +49,9 @@ void ctrl_3_FSF_downpos_task( void *pvParameters )
     TickType_t xLastWakeTime = xTaskGetTickCount();
 
     /* Controller should turn on only if the angle is in range [switch_angle_low, switch_angle_high]. */
-    float switch_angle_low  = 110.0f * PI / 180.0f;    // lower boundry in radians
-    float switch_angle_high = 250.0f * PI / 180.0f;    // upper boundry in radians
+    /* Note: pm. 85 degree works very well with swingdown routine. */
+    float switch_angle_low  = 90.0f  * PI / 180.0f;   // lower boundry in radians
+    float switch_angle_high = 270.0f * PI / 180.0f;   // upper boundry in radians
 
     /* Down position gains, u = F*(x_setpoint - x)
     gains[0] - cart position error gain, units: V/cm

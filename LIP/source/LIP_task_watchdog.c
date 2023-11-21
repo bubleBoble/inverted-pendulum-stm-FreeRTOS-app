@@ -189,7 +189,7 @@ void watchdogTask( void * pvParameters )
         {
             /* App is in swingup state. */
             
-            if( fabsf( pendulum_arm_angle_setpoint_rad_upc - pend_angle[ 0 ] ) < 25.0f*PI/180.0f ) 
+            if( fabsf( pendulum_arm_angle_setpoint_rad_upc - pend_angle[ 0 ] ) < 40.0f*PI/180.0f ) 
             {
                 /* Pendulum angle error is within pm. 25 degrees from up position. */
 

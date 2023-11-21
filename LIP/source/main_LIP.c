@@ -43,7 +43,7 @@ void main_LIP_run( void )
 // uint8_t MAX_POSITION_REACHED = 0;   // 1 only if right limit switch activated
 void HAL_GPIO_EXTI_Callback( uint16_t GPIO_Pin )
 {
-    /* This functionality was moved to watchdog task. */
+    // /* This functionality was moved to watchdog task. */
     // if ( GPIO_Pin == limitSW_left_Pin ) // limit switch left
     // {
     //     ZERO_POSITION_REACHED = 1;
@@ -59,18 +59,19 @@ void HAL_GPIO_EXTI_Callback( uint16_t GPIO_Pin )
     // }
     // if ( GPIO_Pin == blue_btn_Pin ) // built in blue button
     // {
-    //     if ( ZERO_POSITION_REACHED )              // go to the max position if cart on the zero
-    //     {
-    //         dcm_set_output_volatage( 2.0f );
-    //     }
-    //     else if ( MAX_POSITION_REACHED )        // go to the zero position if cart on the max
-    //     {
-    //         dcm_set_output_volatage( -2.0f );
-    //     }
-    //     else
-    //     {
-    //         dcm_set_output_volatage( -2.0f );     // if cart not on max or zero, go to the zero position
-    //     }
+    //     dcm_set_output_volatage( 2.0f );
+    //     // if ( ZERO_POSITION_REACHED )              // go to the max position if cart on the zero
+    //     // {
+    //     //     dcm_set_output_volatage( 2.0f );
+    //     // }
+    //     // else if ( MAX_POSITION_REACHED )        // go to the zero position if cart on the max
+    //     // {
+    //     //     dcm_set_output_volatage( -2.0f );
+    //     // }
+    //     // else
+    //     // {
+    //     //     dcm_set_output_volatage( -2.0f );     // if cart not on max or zero, go to the zero position
+    //     // }
     // }
     // else
     // {

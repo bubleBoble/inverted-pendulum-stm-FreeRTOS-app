@@ -69,11 +69,11 @@ void utilTask( void *pvParameters )
      * Low pass filters for derivatives. Pendulum and cart speed.
      * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
     /* IIR for pendulum position */
-    float alpha_pend = 0.9;
+    float alpha_pend = 0.65;
     IIR_init_fo( &low_pass_IIR_pend, alpha_pend );
 
     /* DCM encoder reading, IIR */
-    float alpha_cart = 0.9;
+    float alpha_cart = 0.54;
     IIR_init_fo( &low_pass_IIR_cart, alpha_cart );
 
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -99,7 +99,7 @@ void utilTask( void *pvParameters )
         // pend_angle[ 0 ] = low_pass_IIR_pend.out;
 
         /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-         * Pendulum angular speed calculation with Tusting method 
+         * Pendulum angular speed calculation with Tustin method 
          * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
         pend_speed[ 1 ] = pend_speed[ 0 ];
         pend_speed[ 0 ] = ( pend_angle[0] - pend_angle[1] ) * 2 * dt_inv - pend_speed[ 1 ];
