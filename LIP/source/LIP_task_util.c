@@ -8,6 +8,7 @@
  *     3. Calculate derivatives of cart position and pend angular position
  *     4. Calculate cart position setpoint from adc potentiometer reading
  *     5. Calculate number of pendulum arm full revolutions
+ *      bla bla bla
  *
  * Note about modulus:
  *     Calculate pendulum arm angle in base range [0 2pi]. This method uses modulus operation but implemented as

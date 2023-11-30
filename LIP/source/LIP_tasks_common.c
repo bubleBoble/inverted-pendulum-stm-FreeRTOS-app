@@ -171,6 +171,13 @@ TaskHandle_t ctrl_5_FSF_uppos_task_handle = NULL;
 StackType_t ctrl_5_FSF_uppos_STACKBUFFER [ CTRL_5_FSF_UPPOS_STACK_DEPTH ];
 StaticTask_t ctrl_5_FSF_uppos_TASKBUFFER_TCB;
 
+/* Controller 6 task
+Full state feedback with integral action, up position with deadzone compensation, 
+nonlinear cart position gain "tanh switching". */
+TaskHandle_t ctrl_6_I_FSF_uppos_task_handle = NULL;
+StackType_t ctrl_6_I_FSF_uppos_STACKBUFFER [ CTRL_6_I_FSF_UPPOS_STACK_DEPTH ];
+StaticTask_t ctrl_6_I_FSF_uppos_TASKBUFFER_TCB;
+
 /* Swingup, trajopt. */
 TaskHandle_t swingup_task_handle = NULL;
 StackType_t swingup_STACKBUFFER [ SWINGUP_STACK_DEPTH ];
@@ -307,6 +314,18 @@ void LIPcreateTasks()
     /* All controller tasks are suspended right after their creation. */  
     vTaskSuspend( ctrl_5_FSF_uppos_task_handle );
 
+    /* Up position controller 2
+    Full state feedback up position ctrl-er with "tanh-switching" deadzone compensation
+    (nonlinear cart position gain), with integral action on cart position. */
+    ctrl_6_I_FSF_uppos_task_handle = xTaskCreateStatic( ctrl_6_I_FSF_uppos_task,
+                                                      (const char*) "UpPosCtrlInt",
+                                                      CTRL_6_I_FSF_UPPOS_STACK_DEPTH,
+                                                      (void *) 0,
+                                                      tskIDLE_PRIORITY+3,
+                                                      ctrl_6_I_FSF_uppos_STACKBUFFER,
+                                                      &ctrl_6_I_FSF_uppos_TASKBUFFER_TCB );
+    /* All controller tasks are suspended right after their creation. */  
+    vTaskSuspend( ctrl_6_I_FSF_uppos_task_handle );
 
     /* Raw byte communication task. */
     // rawComTaskHandle = xTaskCreateStatic( rawComTask,

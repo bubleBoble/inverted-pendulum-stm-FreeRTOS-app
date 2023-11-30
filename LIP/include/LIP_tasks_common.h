@@ -111,6 +111,12 @@ nonlinear cart position gain "tanh switching". */
 void ctrl_5_FSF_uppos_task( void *pvParameters );
 #define CTRL_5_FSF_UPPOS_STACK_DEPTH 500
 
+/* Controller 6 task
+Full state feedback with integral action, up position with deadzone compensation, 
+nonlinear cart position gain "tanh switching". */
+void ctrl_6_I_FSF_uppos_task( void *pvParameters );
+#define CTRL_6_I_FSF_UPPOS_STACK_DEPTH 500
+
 /* Swingup, trajopt. */
 void swingup_task( void *pvParameters );
 #define SWINGUP_STACK_DEPTH 1000

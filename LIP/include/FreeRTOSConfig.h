@@ -77,9 +77,9 @@ each implementation - which would waste RAM.  In this case, there is only one
 command interpreter running. */
 #define configCOMMAND_INT_MAX_OUTPUT_SIZE 2096
 
-// DEBUG use only for debugging
-#define configUSE_STATS_FORMATTING_FUNCTIONS 1 
-#define configUSE_TRACE_FACILITY 1
+// DEBUG use only for debugging, configSUPPORT_DYNAMIC_ALLOCATION has to be set to 1
+// #define configUSE_STATS_FORMATTING_FUNCTIONS 1
+// #define configUSE_TRACE_FACILITY 1
 
 /* Cortex-M specific definitions. */
 #ifdef __NVIC_PRIO_BITS

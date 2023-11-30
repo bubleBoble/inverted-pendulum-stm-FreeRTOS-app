@@ -10,10 +10,10 @@
  *  Whole IP track generates about 6488 ticks
  *  So dcm encoder ARR register is set to 7000 so that it won't 
  *  randomly reset its value at limit max position.
- *  Track length is 47cm 
- *      6488 ticks -> 47cm
+ *  Track length is 40.7cm 
+ *      6488 ticks -> 40.7cm
  * 
- * 	Encoder mode: Encoder Mode TI1&2 => ARR set to 7000 (final CPR)
+ * 	Encoder mode: Encoder Mode TI1&2 => ARR set to 7000
  *
  *	Counter mode: up
  *

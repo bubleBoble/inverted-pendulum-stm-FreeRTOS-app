@@ -20,7 +20,8 @@
  *     spcli            -    Change cart possition setpoint source to CLI
  *     dpc              -    Turn on/off down position controller, default cart pos. setpoint is current cart position
  *     dpci             -    Turn on/off down position controller with integral action on cart position error
- *     upc              -    Turn on/off up position controller ??????????????????????????????????????????????????????
+ *     upc              -    Turn on/off up position controller
+ *     upci             -    Turn on/off up position controller with integral action on cart position error
  *     swingup          -    Turn on pendulum swingup procedure
  *     swingdown
  *     bounceoff        -    Turn on or off cart min max bounce off protection    
@@ -77,6 +78,7 @@ extern TaskHandle_t cartWorkerTaskHandle;
 extern TaskHandle_t ctrl_3_FSF_downpos_task_handle;
 extern TaskHandle_t ctrl_4_I_FSF_downpos_task_handle;
 extern TaskHandle_t ctrl_5_FSF_uppos_task_handle;
+extern TaskHandle_t ctrl_6_I_FSF_uppos_task_handle;
 extern TaskHandle_t swingup_task_handle;
 extern TaskHandle_t swingdown_task_handle;
 
@@ -87,48 +89,67 @@ extern TaskHandle_t swingdown_task_handle;
 /* This command shows task statistics
 command : task-stats */
 static portBASE_TYPE prvTaskStatsCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
+
 /* Command to turn communication on or off,
 command : ENTER_KEY */
 static portBASE_TYPE prvComOnOffCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
+
 /* Command to move cart to default position - center of the track, no controller is used,
 command : home */
 static portBASE_TYPE prvHomeCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
+
 /* Command to turn on or off down position controller,
 command : dpc */
 static portBASE_TYPE prvDpcCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
+
 /* Command to turn on/off down position controller with integral action on cart position error,
 command : dpci */
 static portBASE_TYPE prvDpcICommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
+
 /* Command to turn on or off up position controller,
-command : up */
+command : upc */
 static portBASE_TYPE prvUpcCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
+
+/* Command to turn on or off up position controller with integral action,
+command : upci */
+static portBASE_TYPE prvUpcICommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
+
 /* Command to clear console screen, at least for putty,
 command : clc */
 static portBASE_TYPE prvClcCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
+
 /* Command to change cart position setpoint to potentiometer,
 command: sppot */
 static portBASE_TYPE prvSPPOTCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
+
 /* Command to change cart position setpoint to cli,
 command: spcli */
 static portBASE_TYPE prvSPCLICommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
+
 /* Command to change current cart position setpoint,
 command: sp */
 static portBASE_TYPE prvSPCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
+
 /* Command to start swingup action,
 command: swingup */
 static portBASE_TYPE prvSWINGUPCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
+
 /* Command to start swingdown action,
 command: swingdown */
 static portBASE_TYPE prvSWINGDOWNCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
+
 /* Command to reset uC,
 command: reset */
 static portBASE_TYPE prvRstUCCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
+
 /* Command to manually set dc motor output voltage (via setpoint pointer so it is filtered / smooth),
 command: vol <voltage_setting> */
 static portBASE_TYPE prvVolCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
+
 /* Command to brake the cart, sets dc motor output voltage instantly to zero,
 command: br <voltage_setting> */
 static portBASE_TYPE prvBrCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
+
 /* command: bounceoff */
 static portBASE_TYPE prvBounceOffCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -177,6 +198,12 @@ static const CLI_Command_Definition_t commands_list[] =
         .pcCommand                      = ( const int8_t * const ) "upc",
         .pcHelpString                   = ( const int8_t * const ) "upc         :    Turn on/off up position controller, default cart pos. setpoint is current cart position\r\n                 dpc on/off, or dpc 1/0, available only in DEFAULT state\r\n",
         .pxCommandInterpreter           = prvUpcCommand,
+        .cExpectedNumberOfParameters    = 1
+    },
+    {
+        .pcCommand                      = ( const int8_t * const ) "upci",
+        .pcHelpString                   = ( const int8_t * const ) "upci        :    Turn on/off up position controller with integral action on cart position error\r\n                 dpc on/off, or dpc 1/0, available only in DEFAULT state\r\n",
+        .pxCommandInterpreter           = prvUpcICommand,
         .cExpectedNumberOfParameters    = 1
     },
     {
@@ -272,8 +299,8 @@ static portBASE_TYPE prvTaskStatsCommand( int8_t *pcWriteBuffer, size_t xWriteBu
     configASSERT( pcWriteBuffer );
 
     /* Generate a table of task stats. */
-    strcpy( ( char * ) pcWriteBuffer, ( const char * ) pcTaskTableHeader );
-    vTaskList( (char *) pcWriteBuffer + strlen( ( const char * ) pcTaskTableHeader ) );
+    // strcpy( ( char * ) pcWriteBuffer, ( const char * ) pcTaskTableHeader );
+    // vTaskList( (char *) pcWriteBuffer + strlen( ( const char * ) pcTaskTableHeader ) );
     // configSTATS_BUFFER_MAX_LENGTH
 
     return pdFALSE;
@@ -613,6 +640,84 @@ static portBASE_TYPE prvUpcCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLe
                     
                     /* Turn on up position controller, "upc on" / "upc 1" are both valid commands. */
                     vTaskResume( ctrl_5_FSF_uppos_task_handle );
+                    
+                    /* Change app state to "down position controller" state. 
+                    This will ensure that some cli commands can't be called. */
+                    app_current_state = UPC;
+                }
+            }
+            else
+            {
+                /* Prompt the use to change setpoint source to cli with "spcli" command. */
+                strcpy( ( char * ) pcWriteBuffer, "\r\nERROR: SET CART POSITION SETPOINT SOURCE TO CLI WITH COMMAND: spcli\r\n" );
+            }
+        }
+        else
+        {
+            strcpy( ( char * ) pcWriteBuffer, "\r\nERROR: CAN'T TURN ON UPC, CART TOO CLOSE TO TRACK LIMITS\r\n" );
+        }
+    }
+    else
+    {
+        /* Command parameters were neither "on", "1", "off" or "0". */
+        strcpy( ( char * ) pcWriteBuffer, "ERROR: INVALID PARAMETER VALUE, SHOULD BE: on, 1, off, 0\r\n" );
+    }
+
+    return pdFALSE;
+}
+
+/* command: upci */
+static portBASE_TYPE prvUpcICommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
+{
+    ( void ) pcCommandString;
+    ( void ) xWriteBufferLen;
+    configASSERT( pcWriteBuffer );
+
+    int8_t *pcParameter1;
+    BaseType_t xParameter1StringLength;
+
+    /* Get first command arguemnt. */
+    pcParameter1 = ( int8_t * ) FreeRTOS_CLIGetParameter( pcCommandString,            /* The command string itself. */
+                                                          1,                          /* Which parameter to return. */
+                                                          &xParameter1StringLength);  /* Store the parameter string length. */
+    
+    /* Terminate arguemnt string. */
+    pcParameter1[ xParameter1StringLength ] = 0x00;
+
+    if( !strcmp( ( const char * ) pcParameter1, "off" ) || !strcmp( ( const char * ) pcParameter1, "0" ) )
+    {
+        /* Controller Turn off case. */
+        /* Turn off controller, "upc off" / "upc 0" are both valid commands. */
+        vTaskSuspend( ctrl_6_I_FSF_uppos_task_handle );
+        dcm_set_output_volatage( 0.0f );
+        
+        /* Change current app state back to DEFAULT. */
+        app_current_state = DEFAULT;
+    }
+    else if( !strcmp( ( const char * ) pcParameter1, "on" ) || !strcmp( ( const char * ) pcParameter1, "1" ) )
+    {
+        if( cart_current_zone != FREEZING_ZONE_L || cart_current_zone != FREEZING_ZONE_R )
+        {
+            /* Controller turn on case. */
+            /* Even if controller is turned on, it will only work if the pendulum angle is in range [switch_angle_low, switch_angle_high]. */
+
+            /* Ensure that setpoint for cart postion from cli is the same as the setpoint used by controller tasks.
+            If it's not true, this means that the user changed source of cart pos. setpoint for controllers. 
+            ALL CONTROLLERS TASKS SHOULD BE TURNING ON WITH CART POS. SETPOINT SOURCE SET TO CLI, OTHERWISE DON'T TURN ON CONTROLLER. */
+            if( cart_position_setpoint_cm == &cart_position_setpoint_cm_cli )
+            {
+                // /* Set starting setpoint for cart position to its current position, so that the cart won't 
+                // instantly jump when the controller is turned on. Main cart position setpoint
+                // used by any controller task has to be the same as cart position set point from cli */
+                // cart_position_setpoint_cm_cli_raw = cart_position[ 0 ];
+                
+                if( app_current_state == DEFAULT )
+                {
+                    /* This command should only turn on "up position controller" when app is in the DEFAULT state.
+                    This means that it's not possible to use this command while app is in UNINITIALIZED, SWINGUP or DOWN POSITION CONTROLLER state. */
+                    
+                    /* Turn on up position controller, "upc on" / "upc 1" are both valid commands. */
+                    vTaskResume( ctrl_6_I_FSF_uppos_task_handle );
                     
                     /* Change app state to "down position controller" state. 
                     This will ensure that some cli commands can't be called. */

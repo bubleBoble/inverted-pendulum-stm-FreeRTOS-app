@@ -42,7 +42,7 @@ extern float pendulum_arm_angle_setpoint_rad_upc;
     extern float ctrl_Dt;
 #endif
 
-void ctrl_5_FSF_uppos_task( void *pvParameters )
+void ctrl_6_I_FSF_uppos_task( void *pvParameters )
 {
     /* For RTOS vTaskDelayUntil() */
     TickType_t xLastWakeTime = xTaskGetTickCount();
@@ -56,8 +56,10 @@ void ctrl_5_FSF_uppos_task( void *pvParameters )
     gains[1] - pend angle error gain,    units: V/rad
     gains[2] - cart speed error gain,    units: Vs/cm 
     gains[3] - pend speed error gain,    units: Vs/rad */
+
     /* Gains from first test iteration. There is about 2cm error in cart position. */
     float gains[4] = {-70.710678, -76.351277, -50.892920, -9.096002};
+
     gains[0] = gains[0] * 0.01f; // from V/m to V/cm
     gains[2] = gains[2] * 0.01f; // from V/m/s to V/cm/s
 
