@@ -40,7 +40,7 @@ float FIR_update( FIR_filter *fir, float inp )
 
     // Convolution, compute new output sample
     // 1. iterate through FIR impulse response samples (FIR_COEFFS)
-    // 2. mult. it by shifted samples insie circular buffer
+    // 2. mult. it by shifted samples inside circular buffer
     // iterate from the oldest to the most recent sample
     // can be the other way around, doesn't really matter for conv.
     fir->out = 0.0f;

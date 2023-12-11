@@ -188,18 +188,19 @@ void watchdogTask( void * pvParameters )
         if( app_current_state == SWINGUP )
         {
             /* App is in swingup state. */
-            
-            if( fabsf( pendulum_arm_angle_setpoint_rad_upc - pend_angle[ 0 ] ) < 40.0f*PI/180.0f ) 
+            // if( fabsf( pendulum_arm_angle_setpoint_rad_upc - pend_angle[ 0 ] ) < 70.0f*PI/180.0f ) 
+            if( ( ( pendulum_arm_angle_setpoint_rad_upc - pend_angle[ 0 ] ) < 126.0f*PI/180.0f ) &&
+                ( ( pendulum_arm_angle_setpoint_rad_upc - pend_angle[ 0 ] ) > 0.0f ) ) 
             {
                 /* Pendulum angle error is within pm. 25 degrees from up position. */
 
                 /* Suspend swingup task. */
                 vTaskSuspend( swingup_task_handle );
+                dcm_set_output_volatage( 0.0f );
                 // app_current_state = DEFAULT;
-                /* Resume UPC. */
+
+                /* Resume UPC, change app state to UPC. */
                 vTaskResume( ctrl_5_FSF_uppos_task_handle );    
-                
-                /* Change app state to UPC. */
                 app_current_state = UPC;
             }
         }

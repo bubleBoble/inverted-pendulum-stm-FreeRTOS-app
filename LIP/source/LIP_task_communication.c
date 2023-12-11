@@ -14,8 +14,10 @@
 
 /* These are defined in LIP_tasks_common.c */
 extern float pend_angle[ 2 ];
+extern float pend_speed_raw[ 2 ];
 extern float pend_speed[ 2 ];
 extern float cart_position[ 2 ];
+extern float cart_speed_raw[ 2 ];
 extern float cart_speed[ 2 ];
 extern float *cart_position_setpoint_cm;
 extern float number_of_pendulumarm_revolutions_dpc;
@@ -65,9 +67,9 @@ void comTask( void *pvParameters )
             sprintf( msg,
                     "%f,%f,%f,%f,%f,%f,%f,%f,%ld\r\n",
                     // for pendulum
-                    ( double ) pend_angle[ 0 ],
-                    ( double ) pend_speed[ 0 ],
+                    ( double ) pend_angle[ 0 ], 
                     ( double ) pendulum_arm_angle_setpoint_rad_upc,
+                    ( double ) pend_speed[ 0 ],
                     // for cart
                     ( double ) cart_position[ 0 ],
                     ( double ) cart_speed[ 0 ],
@@ -106,14 +108,16 @@ void comTask( void *pvParameters )
         #ifdef COM_SEND_DEFAULT
             /* Message content */
             sprintf( msg,
-                    "%f,%f,0,%f,%f,%f,%f,%ld\r\n",
+                    "%f,%f,0,%f,%f,0,%f,%ld\r\n",
                     // for pendulum
                     ( double ) pend_angle[ 0 ],
+                    // ( double ) pend_speed_raw[ 0 ],
                     ( double ) pend_speed[ 0 ],
                     // for cart
                     ( double ) cart_position[ 0 ],
+                    // ( double ) cart_speed_raw[ 0 ],
                     ( double ) cart_speed[ 0 ],
-                    ( double ) *cart_position_setpoint_cm,
+                    // ( double ) *cart_position_setpoint_cm,
                     //
                     ( double ) dcm_get_output_voltage(),
                     xLastWakeTime

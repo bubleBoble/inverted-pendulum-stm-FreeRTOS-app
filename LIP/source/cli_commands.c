@@ -292,7 +292,7 @@ void vRegisterCLICommands(void)
 /* command: task-stats */
 static portBASE_TYPE prvTaskStatsCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
 {
-    const int8_t *const pcTaskTableHeader = ( int8_t * ) "Task          State  Priority  Stack	#\r\n******************************************\r\n";
+    // const int8_t *const pcTaskTableHeader = ( int8_t * ) "Task          State  Priority  Stack	#\r\n******************************************\r\n";
 
     ( void ) pcCommandString;
     ( void ) xWriteBufferLen;

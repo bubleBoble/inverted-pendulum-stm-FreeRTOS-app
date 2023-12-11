@@ -2,11 +2,8 @@
  * This file provides task that pendulum swingup routine. This task should run
  * with sampling period of 10ms.
  *
- * Lookup table for swingup input voltage is written
+ * Lookup table for swingup input voltage is saved
  * in swingup_input_voltage_lookup_table.c.
- *
- * Note: To start swingup routine cart should be in position of about 0.2 meters. Task
- * should be run every 10ms and swingup routine shouldn't take longer than 3 seconds.
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  */
 #include "LIP_tasks_common.h"
@@ -40,9 +37,9 @@ extern TaskHandle_t ctrl_3_FSF_downpos_task_handle;
 // extern float LOOKUP_TABLE[ 301 ];
 
 /* swingup_control_2 lookup table. */
-// #define SWINGUP_START_POSITION 6.0f
 #define SWINGUP_START_POSITION 11.0f
 #define N_LOOKUP_SAMPLES 220
+// #define N_LOOKUP_SAMPLES 180
 #define LOOKUP_TABLE swingup_control_2
 extern float LOOKUP_TABLE[ 220 ];
 
@@ -91,11 +88,11 @@ void swingup_task( void *pvParameters )
                 vTaskSuspend( ctrl_3_FSF_downpos_task_handle );
                 app_current_state = SWINGUP;
 
-                com_send( "\r\nswingup in: 3.\r\n",  18 );
-                vTaskDelay( 1000 );
-                com_send(     "swingup in: 2.\r\n",  16 );
-                vTaskDelay( 1000 );
-                com_send(     "swingup in: 1.\r\n",  16 );
+                // com_send( "\r\nswingup in: 3.\r\n",  18 );
+                // vTaskDelay( 1000 );
+                // com_send(     "swingup in: 2.\r\n",  16 );
+                // vTaskDelay( 1000 );
+                // com_send(     "swingup in: 1.\r\n",  16 );
                 vTaskDelay( 1000 );
                 com_send(     "swingup in: 0.\r\n",  16 );
                 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */

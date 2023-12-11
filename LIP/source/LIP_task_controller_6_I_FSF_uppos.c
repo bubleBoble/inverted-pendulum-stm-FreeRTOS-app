@@ -58,10 +58,10 @@ void ctrl_6_I_FSF_uppos_task( void *pvParameters )
     gains[3] - pend speed error gain,    units: Vs/rad */
 
     /* Gains from first test iteration. There is about 2cm error in cart position. */
-    float gains[4] = {-70.710678, -76.351277, -50.892920, -9.096002};
-
-    gains[0] = gains[0] * 0.01f; // from V/m to V/cm
-    gains[2] = gains[2] * 0.01f; // from V/m/s to V/cm/s
+    float gains[ 5 ] = {-70.710678, -76.351277, -50.892920, -9.096002, -0.1f};
+    gains[ 0 ] = gains[ 0 ] * 0.01f; // from V/m to V/cm
+    gains[ 2 ] = gains[ 2 ] * 0.01f; // from V/m/s to V/cm/s
+    gains[ 4 ] = gains[ 4 ] * 0.01f;
 
     /* Allowed error for cart position in centimeters (cm).
     There will always be some steady state error becouse of
@@ -73,16 +73,21 @@ void ctrl_6_I_FSF_uppos_task( void *pvParameters )
 
     float ctrl_signal = 0.0f;
 
-    float cart_position_error = 0.0f;
-    float cart_speed_error    = 0.0f;
-    float pend_position_error = 0.0f;
-    float pend_speed_error    = 0.0f; 
+    float cart_position_error[ 2 ]     = { 0.0f }; // This error will be integrated, need two samples
+    float cart_speed_error             =   0.0f;
+    float pend_position_error          =   0.0f;
+    float pend_speed_error             =   0.0f; 
+    float cart_position_error_int[ 2 ] = { 0.0f }; // Integral of cart_position_error
 
-    /* These variables sum to final control signal */
+    /* These variables sum to final control signal. */
     float ctrl_cart_position_error = 0.0f;
     float ctrl_pend_angle_error    = 0.0f;
     float ctrl_cart_speed_error    = 0.0f;
     float ctrl_pend_speed_error    = 0.0f;
+    float ctrl_cart_position_error_int =  0.0f;
+    
+    /* Will be set to sum of last two cart position error samples. */
+    float sum_cart_position_error    =  0.0f; // for cart position error integaration
 
     for( ;; )
     {
@@ -93,10 +98,18 @@ void ctrl_6_I_FSF_uppos_task( void *pvParameters )
             /* Controller should only work when pendulum arm angle is in range [switch_angle_low, switch_angle_high]. */
 
             /* Calculate state varialbes errors */
-            cart_position_error =  *cart_position_setpoint_cm - cart_position[0]; 
-            cart_speed_error    = - cart_speed[ 0 ];
-            pend_position_error =   pendulum_arm_angle_setpoint_rad_upc - pend_angle[ 0 ];
-            pend_speed_error    = - pend_speed[ 0 ];
+            cart_position_error[ 1 ] = cart_position_error[ 0 ];
+            cart_position_error[ 0 ] =  *cart_position_setpoint_cm - cart_position[0]; 
+            cart_speed_error         = - cart_speed[ 0 ];
+            pend_position_error      =   pendulum_arm_angle_setpoint_rad_upc - pend_angle[ 0 ];
+            pend_speed_error         = - pend_speed[ 0 ];
+          
+            /* Integrate cart position error using Tustin method:
+            y[n] = y[n-1] + T/2 * ( u[n] + u[n-1] ),
+            constant "dt" is in ms so multiply by 0.001 to convert units to seconds */
+            sum_cart_position_error = cart_position_error[ 0 ] + cart_position_error[ 1 ];
+            cart_position_error_int[ 1 ] = cart_position_error_int[ 0 ];
+            cart_position_error_int[ 0 ] = cart_position_error_int[ 1 ] + dt*0.001/2 * ( sum_cart_position_error );
 
             /* Calculate control signal contribution of each state variable error */
             /* Deadzone protection nr. 3 "tanh switching" : non linear cart position gain.
@@ -106,7 +119,7 @@ void ctrl_6_I_FSF_uppos_task( void *pvParameters )
             /* Default cart position error gain is gains[0] */
             if( cart_position_error > 0 )
             {
-                ctrl_cart_position_error =   tanhf( 7.0f * cart_position_error ) * ( gains[ 0 ] * cart_position_error + voltage_deadzone );
+                ctrl_cart_position_error =   tanhf( 7.0f * cart_position_error[ 0 ] ) * ( gains[ 0 ] * cart_position_error[ 0 ] + voltage_deadzone );
                 // if( ctrl_cart_position_error < voltage_deadzone )
                 // {
                 //     ctrl_cart_position_error = 0.0f;
@@ -114,16 +127,17 @@ void ctrl_6_I_FSF_uppos_task( void *pvParameters )
             } 
             else if( cart_position_error < - 0 )
             {
-                ctrl_cart_position_error = - tanhf( 7.0f * cart_position_error ) * ( gains[ 0 ] * cart_position_error - voltage_deadzone );
+                ctrl_cart_position_error = - tanhf( 7.0f * cart_position_error[ 0 ] ) * ( gains[ 0 ] * cart_position_error[ 0 ] - voltage_deadzone );
                 // if( ctrl_cart_position_error > -voltage_deadzone )
                 // {
                 //     ctrl_cart_position_error = 0.0f;
                 // }
             }
             // ctrl_cart_position_error = cart_position_error   * gains[ 0 ];
-            ctrl_pend_angle_error    = pend_position_error   * gains[ 1 ];
-            ctrl_cart_speed_error    = cart_speed_error      * gains[ 2 ];
-            ctrl_pend_speed_error    = pend_speed_error      * gains[ 3 ];
+            ctrl_pend_angle_error           = pend_position_error           * gains[ 1 ];
+            ctrl_cart_speed_error           = cart_speed_error              * gains[ 2 ];
+            ctrl_pend_speed_error           = pend_speed_error              * gains[ 3 ];
+            ctrl_cart_position_error_int    = cart_position_error_int[ 0 ]  * gains[ 4 ];
 
             #ifdef COM_SEND_CTRL_DEBUG
                 ctrl_xw = ctrl_cart_position_error;
@@ -137,7 +151,8 @@ void ctrl_6_I_FSF_uppos_task( void *pvParameters )
             ctrl_signal = ctrl_cart_position_error + 
                           ctrl_pend_angle_error    + 
                           ctrl_cart_speed_error    + 
-                          ctrl_pend_speed_error;
+                          ctrl_pend_speed_error    +
+                          ctrl_cart_position_error_int;
         
             /* Set calculated output voltage / control signal. */
             dcm_set_output_volatage( ctrl_signal );

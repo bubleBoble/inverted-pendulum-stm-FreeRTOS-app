@@ -49,11 +49,11 @@ void ctrl_3_FSF_downpos_task( void *pvParameters )
     TickType_t xLastWakeTime = xTaskGetTickCount();
 
     /* Controller should turn on only if the angle is in range [switch_angle_low, switch_angle_high]. */
-    /* Note: pm. 85 degree works very well with swingdown routine. */
-    float switch_angle_low  = 90.0f  * PI / 180.0f;   // lower boundry in radians
-    float switch_angle_high = 270.0f * PI / 180.0f;   // upper boundry in radians
+    /* Note: pm. 80 degree works very well with swingdown routine. */
+    float switch_angle_low  = ( 180 - 80 )  * PI / 180.0f;   // lower boundry in radians
+    float switch_angle_high = ( 180 + 80 )  * PI / 180.0f;   // upper boundry in radians, było 290
 
-    /* Down position gains, u = F*(x_setpoint - x)
+    /* Down position gains, ideally u = F*(x_setpoint - x)
     gains[0] - cart position error gain, units: V/cm
     gains[1] - pend angle error gain,    units: V/rad
     gains[2] - cart speed error gain,    units: Vs/cm
@@ -68,7 +68,7 @@ void ctrl_3_FSF_downpos_task( void *pvParameters )
     values are set as they are set in matlab simulation. */
     float cart_position_allowed_error_cm = 0.2f;
     float pend_position_allowed_error    = 3.0f * PI/180.0f;
-    float voltage_deadzone = 0.75f;
+    float voltage_deadzone = 1.0f;
 
     float ctrl_signal = 0.0f;
 
@@ -95,24 +95,25 @@ void ctrl_3_FSF_downpos_task( void *pvParameters )
             pend_position_error =   pendulum_arm_angle_setpoint_rad_dpc - pend_angle[ 0 ];
             pend_speed_error    = - pend_speed[ 0 ];
 
-            /* Calculate control signal contribution of each state variable error */
-            /* Deadzone protection nr. 3 "tanh switching" : non linear cart position gain.
-            When cart postion error is >0 linear feedback with offset +1V is used
-            to compensate for voltage deadzone, for <0 error, y-axis mirror is used.
+            /* Calculate control signal contribution of each state variable error 
+            Non linear cart position gain. When cart postion error is >0 linear
+            feedback with offset +1V is used to compensate for voltage deadzone, 
+            for <0 error, y-axis mirror is used. 
             graph: https://www.desmos.com/calculator/ycgnqpyy9y */
-
             /* Cart position error control signal component. */
             if( cart_position_error > cart_position_allowed_error_cm )
             {
-                ctrl_cart_position_error =   tanhf( 8.0f * cart_position_error ) * ( gains[0] * cart_position_error + voltage_deadzone );
+                // ctrl_cart_position_error =   tanhf( 8.0f * cart_position_error ) * ( gains[0] * cart_position_error + voltage_deadzone );
+                ctrl_cart_position_error = gains[0] * cart_position_error + voltage_deadzone;
             }
             else if( cart_position_error < -cart_position_allowed_error_cm )
             {
-                ctrl_cart_position_error = - tanhf( 8.0f * cart_position_error ) * ( gains[0] * cart_position_error - voltage_deadzone );
+                // ctrl_cart_position_error = - tanhf( 8.0f * cart_position_error ) * ( gains[0] * cart_position_error - voltage_deadzone );
+                ctrl_cart_position_error = gains[0] * cart_position_error - voltage_deadzone;
             }
             else
             {
-                ctrl_cart_position_error = 0;
+                ctrl_cart_position_error = 0.0f;
             }
 
             /* Pendulum angle error control signal component. */
@@ -138,8 +139,7 @@ void ctrl_3_FSF_downpos_task( void *pvParameters )
                 ctrl_Dt = ctrl_pend_speed_error;
             #endif
 
-            /* Regular controller update - with constant gains
-            control signal = ( state_setpoint - state ) * ( F ) */
+            /* Sum control. */
             ctrl_signal = ctrl_cart_position_error +
                         ctrl_pend_angle_error      +
                         ctrl_cart_speed_error      +
@@ -152,7 +152,7 @@ void ctrl_3_FSF_downpos_task( void *pvParameters )
             // }
             // if( ( cart_position[0] < 5.0f ) || ( cart_position[0] > (TRACK_LEN_MAX_CM-5.0f) ) )
 
-            /* Set calculated output voltage */
+            /* Set calculated output voltage. */
             dcm_set_output_volatage( ctrl_signal );
         }
         else

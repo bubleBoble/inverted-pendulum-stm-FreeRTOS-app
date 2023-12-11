@@ -64,7 +64,7 @@ Send: pend angle, pend speed, 0,
 /* multiply by dt_inv instead of dividing by dt. */
 #define dt_inv              100.0f
 /* Sampling period in ms for watchdog task. */
-#define dt_watchdog         100
+#define dt_watchdog         25
 /* Sampling period in ms for console task. */
 #define dt_console          50
 /* Sampling period in ms for communication task. */

@@ -48,8 +48,8 @@ void ctrl_5_FSF_uppos_task( void *pvParameters )
     TickType_t xLastWakeTime = xTaskGetTickCount();
 
     /* Controller should turn on only if the angle is in range [switch_angle_low, switch_angle_high]. */
-    float switch_angle_low  = -27.0f * PI / 180.0f;    // lower boundry in radians
-    float switch_angle_high =  27.0f * PI / 180.0f;    // upper boundry in radians
+    float switch_angle_low  = -35.0f * PI / 180.0f;    // lower boundry in radians
+    float switch_angle_high =  35.0f * PI / 180.0f;    // upper boundry in radians
 
     /* Down position gains, u = F*(x_setpoint - x) 
     gains[0] - cart position error gain, units: V/cm
@@ -57,16 +57,17 @@ void ctrl_5_FSF_uppos_task( void *pvParameters )
     gains[2] - cart speed error gain,    units: Vs/cm 
     gains[3] - pend speed error gain,    units: Vs/rad */
     /* Gains from first test iteration. There is about 2cm error in cart position. */
-    float gains[4] = {-70.710678, -76.351277, -50.892920, -9.096002};
+    // float gains[ 4 ] = { -70.710678, -76.351277, -50.892920, -9.096002 }; // dobre na koniec
+    // float gains[ 4 ] = {-113.3893f, -182.8326f,  -93.5820f, -20.7248f}; // totalnie za duże gainy
+    // float gains[ 4 ] = {-73.4597, -76.0f, -50.0f, -9.0f};
+    float gains[ 4 ] = {-74.5, -76.0f, -51.5f, -9.0f}; // dobre
+    
     gains[0] = gains[0] * 0.01f; // from V/m to V/cm
     gains[2] = gains[2] * 0.01f; // from V/m/s to V/cm/s
 
     /* Allowed error for cart position in centimeters (cm).
     There will always be some steady state error becouse of
-    the presence of voltage deadzone in real pendulum. This
-    values are set as they are set in matlab simulation. */
-    // float cart_position_allowed_error_cm = 1.0f;
-    // float pend_position_allowed_error    = 1.0f * PI/180.0f;
+    the presence of voltage deadzone in real pendulum. */
     float voltage_deadzone = 1.0f;
 
     float ctrl_signal = 0.0f;
@@ -96,27 +97,25 @@ void ctrl_5_FSF_uppos_task( void *pvParameters )
             pend_position_error =   pendulum_arm_angle_setpoint_rad_upc - pend_angle[ 0 ];
             pend_speed_error    = - pend_speed[ 0 ];
 
-            /* Calculate control signal contribution of each state variable error */
-            /* Deadzone protection nr. 3 "tanh switching" : non linear cart position gain.
-            When cart postion error is >0 linear feedback with offset +1V is used
-            to compensate for voltage deadzone, for <0 error, y-axis mirror is used.
+            /* Calculate control signal contribution of each state variable error 
+            Non linear cart position gain. When cart postion error is >0 linear
+            feedback with offset +1V is used to compensate for voltage deadzone, 
+            for <0 error, y-axis mirror is used. 
             graph: https://www.desmos.com/calculator/ycgnqpyy9y */
             /* Default cart position error gain is gains[0] */
-            if( cart_position_error > 0 )
+            if( cart_position_error > 0.0f )
             {
-                ctrl_cart_position_error =   tanhf( 7.0f * cart_position_error ) * ( gains[ 0 ] * cart_position_error + voltage_deadzone );
-                // if( ctrl_cart_position_error < voltage_deadzone )
-                // {
-                //     ctrl_cart_position_error = 0.0f;
-                // }
+                // ctrl_cart_position_error =   tanhf( 7.0f * cart_position_error ) * ( gains[ 0 ] * cart_position_error + voltage_deadzone );
+                ctrl_cart_position_error = gains[ 0 ] * cart_position_error + voltage_deadzone;
             } 
-            else if( cart_position_error < - 0 )
+            else if( cart_position_error < - 0.0f )
             {
-                ctrl_cart_position_error = - tanhf( 7.0f * cart_position_error ) * ( gains[ 0 ] * cart_position_error - voltage_deadzone );
-                // if( ctrl_cart_position_error > -voltage_deadzone )
-                // {
-                //     ctrl_cart_position_error = 0.0f;
-                // }
+                // ctrl_cart_position_error = - tanhf( 7.0f * cart_position_error ) * ( gains[ 0 ] * cart_position_error - voltage_deadzone );
+                ctrl_cart_position_error = gains[ 0 ] * cart_position_error - voltage_deadzone;
+            }
+            else
+            {
+                ctrl_cart_position_error = 0.0f;
             }
             // ctrl_cart_position_error = cart_position_error   * gains[ 0 ];
             ctrl_pend_angle_error    = pend_position_error   * gains[ 1 ];
@@ -130,8 +129,7 @@ void ctrl_5_FSF_uppos_task( void *pvParameters )
                 ctrl_Dt = ctrl_pend_speed_error;
             #endif
 
-            /* Regular controller update - with constant gains
-            control signal = ( state_setpoint - state ) * ( F ) */
+            /* Sum control. */
             ctrl_signal = ctrl_cart_position_error + 
                           ctrl_pend_angle_error    + 
                           ctrl_cart_speed_error    + 
