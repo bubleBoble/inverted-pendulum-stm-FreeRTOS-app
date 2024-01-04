@@ -101,6 +101,10 @@ Reset meaning start "home" command procedure from the very begining, it doesn't 
 Should be set to 1 with every call to cli command "swingup". */
 uint32_t reset_home = 0;
 
+// /* Global flag to signal that test command should be reset.
+// Reset meaning start "test" command procedure from the very begining, it doesn't reset the task itself. */
+// uint32_t reset_test = 0;
+
 /* These are used as global variables to hold four control signal components from 
 active controller task. COM_SEND_CTRL_DEBUG is defined in main_LIP.c */
 #ifdef COM_SEND_CTRL_DEBUG
@@ -197,6 +201,12 @@ TaskHandle_t bounceoff_task_handle = NULL;
 StackType_t bounceoff_STACKBUFFER [ BOUNCEOFF_STACK_DEPTH ];
 StaticTask_t bounceoff_TASKBUFFER_TCB;
 
+/* Test task. */
+TaskHandle_t test_task_handle = NULL;
+StackType_t test_STACKBUFFER [ TEST_STACK_DEPTH ];
+StaticTask_t test_TASKBUFFER_TCB;
+
+
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
 /* CREATE TASKS. */
@@ -254,7 +264,7 @@ void LIPcreateTasks()
                                              ( const char * ) "SwingupOpt", 
                                              SWINGUP_STACK_DEPTH,
                                              ( void * ) 0,
-                                            //  tskIDLE_PRIORITY+PRIORITY_CTRL,
+                                             //  tskIDLE_PRIORITY+PRIORITY_CTRL,
                                              tskIDLE_PRIORITY+PRIORITY_CTRL,
                                              swingup_STACKBUFFER,
                                              &swingup_TASKBUFFER_TCB);
@@ -312,7 +322,7 @@ void LIPcreateTasks()
                                                       (const char*) "UpPosCtrl",
                                                       CTRL_5_FSF_UPPOS_STACK_DEPTH,
                                                       (void *) 0,
-                                                      tskIDLE_PRIORITY+3,
+                                                      tskIDLE_PRIORITY+PRIORITY_CTRL,
                                                       ctrl_5_FSF_uppos_STACKBUFFER,
                                                       &ctrl_5_FSF_uppos_TASKBUFFER_TCB );
     /* All controller tasks are suspended right after their creation. */  
@@ -339,6 +349,14 @@ void LIPcreateTasks()
     //                                       tskIDLE_PRIORITY + 2,
     //                                       RAWCOM_STACKBUFFER,
     //                                       &RAWCOM_TASKBUFFER_TCB);
+
+    test_task_handle = xTaskCreateStatic( test_task,
+                                          (const char*) "test",
+                                          TEST_STACK_DEPTH,
+                                          (void *) 0,
+                                          tskIDLE_PRIORITY+PRIORITY_TEST,
+                                          test_STACKBUFFER,
+                                          &test_TASKBUFFER_TCB );
 
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
     /* Down position controllers test tasks */

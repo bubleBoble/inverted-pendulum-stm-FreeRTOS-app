@@ -61,7 +61,11 @@ void ctrl_5_FSF_uppos_task( void *pvParameters )
     // float gains[ 4 ] = {-113.3893f, -182.8326f,  -93.5820f, -20.7248f}; // totalnie za duże gainy
     // float gains[ 4 ] = {-73.4597, -76.0f, -50.0f, -9.0f};
     float gains[ 4 ] = {-74.5, -76.0f, -51.5f, -9.0f}; // dobre
-    
+    // float gains[ 4 ] = {-90.0f, -76.0f, -51.5f, -9.0f};
+    // float gains[ 4 ] = {-74.5, -76.0f, -51.5f, -9.0f};
+    // float gains[ 4 ] = {-74.5, -76.0f, -40.5f, -11.0f};
+    // gains_upc = &gains; 
+
     gains[0] = gains[0] * 0.01f; // from V/m to V/cm
     gains[2] = gains[2] * 0.01f; // from V/m/s to V/cm/s
 

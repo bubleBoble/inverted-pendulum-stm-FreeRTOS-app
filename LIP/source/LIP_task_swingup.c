@@ -51,7 +51,7 @@ void swingup_task( void *pvParameters )
     /* Index for swingup_control lookup table. */
     uint32_t lookup_index = 0;
 
-    char msg[128];
+    // char msg[128];
 
     for( ;; )
     {
@@ -75,13 +75,13 @@ void swingup_task( void *pvParameters )
                 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
                 /* Change to DPC state. */
                 vTaskResume( ctrl_3_FSF_downpos_task_handle );
-                app_current_state = DPC;
-                com_send( "\r\nDPC ON\r\n", 10 );
+                // app_current_state = DPC;
+                // com_send( "\r\nDPC ON\r\n", 10 );
                 
                 /* Change DPC setpoint to necessary swingup cart start position. */
                 cart_position_setpoint_cm_cli_raw = SWINGUP_START_POSITION;
-                sprintf( msg, "\r\nSETPOINT CHANGED TO: %f\r\n", ( double ) SWINGUP_START_POSITION );
-                com_send( msg, strlen(msg) );
+                // sprintf( msg, "\r\nSETPOINT CHANGED TO: %f\r\n", ( double ) SWINGUP_START_POSITION );
+                // com_send( msg, strlen(msg) );
 
                 /* Wait for 3 seconds - should be enough for cart to reach SWINGUP_START_POSITION. */
                 vTaskDelay( 3000 );
@@ -93,8 +93,8 @@ void swingup_task( void *pvParameters )
                 // com_send(     "swingup in: 2.\r\n",  16 );
                 // vTaskDelay( 1000 );
                 // com_send(     "swingup in: 1.\r\n",  16 );
-                vTaskDelay( 1000 );
-                com_send(     "swingup in: 0.\r\n",  16 );
+                // vTaskDelay( 1000 );
+                // com_send(     "swingup in: 0.\r\n",  16 );
                 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
                 /* Reset task last wake time, so that when this task resumed, timing works properly. */

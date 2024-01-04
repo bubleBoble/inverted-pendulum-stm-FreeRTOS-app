@@ -37,6 +37,7 @@ char defaultState_prePrompt[]    = "[    default    ]";
 char dpcState_prePrompt[]        = "[      dpc      ]";
 char upcState_prePrompt[]        = "[      upc      ]";
 char swingupState_prePrompt[]    = "[    swingup    ]";
+char testState_prePrompt[]       = "[     tests     ]";
 
 /* Function to print full prompt with preprompt string which indicates current app state. */
 void show_prompt( void )
@@ -60,6 +61,10 @@ void show_prompt( void )
     else if ( app_current_state == SWINGUP )
     {
         prompt.prePromptStr = swingupState_prePrompt;
+    }
+    else if ( app_current_state == TEST )
+    {
+        prompt.prePromptStr = testState_prePrompt;
     }
     else
     {

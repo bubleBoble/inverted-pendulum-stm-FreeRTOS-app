@@ -81,6 +81,7 @@ extern TaskHandle_t ctrl_5_FSF_uppos_task_handle;
 extern TaskHandle_t ctrl_6_I_FSF_uppos_task_handle;
 extern TaskHandle_t swingup_task_handle;
 extern TaskHandle_t swingdown_task_handle;
+extern TaskHandle_t test_task_handle;
 
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  * CLI commands prototypes
@@ -152,6 +153,13 @@ static portBASE_TYPE prvBrCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen
 
 /* command: bounceoff */
 static portBASE_TYPE prvBounceOffCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
+
+/* command: test */
+static portBASE_TYPE prvTestCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
+
+/* command: upcg */
+// static portBASE_TYPE prvUpcgCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
+
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  * CLI commands definition structures & registration
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -232,13 +240,25 @@ static const CLI_Command_Definition_t commands_list[] =
     },
     {
         .pcCommand                      = ( const int8_t * const ) "swingup",
-        .pcHelpString                   = ( const int8_t * const ) "swingup     :    Start pendulum swingup routine.\r\n",
+        .pcHelpString                   = ( const int8_t * const ) "swingup     :    Start pendulum swingup routine\r\n",
+        .pxCommandInterpreter           = prvSWINGUPCommand,
+        .cExpectedNumberOfParameters    = 0
+    },
+    {
+        .pcCommand                      = ( const int8_t * const ) "swu",
+        .pcHelpString                   = ( const int8_t * const ) "swu         :    Alias for swingup command\r\n",
         .pxCommandInterpreter           = prvSWINGUPCommand,
         .cExpectedNumberOfParameters    = 0
     },
     {
         .pcCommand                      = ( const int8_t * const ) "swingdown",
-        .pcHelpString                   = ( const int8_t * const ) "swingdown   :    Start pendulum swingdown routine.\r\n",
+        .pcHelpString                   = ( const int8_t * const ) "swingdown   :    Start pendulum swingdown routine\r\n",
+        .pxCommandInterpreter           = prvSWINGDOWNCommand,
+        .cExpectedNumberOfParameters    = 0
+    },
+    {
+        .pcCommand                      = ( const int8_t * const ) "swd",
+        .pcHelpString                   = ( const int8_t * const ) "swd         :    Alias for swingdown command\r\n",
         .pxCommandInterpreter           = prvSWINGDOWNCommand,
         .cExpectedNumberOfParameters    = 0
     },
@@ -261,6 +281,12 @@ static const CLI_Command_Definition_t commands_list[] =
         .cExpectedNumberOfParameters    = 1
     },
     {
+        .pcCommand                      = ( const int8_t * const ) "v", 
+        .pcHelpString                   = ( const int8_t * const ) "v           :    Alias for \"vol\" command\r\n",
+        .pxCommandInterpreter           = prvVolCommand,
+        .cExpectedNumberOfParameters    = 1
+    },
+    {
         .pcCommand                      = ( const int8_t * const ) "br", 
         .pcHelpString                   = ( const int8_t * const ) "br          :    Brake, sets output voltage to zero, suspend any active control task\r\n",
         .pxCommandInterpreter           = prvBrCommand,
@@ -270,6 +296,12 @@ static const CLI_Command_Definition_t commands_list[] =
         .pcCommand                      = ( const int8_t * const ) "bo", 
         .pcHelpString                   = ( const int8_t * const ) "bo          :    Turn on or off cart min max bounce off protection\r\n",
         .pxCommandInterpreter           = prvBounceOffCommand,
+        .cExpectedNumberOfParameters    = 1
+    },
+    {
+        .pcCommand                      = ( const int8_t * const ) "test", 
+        .pcHelpString                   = ( const int8_t * const ) "test        :    Starts a test procedure\r\n",
+        .pxCommandInterpreter           = prvTestCommand,
         .cExpectedNumberOfParameters    = 1
     },
     {
@@ -285,6 +317,7 @@ void vRegisterCLICommands(void)
         FreeRTOS_CLIRegisterCommand(&commands_list[command_index++]);
     }
 }
+
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  * CLI commands callback functions definitions
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -354,7 +387,7 @@ static portBASE_TYPE prvHomeCommand( int8_t *pcWriteBuffer, size_t xWriteBufferL
 
             // sprintf( msg_buffer, "\r\nCart already in min position, going right.\r\n" ); // 44 chars
             // com_send( msg_buffer, strlen( msg_buffer ) );
-            strcpy( ( char * ) pcWriteBuffer, "\r\nCart already in min position, going right.\r\n" );
+            // strcpy( ( char * ) pcWriteBuffer, "\r\nCart already in min position, going right.\r\n" );
         }
         else
         {
@@ -368,7 +401,7 @@ static portBASE_TYPE prvHomeCommand( int8_t *pcWriteBuffer, size_t xWriteBufferL
 
             // sprintf( msg_buffer, "\r\nCart position arbitrary, going left, then to track center.\r\n" ); // 59 chars
             // com_send( msg_buffer, strlen( msg_buffer ) );
-            strcpy( ( char * ) pcWriteBuffer, "\r\nCart position arbitrary, going left, then to track center.\r\n" );
+            // strcpy( ( char * ) pcWriteBuffer, "\r\nCart position arbitrary, going left, then to track center.\r\n" );
         }
     }
     else if( app_current_state == DEFAULT )
@@ -384,7 +417,7 @@ static portBASE_TYPE prvHomeCommand( int8_t *pcWriteBuffer, size_t xWriteBufferL
 
             // sprintf( msg_buffer, "\r\nGoing right\r\n" );
             // com_send( msg_buffer, strlen( msg_buffer ) );
-            strcpy(  ( char * ) pcWriteBuffer, "\r\nGoing right\r\n" );
+            // strcpy(  ( char * ) pcWriteBuffer, "\r\nGoing right\r\n" );
         }
         else
         {
@@ -396,7 +429,7 @@ static portBASE_TYPE prvHomeCommand( int8_t *pcWriteBuffer, size_t xWriteBufferL
 
             // sprintf( msg_buffer, "\r\nGoing left\r\n" );
             // com_send( msg_buffer, strlen( msg_buffer ) );
-            strcpy(  ( char * ) pcWriteBuffer, "\r\nGoing left\r\n" );
+            // strcpy(  ( char * ) pcWriteBuffer, "\r\nGoing left\r\n" );
         }
     }
     else if( app_current_state == DPC || app_current_state == UPC )
@@ -417,7 +450,7 @@ static portBASE_TYPE prvHomeCommand( int8_t *pcWriteBuffer, size_t xWriteBufferL
         
             // sprintf( msg_buffer, "\r\nController cart setpoint changed to home position.\r\n" );
             // com_send( msg_buffer, strlen( msg_buffer ) );
-            strcpy(  ( char * ) pcWriteBuffer, "\r\nController cart setpoint changed to home position.\r\n" );
+            // strcpy(  ( char * ) pcWriteBuffer, "\r\nController cart setpoint changed to home position.\r\n" );
         }
     }
     // else if( app_current_state == SWINGUP )
@@ -843,7 +876,7 @@ static portBASE_TYPE prvSPCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen
                 else
                 {
                     /* Parameter passed is a number, display new setpoint. */
-                    sprintf( ( char * ) pcWriteBuffer, "\r\nNew cart setpoint: %f\r\n", (double) new_setpoint );
+                    // sprintf( ( char * ) pcWriteBuffer, "\r\nNew cart setpoint: %f\r\n", (double) new_setpoint );
 
                     /* Write new setpoint to _raw cli setpoint (unfiltered). 
                     cart_position_setpoint_cm_cli_raw acts as input to cart_position_setpoint_cm_cli low-pass filter.
@@ -905,9 +938,6 @@ static portBASE_TYPE prvSWINGDOWNCommand( int8_t *pcWriteBuffer, size_t xWriteBu
 
     if( app_current_state == UPC )
     {
-        /* App is in DEFAULT STATE and cart position is at position 20cm pm 1cm.
-        Swingup can be started. */
-        
         /* Reset lookup_index in swingup task for loop. */
         reset_swingdown = 1;
 
@@ -1040,4 +1070,105 @@ static portBASE_TYPE prvBounceOffCommand( int8_t *pcWriteBuffer, size_t xWriteBu
     return pdFALSE;
 }
 
+/* command: test */
+static portBASE_TYPE prvTestCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
+{
+    /* This command will send notification to test task that will performe selected test procedure. */
 
+    ( void ) pcCommandString;
+    ( void ) xWriteBufferLen;
+    configASSERT( pcWriteBuffer );
+
+    // /* Set reset_test flag to 1, it should be reset to 0 in test task. */
+    // reset_test = 1;
+
+    if( app_current_state == UNINITIALIZED )
+    {
+        strcpy( ( char * ) pcWriteBuffer, "\r\nInitialize first. Run \"home\" command\r\n" );
+    }
+    else if( app_current_state != DEFAULT )
+    {
+        strcpy( ( char * ) pcWriteBuffer, "\r\nApp state not DEFAULT. Run \"break\" command\r\n" );
+    }
+    else if( app_current_state == DEFAULT )
+    {
+        /* Change app state to TEST. */
+        app_current_state = TEST;
+
+        xTaskNotifyIndexed( test_task_handle,         /* Task to notify. */
+                            0,                        /* Notification index is 0. */
+                            TEST_1,                   /* Used to update notification value. */
+                            eSetValueWithOverwrite ); /* Overwrite task notif. value even if it hasn't been read. */
+
+        strcpy( ( char * ) pcWriteBuffer, "\r\nStarting test procedure nr. 1\r\n" );
+    }
+    else
+    {
+        /* App not in any known state. */
+        strcpy( ( char * ) pcWriteBuffer, "\r\nApp not in valid state. Run \"reset\" command\r\n" );
+    }
+
+    return pdFALSE;
+}
+
+// /* command: upcg */
+// static portBASE_TYPE prvUpcgCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
+// {
+//     ( void ) pcCommandString;
+//     ( void ) xWriteBufferLen;
+//     configASSERT( pcWriteBuffer );
+
+//     int8_t *pcParameter1;
+//     int8_t *pcParameter2;
+//     int8_t *pcParameter3;
+//     int8_t *pcParameter4;
+//     BaseType_t xParameter1StringLength;
+//     BaseType_t xParameter2StringLength;
+//     BaseType_t xParameter3StringLength;
+//     BaseType_t xParameter4StringLength;
+
+//     char* errCheck;
+    
+//     /* Get command arguemnts. */
+//     pcParameter1 = ( int8_t * ) FreeRTOS_CLIGetParameter( pcCommandString,            /* The command string itself. */
+//                                                           1,                          /* Which parameter to return. */
+//                                                           &xParameter1StringLength);  /* Store the parameter string length. */
+//     pcParameter2 = ( int8_t * ) FreeRTOS_CLIGetParameter( pcCommandString,
+//                                                           2,
+//                                                           &xParameter2StringLength);       
+//     pcParameter3 = ( int8_t * ) FreeRTOS_CLIGetParameter( pcCommandString,
+//                                                           3,
+//                                                           &xParameter3StringLength);   
+//     pcParameter4 = ( int8_t * ) FreeRTOS_CLIGetParameter( pcCommandString,
+//                                                           4,
+//                                                           &xParameter4StringLength);                                                      
+    
+//     /* Terminate arguemnt string. */
+//     pcParameter1[ xParameter1StringLength ] = 0x00;
+//     pcParameter2[ xParameter2StringLength ] = 0x00;
+//     pcParameter3[ xParameter3StringLength ] = 0x00;
+//     pcParameter4[ xParameter4StringLength ] = 0x00;
+
+//     gains_upc[ 0 ] = strtof( ( const char * )pcParameter1, &errCheck );
+//     if( ( int8_t * ) errCheck == pcParameter1 ) 
+//     {
+//         strcpy( ( char * ) pcWriteBuffer, ( const char * ) "\r\nERROR: PARAMETER HAS TO BE A NUMBER\r\n" );
+//     }
+//     gains_upc[ 1 ] = strtof( ( const char * )pcParameter2, &errCheck );
+//     if( ( int8_t * ) errCheck == pcParameter1 ) 
+//     {
+//         strcpy( ( char * ) pcWriteBuffer, ( const char * ) "\r\nERROR: PARAMETER HAS TO BE A NUMBER\r\n" );
+//     }
+//     gains_upc[ 2 ] = strtof( ( const char * )pcParameter3, &errCheck );
+//     if( ( int8_t * ) errCheck == pcParameter1 ) 
+//     {
+//         strcpy( ( char * ) pcWriteBuffer, ( const char * ) "\r\nERROR: PARAMETER HAS TO BE A NUMBER\r\n" );
+//     }
+//     gains_upc[ 3 ] = strtof( ( const char * )pcParameter4, &errCheck );
+//     if( ( int8_t * ) errCheck == pcParameter1 ) 
+//     {
+//         strcpy( ( char * ) pcWriteBuffer, ( const char * ) "\r\nERROR: PARAMETER HAS TO BE A NUMBER\r\n" );
+//     }
+
+//     return pdFALSE;
+// }

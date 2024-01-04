@@ -21,7 +21,7 @@ void set_output_voltage_nobounce( float voltage );
 
 void cartWorkerTask( void * pvParameters )
 {
-    /* Hold value retrieved from task notification. */
+    /* Holds value retrieved from task notification. */
     uint32_t notif_value_received;
 
     for ( ;; )

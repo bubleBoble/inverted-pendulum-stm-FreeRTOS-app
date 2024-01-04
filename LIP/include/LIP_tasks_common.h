@@ -29,7 +29,9 @@ enum lip_app_states
     Available commands: home, upc, spcli, sppot, sp, swingdown, <enter_key> */
     UPC,
     /* SWINGUP state. */
-    SWINGUP
+    SWINGUP,
+    /* TEST state. */
+    TEST
 };
 #endif // LIP_APP_STATES_ENUM
 
@@ -49,6 +51,12 @@ worker task. */
 #define GO_RIGHT    0x01    /* Move cart to the right. */
 #define GO_LEFT     0x02    /* Move cart to the left. */
 #define SP_HOME     0x04    /* Change controler cart setpoint to home position. */
+
+/* These values are used as task notification value for
+test task. */
+#define TEST_1     0x01    /* Move cart to the right. */
+#define TEST_2     0x02    /* Move cart to the left. */
+#define TEST_3     0x04    /* Change controler cart setpoint to home position. */
 
 /* Watchdog task - protection for cart min and max positions. */
 void watchdogTask( void *pvParameters );
@@ -129,6 +137,10 @@ void swingdown_task( void *pvParameters );
 /* Bounce off task. */
 void bounceoff_task( void *pvParameters );
 #define BOUNCEOFF_STACK_DEPTH 1000
+
+/* Test task. */
+void test_task( void *pvParameters );
+#define TEST_STACK_DEPTH 500
 
 /* Function to create tasks. */
 void LIPcreateTasks(void);

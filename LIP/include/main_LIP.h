@@ -68,7 +68,7 @@ Send: pend angle, pend speed, 0,
 /* Sampling period in ms for console task. */
 #define dt_console          50
 /* Sampling period in ms for communication task. */
-#define dt_com              50
+#define dt_com              10
 // #define dt_com              10 // used for tests
 /* Sampling period in ms for worker task. */
 #define dt_cartworker       50
@@ -89,6 +89,8 @@ Swingup output voltage lookup table was calculated with 10ms sampling period. */
 #define PRIORITY_COM        1 
 /* Priority for cartworker task. */
 #define PRIORITY_CARTWORKER 1 
+/* Priority for test task. */
+#define PRIORITY_TEST 2 
 
 /* For freertos config.
 If time slicing was used, task "watchdog", "util" and "controler" could take
