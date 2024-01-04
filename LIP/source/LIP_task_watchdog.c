@@ -41,10 +41,10 @@ extern float pendulum_arm_angle_setpoint_rad_upc;
 extern uint32_t bounce_off_action_on;
 extern uint32_t swingup_task_resumed;
 
-extern TaskHandle_t ctrl_3_FSF_downpos_task_handle;
+extern TaskHandle_t ctrl_downposition_taskHandle;
 extern TaskHandle_t bounceoff_task_handle;
 extern TaskHandle_t swingup_task_handle;
-extern TaskHandle_t ctrl_5_FSF_uppos_task_handle;
+extern TaskHandle_t ctrl_upposition_taskHandle;
 
 
 void watchdogTask( void * pvParameters )
@@ -72,8 +72,8 @@ void watchdogTask( void * pvParameters )
                 cart_current_zone = FREEZING_ZONE_L;
 
                 /* Suspend controller tasks. */
-                vTaskSuspend( ctrl_3_FSF_downpos_task_handle );
-                vTaskSuspend( ctrl_5_FSF_uppos_task_handle );
+                vTaskSuspend( ctrl_downposition_taskHandle );
+                vTaskSuspend( ctrl_upposition_taskHandle );
                 // vTaskSuspend( swingup_task_handle );
 
                 if( bounce_off_action_on )
@@ -105,8 +105,8 @@ void watchdogTask( void * pvParameters )
                 cart_current_zone = FREEZING_ZONE_R;
 
                 /* Suspend controller tasks. */
-                vTaskSuspend( ctrl_3_FSF_downpos_task_handle );
-                vTaskSuspend( ctrl_5_FSF_uppos_task_handle );
+                vTaskSuspend( ctrl_downposition_taskHandle );
+                vTaskSuspend( ctrl_upposition_taskHandle );
                 // vTaskSuspend( swingup_task_handle );
 
                 if( bounce_off_action_on )
@@ -141,8 +141,8 @@ void watchdogTask( void * pvParameters )
             dcm_set_output_volatage( 0.0f );
 
             /* Suspend controller tasks. */
-            vTaskSuspend( ctrl_3_FSF_downpos_task_handle );
-            vTaskSuspend( ctrl_5_FSF_uppos_task_handle );
+            vTaskSuspend( ctrl_downposition_taskHandle );
+            vTaskSuspend( ctrl_upposition_taskHandle );
 
             /* Set output voltage to zero again in case any controller task 
             managed to set any output voltage. */
@@ -166,8 +166,8 @@ void watchdogTask( void * pvParameters )
             dcm_set_output_volatage( 0.0f );
 
             /* Suspend controller tasks. */
-            vTaskSuspend( ctrl_3_FSF_downpos_task_handle );
-            vTaskSuspend( ctrl_5_FSF_uppos_task_handle );
+            vTaskSuspend( ctrl_downposition_taskHandle );
+            vTaskSuspend( ctrl_upposition_taskHandle );
 
             /* Set output voltage to zero again in case any controller task 
             managed to set any output voltage. */
@@ -200,7 +200,7 @@ void watchdogTask( void * pvParameters )
                 // app_current_state = DEFAULT;
 
                 /* Resume UPC, change app state to UPC. */
-                vTaskResume( ctrl_5_FSF_uppos_task_handle );    
+                vTaskResume( ctrl_upposition_taskHandle );    
                 app_current_state = UPC;
             }
         }

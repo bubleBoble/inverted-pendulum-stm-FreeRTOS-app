@@ -1,4 +1,4 @@
-#include "SP_filter.h"
+#include "LP_filter.h"
 
 void LP_init( LP_filter *lp, float timeConstant, float samplingTime )
 {

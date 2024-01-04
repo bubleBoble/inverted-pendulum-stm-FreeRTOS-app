@@ -69,16 +69,14 @@ extern uint32_t reset_lookup_index;
 extern uint32_t reset_swingdown;
 extern uint32_t reset_home;
 
-extern TaskHandle_t watchdogTaskHandle;
-extern TaskHandle_t consoleTaskHandle;
-extern TaskHandle_t utilTaskHandle;
-extern TaskHandle_t comTaskHandle;
-extern TaskHandle_t rawComTaskHandle;
-extern TaskHandle_t cartWorkerTaskHandle;
-extern TaskHandle_t ctrl_3_FSF_downpos_task_handle;
-extern TaskHandle_t ctrl_4_I_FSF_downpos_task_handle;
-extern TaskHandle_t ctrl_5_FSF_uppos_task_handle;
-extern TaskHandle_t ctrl_6_I_FSF_uppos_task_handle;
+extern TaskHandle_t watchdog_taskHandle;
+extern TaskHandle_t console_taskHandle;
+extern TaskHandle_t util_taskHandle;
+extern TaskHandle_t com_taskHandle;
+extern TaskHandle_t rawcom_taskHandle;
+extern TaskHandle_t cartworker_TaskHandle;
+extern TaskHandle_t ctrl_downposition_taskHandle;
+extern TaskHandle_t ctrl_upposition_taskHandle;
 extern TaskHandle_t swingup_task_handle;
 extern TaskHandle_t swingdown_task_handle;
 extern TaskHandle_t test_task_handle;
@@ -89,76 +87,76 @@ extern TaskHandle_t test_task_handle;
  */
 /* This command shows task statistics
 command : task-stats */
-static portBASE_TYPE prvTaskStatsCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
+static portBASE_TYPE taskStats_command( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
 
 /* Command to turn communication on or off,
 command : ENTER_KEY */
-static portBASE_TYPE prvComOnOffCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
+static portBASE_TYPE comOnOff_command( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
 
 /* Command to move cart to default position - center of the track, no controller is used,
 command : home */
-static portBASE_TYPE prvHomeCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
+static portBASE_TYPE home_command( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
 
 /* Command to turn on or off down position controller,
 command : dpc */
-static portBASE_TYPE prvDpcCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
+static portBASE_TYPE dpc_command( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
 
 /* Command to turn on/off down position controller with integral action on cart position error,
 command : dpci */
-static portBASE_TYPE prvDpcICommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
+static portBASE_TYPE dpci_command( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
 
 /* Command to turn on or off up position controller,
 command : upc */
-static portBASE_TYPE prvUpcCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
+static portBASE_TYPE upc_command( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
 
 /* Command to turn on or off up position controller with integral action,
 command : upci */
-static portBASE_TYPE prvUpcICommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
+static portBASE_TYPE upci_command( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
 
 /* Command to clear console screen, at least for putty,
 command : clc */
-static portBASE_TYPE prvClcCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
+static portBASE_TYPE clc_command( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
 
 /* Command to change cart position setpoint to potentiometer,
 command: sppot */
-static portBASE_TYPE prvSPPOTCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
+static portBASE_TYPE sppot_command( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
 
 /* Command to change cart position setpoint to cli,
 command: spcli */
-static portBASE_TYPE prvSPCLICommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
+static portBASE_TYPE spcli_command( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
 
 /* Command to change current cart position setpoint,
 command: sp */
-static portBASE_TYPE prvSPCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
+static portBASE_TYPE sp_command( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
 
 /* Command to start swingup action,
 command: swingup */
-static portBASE_TYPE prvSWINGUPCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
+static portBASE_TYPE swingup_command( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
 
 /* Command to start swingdown action,
 command: swingdown */
-static portBASE_TYPE prvSWINGDOWNCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
+static portBASE_TYPE swingdown_command( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
 
 /* Command to reset uC,
 command: reset */
-static portBASE_TYPE prvRstUCCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
+static portBASE_TYPE reset_command( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
 
 /* Command to manually set dc motor output voltage (via setpoint pointer so it is filtered / smooth),
 command: vol <voltage_setting> */
-static portBASE_TYPE prvVolCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
+static portBASE_TYPE vol_command( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
 
 /* Command to brake the cart, sets dc motor output voltage instantly to zero,
 command: br <voltage_setting> */
-static portBASE_TYPE prvBrCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
+static portBASE_TYPE br_command( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
 
 /* command: bounceoff */
-static portBASE_TYPE prvBounceOffCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
+static portBASE_TYPE bounceoff_command( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
 
 /* command: test */
-static portBASE_TYPE prvTestCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
+static portBASE_TYPE test_command( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
 
-/* command: upcg */
-// static portBASE_TYPE prvUpcgCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
+/* command: tf1 */
+static portBASE_TYPE tf1_command( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString );
 
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  * CLI commands definition structures & registration
@@ -169,139 +167,139 @@ static const CLI_Command_Definition_t commands_list[] =
     {
         .pcCommand                      = ( const int8_t * const ) "task-stats",
         .pcHelpString                   = ( const int8_t * const ) "task-stats  :    Displays a table showing the state of each FreeRTOS task\r\n                 (B)blocked, (R)Ready, (D)Deleted, (S)Suspended or block w/o timeout\r\n",
-        .pxCommandInterpreter           = prvTaskStatsCommand,
+        .pxCommandInterpreter           = taskStats_command,
         .cExpectedNumberOfParameters    = 0
     },
     {
         .pcCommand                      = ( const int8_t * const ) "",
         .pcHelpString                   = ( const int8_t * const ) "<enter_key> :    Start / stop data streaming\r\n",
-        .pxCommandInterpreter           = prvComOnOffCommand,
+        .pxCommandInterpreter           = comOnOff_command,
         .cExpectedNumberOfParameters    = 0
     },
     {
         .pcCommand                      = ( const int8_t * const ) "q",
         .pcHelpString                   = ( const int8_t * const ) "q :              Start / stop data streaming\r\n",
-        .pxCommandInterpreter           = prvComOnOffCommand,
+        .pxCommandInterpreter           = comOnOff_command,
         .cExpectedNumberOfParameters    = 0
     },
     {
         .pcCommand                      = ( const int8_t * const ) "home",
         .pcHelpString                   = ( const int8_t * const ) "home        :    Go to home cart positon - center of the track, no controller used\r\n",
-        .pxCommandInterpreter           = prvHomeCommand,
+        .pxCommandInterpreter           = home_command,
         .cExpectedNumberOfParameters    = 0
     },
     {
         .pcCommand                      = ( const int8_t * const ) "dpc",
         .pcHelpString                   = ( const int8_t * const ) "dpc         :    Turn on/off down position controller, default cart pos. setpoint is current cart position\r\n                 dpc on/off, or dpc 1/0, available only in DEFAULT state\r\n",
-        .pxCommandInterpreter           = prvDpcCommand,
+        .pxCommandInterpreter           = dpc_command,
         .cExpectedNumberOfParameters    = 1
     },
     {
         .pcCommand                      = ( const int8_t * const ) "dpci",
         .pcHelpString                   = ( const int8_t * const ) "dpci        :    Turn on/off down position controller with integral action on cart position error\r\n                 dpc on/off, or dpc 1/0, available only in DEFAULT state\r\n",
-        .pxCommandInterpreter           = prvDpcICommand,
+        .pxCommandInterpreter           = dpci_command,
         .cExpectedNumberOfParameters    = 1
     },
     {
         .pcCommand                      = ( const int8_t * const ) "upc",
         .pcHelpString                   = ( const int8_t * const ) "upc         :    Turn on/off up position controller, default cart pos. setpoint is current cart position\r\n                 dpc on/off, or dpc 1/0, available only in DEFAULT state\r\n",
-        .pxCommandInterpreter           = prvUpcCommand,
+        .pxCommandInterpreter           = upc_command,
         .cExpectedNumberOfParameters    = 1
     },
     {
         .pcCommand                      = ( const int8_t * const ) "upci",
         .pcHelpString                   = ( const int8_t * const ) "upci        :    Turn on/off up position controller with integral action on cart position error\r\n                 dpc on/off, or dpc 1/0, available only in DEFAULT state\r\n",
-        .pxCommandInterpreter           = prvUpcICommand,
+        .pxCommandInterpreter           = upci_command,
         .cExpectedNumberOfParameters    = 1
     },
     {
         .pcCommand                      = ( const int8_t * const ) "clc",
         .pcHelpString                   = ( const int8_t * const ) "clc         :    Clears console screen\r\n",
-        .pxCommandInterpreter           = prvClcCommand,
+        .pxCommandInterpreter           = clc_command,
         .cExpectedNumberOfParameters    = 0
     },
     {
         .pcCommand                      = ( const int8_t * const ) "sppot",
         .pcHelpString                   = ( const int8_t * const ) "sppot       :    Change cart possition setpoint source to potentiometer\r\n",
-        .pxCommandInterpreter           = prvSPPOTCommand,
+        .pxCommandInterpreter           = sppot_command,
         .cExpectedNumberOfParameters    = 0
     },
     {
         .pcCommand                      = ( const int8_t * const ) "spcli",
         .pcHelpString                   = ( const int8_t * const ) "spcli       :    Change cart possition setpoint source to CLI\r\n",
-        .pxCommandInterpreter           = prvSPCLICommand,
+        .pxCommandInterpreter           = spcli_command,
         .cExpectedNumberOfParameters    = 0
     },
     {
         .pcCommand                      = ( const int8_t * const ) "sp",
         .pcHelpString                   = ( const int8_t * const ) "sp          :    Change cart possition setpoint source to CLI\r\n                 When run with no arguemnt display current cart position setpoint\r\n",
-        .pxCommandInterpreter           = prvSPCommand,
+        .pxCommandInterpreter           = sp_command,
         .cExpectedNumberOfParameters    = 1
     },
     {
         .pcCommand                      = ( const int8_t * const ) "swingup",
         .pcHelpString                   = ( const int8_t * const ) "swingup     :    Start pendulum swingup routine\r\n",
-        .pxCommandInterpreter           = prvSWINGUPCommand,
+        .pxCommandInterpreter           = swingup_command,
         .cExpectedNumberOfParameters    = 0
     },
     {
         .pcCommand                      = ( const int8_t * const ) "swu",
         .pcHelpString                   = ( const int8_t * const ) "swu         :    Alias for swingup command\r\n",
-        .pxCommandInterpreter           = prvSWINGUPCommand,
+        .pxCommandInterpreter           = swingup_command,
         .cExpectedNumberOfParameters    = 0
     },
     {
         .pcCommand                      = ( const int8_t * const ) "swingdown",
         .pcHelpString                   = ( const int8_t * const ) "swingdown   :    Start pendulum swingdown routine\r\n",
-        .pxCommandInterpreter           = prvSWINGDOWNCommand,
+        .pxCommandInterpreter           = swingdown_command,
         .cExpectedNumberOfParameters    = 0
     },
     {
         .pcCommand                      = ( const int8_t * const ) "swd",
         .pcHelpString                   = ( const int8_t * const ) "swd         :    Alias for swingdown command\r\n",
-        .pxCommandInterpreter           = prvSWINGDOWNCommand,
+        .pxCommandInterpreter           = swingdown_command,
         .cExpectedNumberOfParameters    = 0
     },
     {
         .pcCommand                      = ( const int8_t * const ) "reset", 
         .pcHelpString                   = ( const int8_t * const ) "reset       :    Resets uC\r\n",
-        .pxCommandInterpreter           = prvRstUCCommand,
+        .pxCommandInterpreter           = reset_command,
         .cExpectedNumberOfParameters    = 0
     },
     {
         .pcCommand                      = ( const int8_t * const ) "rr", 
         .pcHelpString                   = ( const int8_t * const ) "rr          :    Alias for \"reset\" command\r\n",
-        .pxCommandInterpreter           = prvRstUCCommand,
+        .pxCommandInterpreter           = reset_command,
         .cExpectedNumberOfParameters    = 0
     },
     {
         .pcCommand                      = ( const int8_t * const ) "vol", 
         .pcHelpString                   = ( const int8_t * const ) "vol         :    Manually set DC motor voltage\r\n",
-        .pxCommandInterpreter           = prvVolCommand,
+        .pxCommandInterpreter           = vol_command,
         .cExpectedNumberOfParameters    = 1
     },
     {
         .pcCommand                      = ( const int8_t * const ) "v", 
         .pcHelpString                   = ( const int8_t * const ) "v           :    Alias for \"vol\" command\r\n",
-        .pxCommandInterpreter           = prvVolCommand,
+        .pxCommandInterpreter           = vol_command,
         .cExpectedNumberOfParameters    = 1
     },
     {
         .pcCommand                      = ( const int8_t * const ) "br", 
         .pcHelpString                   = ( const int8_t * const ) "br          :    Brake, sets output voltage to zero, suspend any active control task\r\n",
-        .pxCommandInterpreter           = prvBrCommand,
+        .pxCommandInterpreter           = br_command,
         .cExpectedNumberOfParameters    = 0
     },
     {
         .pcCommand                      = ( const int8_t * const ) "bo", 
         .pcHelpString                   = ( const int8_t * const ) "bo          :    Turn on or off cart min max bounce off protection\r\n",
-        .pxCommandInterpreter           = prvBounceOffCommand,
+        .pxCommandInterpreter           = bounceoff_command,
         .cExpectedNumberOfParameters    = 1
     },
     {
         .pcCommand                      = ( const int8_t * const ) "test", 
         .pcHelpString                   = ( const int8_t * const ) "test        :    Starts a test procedure\r\n",
-        .pxCommandInterpreter           = prvTestCommand,
+        .pxCommandInterpreter           = test_command,
         .cExpectedNumberOfParameters    = 1
     },
     {
@@ -323,7 +321,7 @@ void vRegisterCLICommands(void)
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  */
 /* command: task-stats */
-static portBASE_TYPE prvTaskStatsCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
+static portBASE_TYPE taskStats_command( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
 {
     // const int8_t *const pcTaskTableHeader = ( int8_t * ) "Task          State  Priority  Stack	#\r\n******************************************\r\n";
 
@@ -340,26 +338,26 @@ static portBASE_TYPE prvTaskStatsCommand( int8_t *pcWriteBuffer, size_t xWriteBu
 }
 
 /* command: <enter_key> (data logging on/off) */
-static portBASE_TYPE prvComOnOffCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
+static portBASE_TYPE comOnOff_command( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
 {
     ( void ) pcCommandString;
     ( void ) xWriteBufferLen;
     configASSERT( pcWriteBuffer );
 
-    if( eTaskGetState( comTaskHandle ) == eSuspended )
+    if( eTaskGetState( com_taskHandle ) == eSuspended )
     {
-        vTaskResume( comTaskHandle );
+        vTaskResume( com_taskHandle );
     }
     else
     {
-        vTaskSuspend( comTaskHandle );
+        vTaskSuspend( com_taskHandle );
     }
 
     return pdFALSE;
 }
 
 /* command: home */
-static portBASE_TYPE prvHomeCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
+static portBASE_TYPE home_command( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
 {
     /* This command will send notification to worker task that will take action based on notification value. */
 
@@ -380,7 +378,7 @@ static portBASE_TYPE prvHomeCommand( int8_t *pcWriteBuffer, size_t xWriteBufferL
             /* Cart is already in zero position.
             Send notification to worker_task,
             set notification bit 0 - go to the right until cart is in the middle. */
-            xTaskNotifyIndexed( cartWorkerTaskHandle,     /* Task to notify. */
+            xTaskNotifyIndexed( cartworker_TaskHandle,     /* Task to notify. */
                                 0,                        /* Notification index is 0. */
                                 GO_RIGHT,                 /* Used to update notification value. */
                                 eSetValueWithOverwrite ); /* Overwrite task notif. value even if it hasn't been read. */
@@ -394,7 +392,7 @@ static portBASE_TYPE prvHomeCommand( int8_t *pcWriteBuffer, size_t xWriteBufferL
             /* CALIBRATION - Cart position is arbitrary.
             Send notification to worker_task,
             set notification bit 1 - go left until min position reached, then go right to track center. */
-            xTaskNotifyIndexed( cartWorkerTaskHandle,     /* Task to notify. */
+            xTaskNotifyIndexed( cartworker_TaskHandle,     /* Task to notify. */
                                 0,                        /* Notification index is 0. */
                                 GO_LEFT+GO_RIGHT,         /* Used to update notification value. */
                                 eSetValueWithOverwrite ); /* Overwrite task notif. value even if it hasn't been read. */
@@ -410,7 +408,7 @@ static portBASE_TYPE prvHomeCommand( int8_t *pcWriteBuffer, size_t xWriteBufferL
         if( cart_position[ 0 ] < TRACK_LEN_MAX_CM/2 )
         {
             /* Cart is to the left of track center. */
-            xTaskNotifyIndexed( cartWorkerTaskHandle,     /* Task to notify. */
+            xTaskNotifyIndexed( cartworker_TaskHandle,     /* Task to notify. */
                                 0,                        /* Notification index is 0. */
                                 GO_RIGHT,                 /* Used to update notification value. */
                                 eSetValueWithOverwrite ); /* Overwrite task notif. value even if it hasn't been read. */
@@ -422,7 +420,7 @@ static portBASE_TYPE prvHomeCommand( int8_t *pcWriteBuffer, size_t xWriteBufferL
         else
         {
             /* Cart is to the right of track center. */
-            xTaskNotifyIndexed( cartWorkerTaskHandle,     /* Task to notify. */
+            xTaskNotifyIndexed( cartworker_TaskHandle,     /* Task to notify. */
                                 0,                        /* Notification index is 0. */
                                 GO_LEFT,                  /* Used to update notification value. */
                                 eSetValueWithOverwrite ); /* Overwrite task notif. value even if it hasn't been read. */
@@ -443,7 +441,7 @@ static portBASE_TYPE prvHomeCommand( int8_t *pcWriteBuffer, size_t xWriteBufferL
             is set to setpoint from cli command "spcli", otherwise if the source of setpoint is external potentiometer, which reading 
             can't be overwritten, the value of this setpoint will be arbitrary - the same as physical pot setting, and 
             the behaviour of cart will be less predictable. */
-            xTaskNotifyIndexed( cartWorkerTaskHandle,     /* Task to notify. */
+            xTaskNotifyIndexed( cartworker_TaskHandle,     /* Task to notify. */
                                 0,                        /* Notification index is 0. */
                                 SP_HOME,                  /* Used to update notification value. */
                                 eSetValueWithOverwrite ); /* Overwrite task notif. value even if it hasn't been read. */
@@ -466,7 +464,7 @@ static portBASE_TYPE prvHomeCommand( int8_t *pcWriteBuffer, size_t xWriteBufferL
 }
 
 /* command: dpc */
-static portBASE_TYPE prvDpcCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
+static portBASE_TYPE dpc_command( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
 {
     ( void ) pcCommandString;
     ( void ) xWriteBufferLen;
@@ -487,7 +485,7 @@ static portBASE_TYPE prvDpcCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLe
     {
         /* Controller Turn off case. */
         /* Turn off down position controller, "dcp off" / "dpc 0" are both valid commands. */
-        vTaskSuspend( ctrl_3_FSF_downpos_task_handle );
+        vTaskSuspend( ctrl_downposition_taskHandle );
         dcm_set_output_volatage( 0.0f );
         
         /* Change current app state back to DEFAULT. */
@@ -516,7 +514,7 @@ static portBASE_TYPE prvDpcCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLe
                     This means that it's not possible to use this command while app is in UNINITIALIZED, SWINGUP or UPPOSITION CONTROLLER state. */
                     
                     /* Turn on down position controller, "dcp on" / "dpc 1" are both valid commands. */
-                    vTaskResume( ctrl_3_FSF_downpos_task_handle );
+                    vTaskResume( ctrl_downposition_taskHandle );
                     
                     /* Change app state to "down position controller" state. 
                     This will ensure that some cli commands can't be called. */
@@ -544,7 +542,7 @@ static portBASE_TYPE prvDpcCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLe
 }
 
 /* command: dpci */
-static portBASE_TYPE prvDpcICommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
+static portBASE_TYPE dpci_command( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
 {
     ( void ) pcCommandString;
     ( void ) xWriteBufferLen;
@@ -565,7 +563,7 @@ static portBASE_TYPE prvDpcICommand( int8_t *pcWriteBuffer, size_t xWriteBufferL
     {
         /* Controller Turn off case. */
         /* Turn off down position controller, "dcp off" / "dpc 0" are both valid commands. */
-        vTaskSuspend( ctrl_4_I_FSF_downpos_task_handle );
+        vTaskSuspend( ctrl_downposition_taskHandle );
         dcm_set_output_volatage( 0.0f );
         
         /* Change current app state back to DEFAULT. */
@@ -594,7 +592,7 @@ static portBASE_TYPE prvDpcICommand( int8_t *pcWriteBuffer, size_t xWriteBufferL
                     This means that it's not possible to use this command while app is in UNINITIALIZED, SWINGUP or UPPOSITION CONTROLLER state. */
                     
                     /* Turn on down position controller, "dcp on" / "dpc 1" are both valid commands. */
-                    vTaskResume( ctrl_4_I_FSF_downpos_task_handle );
+                    vTaskResume( ctrl_downposition_taskHandle );
                     
                     /* Change app state to "down position controller" state. 
                     This will ensure that some cli commands can't be called. */
@@ -622,7 +620,7 @@ static portBASE_TYPE prvDpcICommand( int8_t *pcWriteBuffer, size_t xWriteBufferL
 }
 
 /* command: upc */
-static portBASE_TYPE prvUpcCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
+static portBASE_TYPE upc_command( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
 {
     ( void ) pcCommandString;
     ( void ) xWriteBufferLen;
@@ -643,7 +641,7 @@ static portBASE_TYPE prvUpcCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLe
     {
         /* Controller Turn off case. */
         /* Turn off controller, "upc off" / "upc 0" are both valid commands. */
-        vTaskSuspend( ctrl_5_FSF_uppos_task_handle );
+        vTaskSuspend( ctrl_upposition_taskHandle );
         dcm_set_output_volatage( 0.0f );
         
         /* Change current app state back to DEFAULT. */
@@ -672,7 +670,7 @@ static portBASE_TYPE prvUpcCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLe
                     This means that it's not possible to use this command while app is in UNINITIALIZED, SWINGUP or DOWN POSITION CONTROLLER state. */
                     
                     /* Turn on up position controller, "upc on" / "upc 1" are both valid commands. */
-                    vTaskResume( ctrl_5_FSF_uppos_task_handle );
+                    vTaskResume( ctrl_upposition_taskHandle );
                     
                     /* Change app state to "down position controller" state. 
                     This will ensure that some cli commands can't be called. */
@@ -700,7 +698,7 @@ static portBASE_TYPE prvUpcCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLe
 }
 
 /* command: upci */
-static portBASE_TYPE prvUpcICommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
+static portBASE_TYPE upci_command( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
 {
     ( void ) pcCommandString;
     ( void ) xWriteBufferLen;
@@ -721,7 +719,7 @@ static portBASE_TYPE prvUpcICommand( int8_t *pcWriteBuffer, size_t xWriteBufferL
     {
         /* Controller Turn off case. */
         /* Turn off controller, "upc off" / "upc 0" are both valid commands. */
-        vTaskSuspend( ctrl_6_I_FSF_uppos_task_handle );
+        vTaskSuspend( ctrl_upposition_taskHandle );
         dcm_set_output_volatage( 0.0f );
         
         /* Change current app state back to DEFAULT. */
@@ -750,7 +748,7 @@ static portBASE_TYPE prvUpcICommand( int8_t *pcWriteBuffer, size_t xWriteBufferL
                     This means that it's not possible to use this command while app is in UNINITIALIZED, SWINGUP or DOWN POSITION CONTROLLER state. */
                     
                     /* Turn on up position controller, "upc on" / "upc 1" are both valid commands. */
-                    vTaskResume( ctrl_6_I_FSF_uppos_task_handle );
+                    vTaskResume( ctrl_upposition_taskHandle );
                     
                     /* Change app state to "down position controller" state. 
                     This will ensure that some cli commands can't be called. */
@@ -778,7 +776,7 @@ static portBASE_TYPE prvUpcICommand( int8_t *pcWriteBuffer, size_t xWriteBufferL
 }
 
 /* command: clc */
-static portBASE_TYPE prvClcCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
+static portBASE_TYPE clc_command( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
 {
     ( void ) pcCommandString;
     ( void ) xWriteBufferLen;
@@ -792,7 +790,7 @@ static portBASE_TYPE prvClcCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLe
 }
 
 /* command: sppot */
-static portBASE_TYPE prvSPPOTCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
+static portBASE_TYPE sppot_command( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
 {
     ( void ) pcCommandString;
     ( void ) xWriteBufferLen;
@@ -805,7 +803,7 @@ static portBASE_TYPE prvSPPOTCommand( int8_t *pcWriteBuffer, size_t xWriteBuffer
 }
 
 /* command: spcli */
-static portBASE_TYPE prvSPCLICommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
+static portBASE_TYPE spcli_command( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
 {
     ( void ) pcCommandString;
     ( void ) xWriteBufferLen;
@@ -818,7 +816,7 @@ static portBASE_TYPE prvSPCLICommand( int8_t *pcWriteBuffer, size_t xWriteBuffer
 }
 
 /* command: sp */
-static portBASE_TYPE prvSPCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
+static portBASE_TYPE sp_command( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
 {
     ( void ) pcCommandString;
     ( void ) xWriteBufferLen;
@@ -897,7 +895,7 @@ static portBASE_TYPE prvSPCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen
 }
 
 /* command: swingup */
-static portBASE_TYPE prvSWINGUPCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
+static portBASE_TYPE swingup_command( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
 {
     ( void ) pcCommandString;
     ( void ) xWriteBufferLen;
@@ -930,7 +928,7 @@ static portBASE_TYPE prvSWINGUPCommand( int8_t *pcWriteBuffer, size_t xWriteBuff
 }
 
 /* command: swingdown */
-static portBASE_TYPE prvSWINGDOWNCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
+static portBASE_TYPE swingdown_command( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
 {
     ( void ) pcCommandString;
     ( void ) xWriteBufferLen;
@@ -956,7 +954,7 @@ static portBASE_TYPE prvSWINGDOWNCommand( int8_t *pcWriteBuffer, size_t xWriteBu
 }
 
 /* command: reset */
-static portBASE_TYPE prvRstUCCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
+static portBASE_TYPE reset_command( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
 {
     ( void ) pcCommandString;
     ( void ) xWriteBufferLen;
@@ -971,7 +969,7 @@ static portBASE_TYPE prvRstUCCommand( int8_t *pcWriteBuffer, size_t xWriteBuffer
 
 /* command: vol
 Available in: UNINITIALIZED and DEFAULT states. */
-static portBASE_TYPE prvVolCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )  
+static portBASE_TYPE vol_command( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )  
 {
     configASSERT( pcWriteBuffer );
     ( void ) xWriteBufferLen;
@@ -1012,7 +1010,7 @@ static portBASE_TYPE prvVolCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLe
 }
 
 /* command: br */
-static portBASE_TYPE prvBrCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
+static portBASE_TYPE br_command( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
 {
     ( void ) pcCommandString;
     ( void ) xWriteBufferLen;
@@ -1029,8 +1027,8 @@ static portBASE_TYPE prvBrCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen
         /* Suspend any control task. Calls to vTaskSuspend are not cumulative 
         so it can be used on task which is already suspended and one vTaskResume will
         be enoguh to bring that task back to work. */
-        vTaskSuspend( ctrl_3_FSF_downpos_task_handle );
-        vTaskSuspend( ctrl_5_FSF_uppos_task_handle );
+        vTaskSuspend( ctrl_downposition_taskHandle );
+        vTaskSuspend( ctrl_upposition_taskHandle );
         vTaskSuspend( swingup_task_handle );
     }
 
@@ -1041,7 +1039,7 @@ static portBASE_TYPE prvBrCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen
 }
 
 /* command: bo (bounceoff) */
-static portBASE_TYPE prvBounceOffCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
+static portBASE_TYPE bounceoff_command( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
 {
     ( void ) pcCommandString;
     ( void ) xWriteBufferLen;
@@ -1071,7 +1069,7 @@ static portBASE_TYPE prvBounceOffCommand( int8_t *pcWriteBuffer, size_t xWriteBu
 }
 
 /* command: test */
-static portBASE_TYPE prvTestCommand( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
+static portBASE_TYPE test_command( int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString )
 {
     /* This command will send notification to test task that will performe selected test procedure. */
 

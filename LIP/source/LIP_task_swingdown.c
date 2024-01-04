@@ -21,8 +21,8 @@ extern float pendulum_angle_in_base_range_upc;
 extern enum lip_app_states app_current_state;
 extern uint32_t swingup_task_resumed;
 
-extern TaskHandle_t ctrl_3_FSF_downpos_task_handle;
-extern TaskHandle_t ctrl_5_FSF_uppos_task_handle;
+extern TaskHandle_t ctrl_downposition_taskHandle;
+extern TaskHandle_t ctrl_upposition_taskHandle;
 
 void swingdown_task( void *pvParameters )
 {
@@ -46,7 +46,7 @@ void swingdown_task( void *pvParameters )
                 vTaskDelay(1000);
                 
                 /* Suspend UPC. */
-                vTaskSuspend( ctrl_5_FSF_uppos_task_handle );
+                vTaskSuspend( ctrl_upposition_taskHandle );
 
                 /* Help pendulum swing freely in CCW direction */
                 dcm_set_output_volatage( 2.0f );
@@ -57,7 +57,7 @@ void swingdown_task( void *pvParameters )
                 // cart_position_setpoint_cm_cli_raw = TRACK_LEN_MAX_CM / 2.0f;
 
                 /* Resume DPC. */
-                vTaskResume( ctrl_3_FSF_downpos_task_handle );
+                vTaskResume( ctrl_downposition_taskHandle );
 
                 /* Resume DPC AND change app state do DPC. */
                 app_current_state = DPC;
@@ -73,7 +73,7 @@ void swingdown_task( void *pvParameters )
                 vTaskDelay(1000);
 
                 /* Suspend UPC. */
-                vTaskSuspend( ctrl_5_FSF_uppos_task_handle );
+                vTaskSuspend( ctrl_upposition_taskHandle );
 
                 /* Help pendulum swing freely in CW direction */
                 dcm_set_output_volatage( -2.0f );
@@ -84,7 +84,7 @@ void swingdown_task( void *pvParameters )
                 // cart_position_setpoint_cm_cli_raw = TRACK_LEN_MAX_CM / 2.0f;
 
                 /* Resume DPC AND change app state do DPC. */
-                vTaskResume( ctrl_3_FSF_downpos_task_handle );
+                vTaskResume( ctrl_downposition_taskHandle );
                 app_current_state = DPC;
 
                 reset_swingdown = 0;

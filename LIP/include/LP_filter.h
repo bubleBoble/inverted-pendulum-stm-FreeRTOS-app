@@ -3,8 +3,8 @@
  * T - time constant
  */
 
-#ifndef SP_FILTER_H
-#define SP_FILTER_H
+#ifndef LP_FILTER_H
+#define LP_FILTER_H
 
 #include <stdint.h>
 
@@ -20,4 +20,4 @@ typedef struct
 void LP_init( LP_filter *lp, float timeConstant, float samplingTime );
 float LP_update( LP_filter *lp, float in );
 
-#endif // SP_FILTER_H
+#endif // LP_FILTER_H

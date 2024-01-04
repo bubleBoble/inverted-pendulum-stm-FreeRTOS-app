@@ -8,7 +8,7 @@ extern enum cart_position_zones cart_current_zone;
 extern float *cart_position_setpoint_cm;
 extern float cart_position_setpoint_cm_cli;
 extern enum lip_app_states app_current_state; 
-extern TaskHandle_t ctrl_3_FSF_downpos_task_handle;
+extern TaskHandle_t ctrl_downposition_taskHandle;
 extern float cart_position_setpoint_cm_cli_raw;
 extern uint32_t swingup_task_resumed;
 extern uint32_t reset_lookup_index;
@@ -56,7 +56,7 @@ void testProcedure1( void )
     //     if( cart_position_setpoint_cm == &cart_position_setpoint_cm_cli )
     //     {
     //         /* Turn on down position controller, "dcp on" / "dpc 1" are both valid commands. */
-    //         vTaskResume( ctrl_3_FSF_downpos_task_handle );
+    //         vTaskResume( ctrl_downposition_taskHandle );
             
     //         /* Change app state to "down position controller" state. 
     //         This will ensure that some cli commands can't be called. */
@@ -125,7 +125,7 @@ void testProcedure1( void )
     // vTaskDelayUntil( &xLastWakeTime, 2000 );
 
     // /* [ 18 ] dpc off */
-    // vTaskSuspend( ctrl_3_FSF_downpos_task_handle );
+    // vTaskSuspend( ctrl_downposition_taskHandle );
     // // app_current_state = DEFAULT;
     // dcm_set_output_volatage( 0.0f );
 

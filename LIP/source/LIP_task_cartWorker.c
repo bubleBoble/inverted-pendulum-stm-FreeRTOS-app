@@ -15,7 +15,7 @@ extern float *cart_position_setpoint_cm;
 extern float cart_position_setpoint_cm_cli_raw;
 extern uint32_t reset_home;
 
-extern TaskHandle_t cartWorkerTaskHandle;
+extern TaskHandle_t cartworker_TaskHandle;
 
 void set_output_voltage_nobounce( float voltage );
 

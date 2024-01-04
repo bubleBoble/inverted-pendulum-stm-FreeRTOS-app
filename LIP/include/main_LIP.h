@@ -30,7 +30,7 @@
 #include "filters_coeffs.h"
 #include "IIR_filter.h"
 #include "LIP_tasks_common.h"
-#include "SP_filter.h"
+#include "LP_filter.h"
 
 /* Note: define only one COM_SEND_* */ 
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
