@@ -22,7 +22,7 @@ float pend_angle[ 2 ] = { 0.0f };   // Angle current & previous sample
 float pend_speed_raw[ 2 ] = { 0.0f };   // Angle derivative
 float pend_speed[ 2 ] = { 0.0f };
 // IIR_filter low_pass_IIR_pend;
-LP_filter low_pass_IIR_pend;
+LP_filter LP_filter_pendulum;
 
 /* These are made global but only basic_test_task will write to them
 Only controller_task should read them
@@ -31,7 +31,7 @@ float cart_position[ 2 ] = { 0.0f };
 float cart_speed_raw[ 2 ] = { 0.0f };
 float cart_speed[ 2 ] = { 0.0f };
 // IIR_filter low_pass_IIR_cart;
-LP_filter low_pass_IIR_cart;
+LP_filter LP_filter_cart;
 
 /* Cart position setpoint from adc reading, converetd to [0, 40.7] range in cm.
 [ 0 ] is current, [ 1 ] is previous sample. */

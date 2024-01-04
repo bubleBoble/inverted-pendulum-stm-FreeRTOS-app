@@ -1,6 +1,8 @@
 /*
- * First order low pass filter 1/(T*s+1)
+ * First order low pass filter with transfer function: 
+ * 1/(T*s+1)
  * T - time constant
+ * Discretized with Tustin (trapezoid) method. 
  */
 
 #ifndef LP_FILTER_H
@@ -19,5 +21,6 @@ typedef struct
 
 void LP_init( LP_filter *lp, float timeConstant, float samplingTime );
 float LP_update( LP_filter *lp, float in );
+void LP_update_time_Constant( LP_filter *lp, float newTimeConstant );
 
 #endif // LP_FILTER_H

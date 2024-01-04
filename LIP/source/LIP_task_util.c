@@ -48,10 +48,10 @@ extern float pend_speed[ 2 ];
 extern float cart_position[ 2 ];
 extern float cart_speed_raw[ 2 ];
 extern float cart_speed[ 2 ];
-// extern IIR_filter low_pass_IIR_pend;
-// extern IIR_filter low_pass_IIR_cart;
-extern LP_filter low_pass_IIR_pend;
-extern LP_filter low_pass_IIR_cart;
+// extern IIR_filter LP_filter_pendulum;
+// extern IIR_filter LP_filter_cart;
+extern LP_filter LP_filter_pendulum;
+extern LP_filter LP_filter_cart;
 extern float cart_position_setpoint_cm_pot_raw;
 extern float cart_position_setpoint_cm_pot;
 extern float cart_position_setpoint_cm_cli_raw;
@@ -75,13 +75,13 @@ void utilTask( void *pvParameters )
      * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
     /* IIR for pendulum position */
     // float alpha_pend = 0.65;
-    // IIR_init_fo( &low_pass_IIR_pend, alpha_pend );
-    LP_init( &low_pass_IIR_pend, 0.025f, dt*0.001f );
+    // IIR_init_fo( &LP_filter_pendulum, alpha_pend );
+    LP_init( &LP_filter_pendulum, 0.025f, dt*0.001f );
 
     /* DCM encoder reading, IIR */
     // float alpha_cart = 0.54;
-    // IIR_init_fo( &low_pass_IIR_cart, alpha_cart );
-    LP_init( &low_pass_IIR_cart, 0.025f, dt*0.001f );
+    // IIR_init_fo( &LP_filter_cart, alpha_cart );
+    LP_init( &LP_filter_cart, 0.025f, dt*0.001f );
 
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
      * Low pass filters for setpoints - cli and pot.
@@ -102,8 +102,8 @@ void utilTask( void *pvParameters )
         pend_angle[ 0 ] = ( float ) pend_enc_get_cumulative_count() / 4096.0f * PI2 - pend_init_angle_offset;
         
         /* ??? filter for pendulum angle ??? */
-        // IIR_update_fo( &low_pass_IIR_pend, pend_angle[ 0 ] );
-        // pend_angle[ 0 ] = low_pass_IIR_pend.out;
+        // IIR_update_fo( &LP_filter_pendulum, pend_angle[ 0 ] );
+        // pend_angle[ 0 ] = LP_filter_pendulum.out;
 
         /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
          * Pendulum angular speed calculation with Tustin method 
@@ -111,11 +111,13 @@ void utilTask( void *pvParameters )
         pend_speed_raw[ 1 ] = pend_speed_raw[ 0 ];
         pend_speed_raw[ 0 ] = ( pend_angle[0] - pend_angle[1] ) * 2 * dt_inv - pend_speed_raw[ 1 ];
 
-        /* ??? IIR filter for pendulum angle derivative ??? */
-        // IIR_update_fo( &low_pass_IIR_pend, pend_speed[ 0 ] );
-        // pend_speed[ 0 ] = low_pass_IIR_pend.out;
-        LP_update( &low_pass_IIR_pend, pend_speed_raw[ 0 ] );
-        pend_speed[ 0 ] = low_pass_IIR_pend.out[ 0 ];
+        /* IIR filter for pendulum speed. */
+        // IIR_update_fo( &LP_filter_pendulum, pend_speed[ 0 ] );
+        // pend_speed[ 0 ] = LP_filter_pendulum.out;
+        
+        /* Low-pass filter for pendulum angle derivative. */
+        LP_update( &LP_filter_pendulum, pend_speed_raw[ 0 ] );
+        pend_speed[ 0 ] = LP_filter_pendulum.out[ 0 ];
 
         /* Dead zone for calculated pendulum speed, about +-10 deg/sec. */ 
         if ( ( pend_speed[ 0 ] < 0.2 ) && ( pend_speed[ 0 ] > -0.2 ) )
@@ -129,21 +131,23 @@ void utilTask( void *pvParameters )
         cart_position[ 1 ] = cart_position[ 0 ];
         cart_position[ 0 ] = dcm_enc_get_cart_position_cm();
 
-        /* ??? IIR filter for cart position ??? */
-        // IIR_update_fo( &low_pass_IIR_cart, cart_position[ 0 ] );
-        // cart_position[ 0 ] = low_pass_IIR_cart.out;
+        /* IIR filter for cart position. */
+        // IIR_update_fo( &LP_filter_cart, cart_position[ 0 ] );
+        // cart_position[ 0 ] = LP_filter_cart.out;
 
         /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
          * Cart speed with Tustin method
          * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
         cart_speed_raw[ 1 ] = cart_speed_raw[ 0 ];
-        cart_speed_raw[ 0 ] = ( cart_position[ 0 ] - cart_position[ 1 ] ) * 2 * dt_inv - cart_speed_raw[ 1 ]; // 1st deriv
+        cart_speed_raw[ 0 ] = ( cart_position[ 0 ] - cart_position[ 1 ] ) * 2 * dt_inv - cart_speed_raw[ 1 ];
 
-        /* ??? IIR filter for cart speed ??? */
-        // IIR_update_fo( &low_pass_IIR_cart, cart_speed[ 0 ] );
-        // cart_speed[ 0 ] = low_pass_IIR_cart.out;
-        LP_update( &low_pass_IIR_cart, cart_speed_raw[ 0 ] );
-        cart_speed[ 0 ] = low_pass_IIR_cart.out[ 0 ];
+        /* IIR filter for cart speed. */
+        // IIR_update_fo( &LP_filter_cart, cart_speed[ 0 ] );
+        // cart_speed[ 0 ] = LP_filter_cart.out;
+
+        /* Low-pass filter for cart speed. */
+        LP_update( &LP_filter_cart, cart_speed_raw[ 0 ] );
+        cart_speed[ 0 ] = LP_filter_cart.out[ 0 ];
 
         /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
          * Cart position setpoint from potentiometer adc reading, global variable. 

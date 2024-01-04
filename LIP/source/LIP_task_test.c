@@ -45,7 +45,7 @@ void testProcedure1( void )
     /* For RTOS vTaskDelayUntil(). */
     TickType_t xLastWakeTime = xTaskGetTickCount();
 
-    char msg[128];
+    // char msg[128];
 
     // /* [ 01 ] dpc on */
     // if( cart_current_zone != FREEZING_ZONE_L || cart_current_zone != FREEZING_ZONE_R )
