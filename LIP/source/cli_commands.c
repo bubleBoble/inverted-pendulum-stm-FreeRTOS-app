@@ -7,6 +7,7 @@
  *     DPC
  *     UPC
  *     SWINGUP
+ *     TESTS
  *
  * Commands:
  *     task-stats       -    Displays a table showing the state of each FreeRTOS task
@@ -28,27 +29,17 @@
  *
  * Note: commands callback functions change app state, which is indicated by
  * preprompt string in cli prompt ( (preprompt)>>> ). All logic related to
- * LIP app state changes is contained in cli commands callback functions.
+ * LIP app state change (performed by a command) is contained in cli commands callback functions.
  *
  * Note2: in FreeRTOSConfig.h, configTASK_NOTIFICATION_ARRAY_ENTRIES is set to 5
  * so max 5 notifications for a task.
- *
- * Note3:
- *     Commands for UNINITIALIZED state:
- *         task-stats, <enter_key>, home, reset/rr, vol, br
- *         Only "home" command will change state of the app from UNINITIALIZED TO DEFAULT
- *     Commands for DEFAULT state:
- *         task-stats, <enter_key>, home, reset/rr, vol, br
- *         sp, sppot, spcli
- *         dpc, upc, swingup
- *         In this state, only commands "dpc", "upc" and "swingup" will change app state to their respective states
  *
  * All variables related to LIP app state are defined in file: LIP_tasks_common.c
  *
  * FreeRTOS CLI demo:
  * https://www.freertos.org/FreeRTOS-Plus/FreeRTOS_Plus_IO/Demo_Applications/LPCXpresso_LPC1769/NXP_LPC1769_Demo_Description.html
  */
-#include <stdlib.h>     /* For strtox functions (string to float). */
+#include <stdlib.h>     /* For string to float function (strtof). */
 #include <errno.h>      /* error codes. */
 #include "math.h"
 
@@ -71,14 +62,14 @@ extern uint32_t reset_home;
 extern LP_filter LP_filter_cart;
 extern LP_filter LP_filter_pendulum;
 
-extern TaskHandle_t watchdog_taskHandle;
-extern TaskHandle_t console_taskHandle;
-extern TaskHandle_t util_taskHandle;
-extern TaskHandle_t com_taskHandle;
-extern TaskHandle_t rawcom_taskHandle;
+extern TaskHandle_t watchdog_task_handle;
+extern TaskHandle_t console_task_handle;
+extern TaskHandle_t util_task_handle;
+extern TaskHandle_t com_task_handle;
+extern TaskHandle_t rawcom_task_handle;
 extern TaskHandle_t cartworker_TaskHandle;
-extern TaskHandle_t ctrl_downposition_taskHandle;
-extern TaskHandle_t ctrl_upposition_taskHandle;
+extern TaskHandle_t ctrl_downposition_task_handle;
+extern TaskHandle_t ctrl_upposition_task_handle;
 extern TaskHandle_t swingup_task_handle;
 extern TaskHandle_t swingdown_task_handle;
 extern TaskHandle_t test_task_handle;
@@ -361,13 +352,13 @@ static portBASE_TYPE comOnOff_command( int8_t *pcWriteBuffer, size_t xWriteBuffe
     ( void ) xWriteBufferLen;
     configASSERT( pcWriteBuffer );
 
-    if( eTaskGetState( com_taskHandle ) == eSuspended )
+    if( eTaskGetState( com_task_handle ) == eSuspended )
     {
-        vTaskResume( com_taskHandle );
+        vTaskResume( com_task_handle );
     }
     else
     {
-        vTaskSuspend( com_taskHandle );
+        vTaskSuspend( com_task_handle );
     }
 
     return pdFALSE;
@@ -502,7 +493,7 @@ static portBASE_TYPE dpc_command( int8_t *pcWriteBuffer, size_t xWriteBufferLen,
     {
         /* Controller Turn off case. */
         /* Turn off down position controller, "dcp off" / "dpc 0" are both valid commands. */
-        vTaskSuspend( ctrl_downposition_taskHandle );
+        vTaskSuspend( ctrl_downposition_task_handle );
         dcm_set_output_volatage( 0.0f );
 
         /* Change current app state back to DEFAULT. */
@@ -531,7 +522,7 @@ static portBASE_TYPE dpc_command( int8_t *pcWriteBuffer, size_t xWriteBufferLen,
                     This means that it's not possible to use this command while app is in UNINITIALIZED, SWINGUP or UPPOSITION CONTROLLER state. */
 
                     /* Turn on down position controller, "dcp on" / "dpc 1" are both valid commands. */
-                    vTaskResume( ctrl_downposition_taskHandle );
+                    vTaskResume( ctrl_downposition_task_handle );
 
                     /* Change app state to "down position controller" state.
                     This will ensure that some cli commands can't be called. */
@@ -580,7 +571,7 @@ static portBASE_TYPE dpci_command( int8_t *pcWriteBuffer, size_t xWriteBufferLen
     {
         /* Controller Turn off case. */
         /* Turn off down position controller, "dcp off" / "dpc 0" are both valid commands. */
-        vTaskSuspend( ctrl_downposition_taskHandle );
+        vTaskSuspend( ctrl_downposition_task_handle );
         dcm_set_output_volatage( 0.0f );
 
         /* Change current app state back to DEFAULT. */
@@ -609,7 +600,7 @@ static portBASE_TYPE dpci_command( int8_t *pcWriteBuffer, size_t xWriteBufferLen
                     This means that it's not possible to use this command while app is in UNINITIALIZED, SWINGUP or UPPOSITION CONTROLLER state. */
 
                     /* Turn on down position controller, "dcp on" / "dpc 1" are both valid commands. */
-                    vTaskResume( ctrl_downposition_taskHandle );
+                    vTaskResume( ctrl_downposition_task_handle );
 
                     /* Change app state to "down position controller" state.
                     This will ensure that some cli commands can't be called. */
@@ -658,7 +649,7 @@ static portBASE_TYPE upc_command( int8_t *pcWriteBuffer, size_t xWriteBufferLen,
     {
         /* Controller Turn off case. */
         /* Turn off controller, "upc off" / "upc 0" are both valid commands. */
-        vTaskSuspend( ctrl_upposition_taskHandle );
+        vTaskSuspend( ctrl_upposition_task_handle );
         dcm_set_output_volatage( 0.0f );
 
         /* Change current app state back to DEFAULT. */
@@ -687,7 +678,7 @@ static portBASE_TYPE upc_command( int8_t *pcWriteBuffer, size_t xWriteBufferLen,
                     This means that it's not possible to use this command while app is in UNINITIALIZED, SWINGUP or DOWN POSITION CONTROLLER state. */
 
                     /* Turn on up position controller, "upc on" / "upc 1" are both valid commands. */
-                    vTaskResume( ctrl_upposition_taskHandle );
+                    vTaskResume( ctrl_upposition_task_handle );
 
                     /* Change app state to "down position controller" state.
                     This will ensure that some cli commands can't be called. */
@@ -736,7 +727,7 @@ static portBASE_TYPE upci_command( int8_t *pcWriteBuffer, size_t xWriteBufferLen
     {
         /* Controller Turn off case. */
         /* Turn off controller, "upc off" / "upc 0" are both valid commands. */
-        vTaskSuspend( ctrl_upposition_taskHandle );
+        vTaskSuspend( ctrl_upposition_task_handle );
         dcm_set_output_volatage( 0.0f );
 
         /* Change current app state back to DEFAULT. */
@@ -765,7 +756,7 @@ static portBASE_TYPE upci_command( int8_t *pcWriteBuffer, size_t xWriteBufferLen
                     This means that it's not possible to use this command while app is in UNINITIALIZED, SWINGUP or DOWN POSITION CONTROLLER state. */
 
                     /* Turn on up position controller, "upc on" / "upc 1" are both valid commands. */
-                    vTaskResume( ctrl_upposition_taskHandle );
+                    vTaskResume( ctrl_upposition_task_handle );
 
                     /* Change app state to "down position controller" state.
                     This will ensure that some cli commands can't be called. */
@@ -1044,8 +1035,8 @@ static portBASE_TYPE br_command( int8_t *pcWriteBuffer, size_t xWriteBufferLen, 
         /* Suspend any control task. Calls to vTaskSuspend are not cumulative
         so it can be used on task which is already suspended and one vTaskResume will
         be enoguh to bring that task back to work. */
-        vTaskSuspend( ctrl_downposition_taskHandle );
-        vTaskSuspend( ctrl_upposition_taskHandle );
+        vTaskSuspend( ctrl_downposition_task_handle );
+        vTaskSuspend( ctrl_upposition_task_handle );
         vTaskSuspend( swingup_task_handle );
     }
 

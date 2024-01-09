@@ -2,8 +2,6 @@
  * This file contains task that implements full state feedback controller for
  * linear inverted pendulum. Controller keeps pendulum in down position.
  *
- * This implementation tries to compensate for voltage deadzone with "tanh switching"
- *
  * This task is used to:
  *     1. Read LIP state variables (defined as global), these are:
  *         state variable    |  variable name in prog  |  unit

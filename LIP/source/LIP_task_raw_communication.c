@@ -2,7 +2,7 @@
  * This file provides task that implements uC to PC communication over uart. Data is 
  * sent in form of raw bytes, HAL_UART_Transmit_IT (non-blocking mode) is used. 
  * 
- * For human readable com, comTask() is provided.
+ * For human readable com, com_task() is provided.
  * 
  * This task only reads global state and related variables defined in LIP_tasks_common.c.
  * This task shouldn't write to these variables.
@@ -17,11 +17,6 @@
  *     allright
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  */
-/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    * Com for matlab/simulink - raw bytes com
-    * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    * Note:
-    * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 #include "LIP_tasks_common.h"
 
 /* These are defined in LIP_tasks_common.c */
@@ -31,7 +26,7 @@ extern float cart_position[ 2 ];
 extern float cart_speed[ 2 ];
 extern float *cart_position_setpoint_cm;
 
-void rawComTask( void *pvParameters )
+void raw_com_task( void *pvParameters )
 {
     /* For RTOS vTaskDelayUntil() */
     TickType_t xLastWakeTime = xTaskGetTickCount();

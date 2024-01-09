@@ -19,7 +19,7 @@ extern TaskHandle_t cartworker_TaskHandle;
 
 void set_output_voltage_nobounce( float voltage );
 
-void cartWorkerTask( void * pvParameters )
+void cart_worker_task( void * pvParameters )
 {
     /* Holds value retrieved from task notification. */
     uint32_t notif_value_received;
@@ -69,7 +69,6 @@ void cartWorkerTask( void * pvParameters )
         }
         else if( notif_value_received == GO_LEFT+GO_RIGHT )
         {
-            // com_send( "\r\ngowno nie dziala\r\n", 20 ); // message used for debugging, in polish it means: "this shit doesn't work"
             /* App is in uninitialized state and cart position has to be calibrated. */
             
             /* Debouncing. */

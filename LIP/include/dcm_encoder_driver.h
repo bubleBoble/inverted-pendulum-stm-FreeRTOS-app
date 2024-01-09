@@ -1,8 +1,6 @@
 /*
  * Description: Basic functionality for interfaceing incremental encoder.
  *
- * Created at: 21/09/2023
- *
  * Notes:
  * 	Timer for encoder is tim4 (htim4) (APB1@84MHz)
  * 	on CH1 & CH2

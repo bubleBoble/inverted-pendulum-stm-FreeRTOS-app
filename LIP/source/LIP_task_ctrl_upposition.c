@@ -1,7 +1,6 @@
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  * This file contains task that implements full state feedback controller for
- * linear inverted pendulum. Controller tries to balance pendulum in 
- * down position, tanh switing for voltage deadzone compensation.
+ * linear inverted pendulum. Controller tries to balance pendulum in up position.
  *
  * This task is used to:
  *     1. Read LIP state variables (defined as global), these are:

@@ -92,13 +92,7 @@ Swingup output voltage lookup table was calculated with 10ms sampling period. */
 /* Priority for test task. */
 #define PRIORITY_TEST 2 
 
-/* For freertos config.
-If time slicing was used, task "watchdog", "util" and "controler" could take
-a little bit more time to execute in their 10ms time period becouse of
-more frequent context switching - leaving no time for "com" and "console" tasks.
-In setting with preemtion and no time slicing, context switching should happen
-only when one task with the same priority finished its work - less frequent.
-ANYWAY, BOTH WAYS WORK AS FOR NOW SO I'LL LEAVE TIME SLICING. LOL */
+/* For freertos config. */
 #define RTOS_USE_PREEMPTION     1
 #define RTOS_USE_TIME_SLICING   0
 
@@ -106,7 +100,7 @@ void main_LIP_init(void);
 void main_LIP_run(void);
 
 /* Defined in main_LIP.c */
-void LIPcreateTasks(void);
+void LIP_create_Tasks(void);
 
 /* Defined in cli_commands.c */
 void vRegisterCLICommands(void);

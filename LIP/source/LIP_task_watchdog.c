@@ -10,7 +10,7 @@
  * 
  * For safety reasons cart position zones were defined as:
  * FREEZING_ZONE_L    |      OK_ZONE             |      FREEZING_ZONE_R
- * (0cm - 4cm)	      |      (6cm - 34.7cm)      |      (36.7cm - 40.7cm)
+ * (0cm - 3cm)	      |      (3cm - 37cm)      |      (37cm - 40cm)
  *
  * OK_ZONE           - Normal up/down controller working
  * DANGER_ZONE_L/R   - Control signal lowered
@@ -41,13 +41,13 @@ extern float pendulum_arm_angle_setpoint_rad_upc;
 extern uint32_t bounce_off_action_on;
 extern uint32_t swingup_task_resumed;
 
-extern TaskHandle_t ctrl_downposition_taskHandle;
+extern TaskHandle_t ctrl_downposition_task_handle;
 extern TaskHandle_t bounceoff_task_handle;
 extern TaskHandle_t swingup_task_handle;
-extern TaskHandle_t ctrl_upposition_taskHandle;
+extern TaskHandle_t ctrl_upposition_task_handle;
 
 
-void watchdogTask( void * pvParameters )
+void watchdog_task( void * pvParameters )
 {
     // uint8_t MAX_POSITION_REACHED_h;
     // uint8_t ZERO_POSITION_REACHED_h;
@@ -72,8 +72,8 @@ void watchdogTask( void * pvParameters )
                 cart_current_zone = FREEZING_ZONE_L;
 
                 /* Suspend controller tasks. */
-                vTaskSuspend( ctrl_downposition_taskHandle );
-                vTaskSuspend( ctrl_upposition_taskHandle );
+                vTaskSuspend( ctrl_downposition_task_handle );
+                vTaskSuspend( ctrl_upposition_task_handle );
                 // vTaskSuspend( swingup_task_handle );
 
                 if( bounce_off_action_on )
@@ -105,8 +105,8 @@ void watchdogTask( void * pvParameters )
                 cart_current_zone = FREEZING_ZONE_R;
 
                 /* Suspend controller tasks. */
-                vTaskSuspend( ctrl_downposition_taskHandle );
-                vTaskSuspend( ctrl_upposition_taskHandle );
+                vTaskSuspend( ctrl_downposition_task_handle );
+                vTaskSuspend( ctrl_upposition_task_handle );
                 // vTaskSuspend( swingup_task_handle );
 
                 if( bounce_off_action_on )
@@ -141,8 +141,8 @@ void watchdogTask( void * pvParameters )
             dcm_set_output_volatage( 0.0f );
 
             /* Suspend controller tasks. */
-            vTaskSuspend( ctrl_downposition_taskHandle );
-            vTaskSuspend( ctrl_upposition_taskHandle );
+            vTaskSuspend( ctrl_downposition_task_handle );
+            vTaskSuspend( ctrl_upposition_task_handle );
 
             /* Set output voltage to zero again in case any controller task 
             managed to set any output voltage. */
@@ -166,8 +166,8 @@ void watchdogTask( void * pvParameters )
             dcm_set_output_volatage( 0.0f );
 
             /* Suspend controller tasks. */
-            vTaskSuspend( ctrl_downposition_taskHandle );
-            vTaskSuspend( ctrl_upposition_taskHandle );
+            vTaskSuspend( ctrl_downposition_task_handle );
+            vTaskSuspend( ctrl_upposition_task_handle );
 
             /* Set output voltage to zero again in case any controller task 
             managed to set any output voltage. */
@@ -200,7 +200,7 @@ void watchdogTask( void * pvParameters )
                 // app_current_state = DEFAULT;
 
                 /* Resume UPC, change app state to UPC. */
-                vTaskResume( ctrl_upposition_taskHandle );    
+                vTaskResume( ctrl_upposition_task_handle );    
                 app_current_state = UPC;
             }
         }

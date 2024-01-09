@@ -1,7 +1,4 @@
 /*
- *  For IIR filter coefficients use https://www.youtube.com/watch?v=FaG5lPmBY_o
- *
- * 
  * 
  */
 

@@ -4,7 +4,7 @@
  * is used. This way really helpful app can be used to quickly analyze generated data.
  *     serial oscilloscope: https://x-io.co.uk/serial-oscilloscope/
  * 
- * For raw byte transmission, rawComTask() task is provided.
+ * For raw byte transmission, raw_com_task() task is provided.
  * 
  * This task only reads global state and related variables defined in LIP_tasks_common.h.
  * This task shouldn't write to these variables.
@@ -34,7 +34,7 @@ extern float pendulum_arm_angle_setpoint_rad_upc;
     extern float ctrl_Dt;
 #endif
 
-void comTask( void *pvParameters )
+void com_task( void *pvParameters )
 {
     /* For RTOS vTaskDelayUntil() */
     TickType_t xLastWakeTime = xTaskGetTickCount();

@@ -1,8 +1,5 @@
 /*
- * Description: Basic functionality for interfaceing DC motor
- * 		        through pwm signal.
- *
- * Created at: 20/09/2023
+ * Description: Basic interface for dcmotor
  *
  * Notes: Timer for PWM motor control is tim3 (htim3) (APB1@84MHz)
  * 	      on CH1 & CH2

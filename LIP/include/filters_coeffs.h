@@ -1,6 +1,6 @@
 /*   
  *  Filter coefficients uesd while testing pendulum are defined in this file
- *  to keep main_LIP.c reasonably clean
+ *  to keep main_LIP.c
 */
 
 #define FIR_1 \

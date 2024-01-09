@@ -83,7 +83,7 @@ backspace, print blank and backspace again. */
 uint8_t backspaceDeleteAction[] = "\b \b";
 
 // Source: https://www.freertos.org/FreeRTOS-Plus/FreeRTOS_Plus_CLI/FreeRTOS_Plus_CLI_IO_Interfacing_and_Task.html
-void vCommandConsoleTask( void *pvParameters )
+void console_task( void *pvParameters )
 {
     /* Keeps track of the number of input characters */
     int8_t cInputIndex = 0;
@@ -202,4 +202,4 @@ void vCommandConsoleTask( void *pvParameters )
         } // if (cRxedChar != 0x00)
         vTaskDelayUntil( &xLastWakeTime, dt_console );
     } // for( ;; )
-} //vCommandConsoleTask
+} // console_task

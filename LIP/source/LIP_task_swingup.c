@@ -27,9 +27,9 @@ extern enum lip_app_states app_current_state;
 extern uint32_t swingup_task_resumed;
 
 /* Down position controller stask handle. */
-extern TaskHandle_t ctrl_downposition_taskHandle;
+extern TaskHandle_t ctrl_downposition_task_handle;
 
-/* Voltage lookup tables for swingup. Commant/uncomment one or the other. */
+/* Voltage lookup tables for swingup. Comment/uncomment one or the other. */
 /* swingup_control_1 lookup table. */
 // #define SWINGUP_START_POSITION 20.0f
 // #define N_LOOKUP_SAMPLES 300
@@ -74,7 +74,7 @@ void swingup_task( void *pvParameters )
 
                 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
                 /* Change to DPC state. */
-                vTaskResume( ctrl_downposition_taskHandle );
+                vTaskResume( ctrl_downposition_task_handle );
                 // app_current_state = DPC;
                 // com_send( "\r\nDPC ON\r\n", 10 );
                 
@@ -85,7 +85,7 @@ void swingup_task( void *pvParameters )
 
                 /* Wait for 3 seconds - should be enough for cart to reach SWINGUP_START_POSITION. */
                 vTaskDelay( 3000 );
-                vTaskSuspend( ctrl_downposition_taskHandle );
+                vTaskSuspend( ctrl_downposition_task_handle );
                 app_current_state = SWINGUP;
 
                 // com_send( "\r\nswingup in: 3.\r\n",  18 );

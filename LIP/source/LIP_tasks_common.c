@@ -1,7 +1,7 @@
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  * This file provides global variables used by more than one task,
  * All handles to tasks, its stackbuffers and its taskbuffers TCBs,
- * definition of LIPcreateTasks function, which creates all app tasks.
+ * definition of LIP_create_Tasks function, which creates all app tasks.
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 #include "LIP_tasks_common.h"
 
@@ -115,28 +115,28 @@ active controller task. COM_SEND_CTRL_DEBUG is defined in main_LIP.c */
 #endif
 
 /* Watchdog task - protection for cart min and max positions and default always running task. */
-TaskHandle_t watchdog_taskHandle = NULL;
+TaskHandle_t watchdog_task_handle = NULL;
 StackType_t WATCHDOG_STACKBUFFER[ WATCHDOG_STACK_DEPTH ];
 StaticTask_t WATCHDOG_TASKBUFFER_TCB;
 
 /* Console task */
-TaskHandle_t console_taskHandle;
+TaskHandle_t console_task_handle;
 StackType_t console_STACKBUFFER[ CONSOLE_STACKDEPTH ];
 StaticTask_t console_TASKBUFFER_TCB;
 TickType_t time_at_which_consoleMutex_was_taken;
 
 /* State estimation task */
-TaskHandle_t util_taskHandle = NULL;
+TaskHandle_t util_task_handle = NULL;
 StackType_t utilTask_STACKBUFFER [ UTIL_STACK_DEPTH ];
 StaticTask_t utilTask_TASKBUFFER_TCB;
 
 /* Communication task. */
-TaskHandle_t com_taskHandle = NULL;
+TaskHandle_t com_task_handle = NULL;
 StackType_t COM_STACKBUFFER [ COM_STACK_DEPTH ];
 StaticTask_t COM_TASKBUFFER_TCB;
 
 /* Communication task - for raw bytes transmission. */
-TaskHandle_t rawcom_taskHandle = NULL;
+TaskHandle_t rawcom_task_handle = NULL;
 StackType_t RAWCOM_STACKBUFFER [ RAWCOM_STACK_DEPTH ];
 StaticTask_t RAWCOM_TASKBUFFER_TCB;
 
@@ -147,23 +147,18 @@ StackType_t CARTWORKER_STACKBUFFER [ CARTWORKER_STACK_DEPTH ];
 StaticTask_t CARTWORKER_TASKBUFFER_TCB;
 
 /* Down-position controller
-Full state feedback down position with better deadzone compensation. */
-TaskHandle_t ctrl_downposition_taskHandle = NULL;
+Full state feedback down position with deadzone compensation. */
+TaskHandle_t ctrl_downposition_task_handle = NULL;
 StackType_t ctrl_downposition_STACKBUFFER [ CTRL_3_FSF_DOWNPOS_STACK_DEPTH ];
 StaticTask_t ctrl_downposition_TASKBUFFER_TCB;
-// StackType_t ctrl_3_FSF_downpos_STACKBUFFER [ CTRL_3_FSF_DOWNPOS_STACK_DEPTH ];
-// StaticTask_t ctrl_3_FSF_downpos_TASKBUFFER_TCB;
 
 /* Up-position controller
 Full state feedback up position with deadzone compensation. */
-TaskHandle_t ctrl_upposition_taskHandle = NULL;
+TaskHandle_t ctrl_upposition_task_handle = NULL;
 StackType_t ctrl_upposition_STACKBUFFER [ CTRL_5_FSF_UPPOS_STACK_DEPTH ];
 StaticTask_t ctrl_upposition_TASKBUFFER_TCB;
-// TaskHandle_t ctrl_5_FSF_uppos_task_handle = NULL;
-// StackType_t ctrl_5_FSF_uppos_STACKBUFFER [ CTRL_5_FSF_UPPOS_STACK_DEPTH ];
-// StaticTask_t ctrl_5_FSF_uppos_TASKBUFFER_TCB;
 
-/* Swingup, trajopt. */
+/* Swingup. */
 TaskHandle_t swingup_task_handle = NULL;
 StackType_t swingup_STACKBUFFER [ SWINGUP_STACK_DEPTH ];
 StaticTask_t swingup_TASKBUFFER_TCB;
@@ -183,53 +178,50 @@ TaskHandle_t test_task_handle = NULL;
 StackType_t test_STACKBUFFER [ TEST_STACK_DEPTH ];
 StaticTask_t test_TASKBUFFER_TCB;
 
-
-/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-
 /* CREATE TASKS. */
-void LIPcreateTasks()
+void LIP_create_Tasks()
 {
-    watchdog_taskHandle = xTaskCreateStatic( watchdogTask,
-                                             (const char*) "Watchdog",
-                                             WATCHDOG_STACK_DEPTH,
-                                             (void *) 0,
-                                             tskIDLE_PRIORITY+PRIORITY_WATCHDOG,
-                                             WATCHDOG_STACKBUFFER,
-                                             &WATCHDOG_TASKBUFFER_TCB );
+    watchdog_task_handle = xTaskCreateStatic( watchdog_task,
+                                              (const char*) "Watchdog",
+                                              WATCHDOG_STACK_DEPTH,
+                                              (void *) 0,
+                                              tskIDLE_PRIORITY+PRIORITY_WATCHDOG,
+                                              WATCHDOG_STACKBUFFER,
+                                              &WATCHDOG_TASKBUFFER_TCB );
 
     /* Task that implements FreeRTOS console functionality */
-    console_taskHandle = xTaskCreateStatic( vCommandConsoleTask,
-                                            (const char*) "Console",
-                                            CONSOLE_STACKDEPTH,
-                                            (void *) 0,
-                                            tskIDLE_PRIORITY+PRIORITY_CONSOLE,
-                                            console_STACKBUFFER,
-                                            &console_TASKBUFFER_TCB );
+    console_task_handle = xTaskCreateStatic( console_task,
+                                             (const char*) "Console",
+                                             CONSOLE_STACKDEPTH,
+                                             (void *) 0,
+                                             tskIDLE_PRIORITY+PRIORITY_CONSOLE,
+                                             console_STACKBUFFER,
+                                             &console_TASKBUFFER_TCB );
 
     /* State variables are calculated here. */
-    util_taskHandle = xTaskCreateStatic( utilTask,
-                                         (const char*) "Util",
-                                         UTIL_STACK_DEPTH,
-                                         (void *) 0,
-                                         tskIDLE_PRIORITY+PRIORITY_UTIL,
-                                         utilTask_STACKBUFFER,
-                                         &utilTask_TASKBUFFER_TCB );
+    util_task_handle = xTaskCreateStatic( util_task,
+                                          (const char*) "Util",
+                                          UTIL_STACK_DEPTH,
+                                          (void *) 0,
+                                          tskIDLE_PRIORITY+PRIORITY_UTIL,
+                                          utilTask_STACKBUFFER,
+                                          &utilTask_TASKBUFFER_TCB );
 
 
     /* Human readable communication - for serialoscilloscope. */
-    com_taskHandle = xTaskCreateStatic( comTask,
-                                        (const char*) "Communication",
-                                        COM_STACK_DEPTH,
-                                        (void *) 0,
-                                        tskIDLE_PRIORITY+PRIORITY_COM,
-                                        COM_STACKBUFFER,
-                                        &COM_TASKBUFFER_TCB );
+    com_task_handle = xTaskCreateStatic( com_task,
+                                         (const char*) "Communication",
+                                         COM_STACK_DEPTH,
+                                         (void *) 0,
+                                         tskIDLE_PRIORITY+PRIORITY_COM,
+                                         COM_STACKBUFFER,
+                                         &COM_TASKBUFFER_TCB );
     /* Data streaming is suspended right after task creation */
-    vTaskSuspend( com_taskHandle );
+    vTaskSuspend( com_task_handle );
 
     /* Worker task - this tas is only active when command "zero" or "home" are called.
     Its purpose is to move the cart without any controller. */
-    cartworker_TaskHandle = xTaskCreateStatic( cartWorkerTask,
+    cartworker_TaskHandle = xTaskCreateStatic( cart_worker_task,
                                                (const char*) "CartWorker",
                                                CARTWORKER_STACK_DEPTH,
                                                (void *) 0,
@@ -238,7 +230,7 @@ void LIPcreateTasks()
                                                &CARTWORKER_TASKBUFFER_TCB );
 
     swingup_task_handle = xTaskCreateStatic( swingup_task,
-                                             ( const char * ) "SwingupOpt", 
+                                             ( const char * ) "Swingup", 
                                              SWINGUP_STACK_DEPTH,
                                              ( void * ) 0,
                                              //  tskIDLE_PRIORITY+PRIORITY_CTRL,
@@ -270,40 +262,40 @@ void LIPcreateTasks()
     /* Down position controller
     Full state feedback down position ctrl-er with "tanh switching" deadzone compensation 
     (nonlinear cart position gain). */
-    ctrl_downposition_taskHandle = xTaskCreateStatic( ctrl_3_FSF_downpos_task,
-                                                      ( const char* ) "DownPosCtrl",
-                                                      CTRL_3_FSF_DOWNPOS_STACK_DEPTH,
-                                                      ( void * ) 0,
-                                                      tskIDLE_PRIORITY+PRIORITY_CTRL,
-                                                      ctrl_downposition_STACKBUFFER,
-                                                      &ctrl_downposition_TASKBUFFER_TCB );
+    ctrl_downposition_task_handle = xTaskCreateStatic( ctrl_3_FSF_downpos_task,
+                                                       ( const char* ) "DownPosCtrl",
+                                                       CTRL_3_FSF_DOWNPOS_STACK_DEPTH,
+                                                       ( void * ) 0,
+                                                       tskIDLE_PRIORITY+PRIORITY_CTRL,
+                                                       ctrl_downposition_STACKBUFFER,
+                                                       &ctrl_downposition_TASKBUFFER_TCB );
     /* All controller tasks are suspended right after their creation. */  
-    vTaskSuspend( ctrl_downposition_taskHandle );
+    vTaskSuspend( ctrl_downposition_task_handle );
 
     /* Up position controller
     Full state feedback up position ctrl-er with "tanh-switching" deadzone compensation
     (nonlinear cart position gain). */
-    ctrl_upposition_taskHandle = xTaskCreateStatic( ctrl_5_FSF_uppos_task,
-                                                    (const char*) "UpPosCtrl",
-                                                    CTRL_5_FSF_UPPOS_STACK_DEPTH,
-                                                    (void *) 0,
-                                                    tskIDLE_PRIORITY+PRIORITY_CTRL,
-                                                    ctrl_upposition_STACKBUFFER,
-                                                    &ctrl_upposition_TASKBUFFER_TCB );
+    ctrl_upposition_task_handle = xTaskCreateStatic( ctrl_5_FSF_uppos_task,
+                                                     (const char*) "UpPosCtrl",
+                                                     CTRL_5_FSF_UPPOS_STACK_DEPTH,
+                                                     (void *) 0,
+                                                     tskIDLE_PRIORITY+PRIORITY_CTRL,
+                                                     ctrl_upposition_STACKBUFFER,
+                                                     &ctrl_upposition_TASKBUFFER_TCB );
     /* All controller tasks are suspended right after their creation. */  
-    vTaskSuspend( ctrl_upposition_taskHandle );
+    vTaskSuspend( ctrl_upposition_task_handle );
 
     /* Raw byte communication task. */
-    // rawcom_taskHandle = xTaskCreateStatic( rawComTask,
-    //                                       (const char*) "RawCommunicationTask",
-    //                                       RAWCOM_STACK_DEPTH,
-    //                                       (void *) 0,
-    //                                       tskIDLE_PRIORITY + 2,
-    //                                       RAWCOM_STACKBUFFER,
-    //                                       &RAWCOM_TASKBUFFER_TCB);
+    // rawcom_task_handle = xTaskCreateStatic( raw_com_task,
+    //                                         (const char*) "RawCommunicationTask",
+    //                                         RAWCOM_STACK_DEPTH,
+    //                                         (void *) 0,
+    //                                         tskIDLE_PRIORITY + 2,
+    //                                         RAWCOM_STACKBUFFER,
+    //                                         &RAWCOM_TASKBUFFER_TCB);
 
     test_task_handle = xTaskCreateStatic( test_task,
-                                          (const char*) "test",
+                                          (const char*) "Test",
                                           TEST_STACK_DEPTH,
                                           (void *) 0,
                                           tskIDLE_PRIORITY+PRIORITY_TEST,

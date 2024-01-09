@@ -1,11 +1,6 @@
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- * Basically, when cart is in freezing zone (see watchdog task), app should 
- * instantly stop it. Setting motor voltage to zero is not enough becouse of cart 
- * inertia - it keeps moving for a little bit. This task is resumed when the cart 
- * is present in freezing zone and should perform hard break operation, which
- * means that cart should instantly stop. It can't be implemented directly in 
- * watchdog task where current cart zone is indicated because it have other
- * security related stuff to do. 
+ * When cart is in freezing zone (see watchdog task), app should 
+ * instantly stop it. 
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  */
 #include "LIP_tasks_common.h"

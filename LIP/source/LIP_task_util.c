@@ -8,10 +8,9 @@
  *     3. Calculate derivatives of cart position and pend angular position
  *     4. Calculate cart position setpoint from adc potentiometer reading
  *     5. Calculate number of pendulum arm full revolutions
- *      bla bla bla
  *
- * Note about modulus:
- *     Calculate pendulum arm angle in base range [0 2pi]. This method uses modulus operation but implemented as
+ * Note about modulo:
+ *     Calculate pendulum arm angle in base range [0 2pi]. This method uses modulo operation but implemented as
  *     "floored division" rather than "truncated division" implemented in math.h in mod, fmod, fmodf etc. 
  *     More info about modulus operation: https://en.wikipedia.org/wiki/Modulo#In_programming_languages 
  *     Graph: https://www.desmos.com/calculator/qaacl2m3cu 
@@ -65,7 +64,7 @@ extern float pendulum_angle_in_base_range_upc;
 extern float pendulum_arm_angle_setpoint_rad_upc;
 extern float pendulum_arm_angle_setpoint_rad_dpc;
 
-void utilTask( void *pvParameters )
+void util_task( void *pvParameters )
 {
     /* For RTOS vTaskDelayUntil() */
     TickType_t xLastWakeTime = xTaskGetTickCount();

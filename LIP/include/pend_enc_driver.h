@@ -1,7 +1,5 @@
 /*
  * Description: Wrapper for AS5600 magnetic encoder driver functionality
- *
- * Created at: 07/10/2023
  * 
  * Main driver source: https://github.com/hepingood/as5600
  * 

@@ -1,6 +1,5 @@
 /*
- * Description: Basic interfacing for interfaceing DC motor
- * 		through pwm signal.
+ * Description: Basic interface for dcmotor
  *
  * Created at: 20/09/2023
  *

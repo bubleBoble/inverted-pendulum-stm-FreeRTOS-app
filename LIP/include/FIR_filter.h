@@ -1,5 +1,4 @@
 /*
- *  For FIR filter coefficients use https://www.youtube.com/watch?v=FaG5lPmBY_o
  *  eg. use
  *      #include filter_coeffs.h                            // Defines for filter coeffs
  *      ...
