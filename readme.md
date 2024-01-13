@@ -20,10 +20,12 @@ https://github.com/bubleBoble/invertedPendulumPythonMatlabOptimizationMath
 <img title="diagram" alt="" src="./images/moduls_connections.jpg">
 
 ## Note 1:
-    From FreeRTOS/portable leave:
-        portable/GCC/ARM_CM4F
-        portable/GCC/MemMang/heap4.c is fine
-    rest of porable code has to be excluded from the build
+From FreeRTOS/portable leave:
+```
+    portable/GCC/ARM_CM4F
+    portable/GCC/MemMang/heap4.c is fine
+```
+rest of porable code has to be excluded from the build
 
 ## Note 2:
     FreeRTOSConfig.h is located in
@@ -74,39 +76,25 @@ https://github.com/bubleBoble/invertedPendulumPythonMatlabOptimizationMath
 
 ## For FPU
     FPU initialization
-    ```
         SCB->CPACR |= ((3 << 10*2)|(3 << 11*2));
-    ```
-
 
     Float abi
-    ```
     -mfloat-abi=xxx
-    ```
     xxx = soft/softfp/hard
     (GCC DOCS)
 
     FPU selection
-    ```
     -mfpu=xxx
-    ```
         xxx = fpv4-sp-d16
 
 
     Default all floating point constant in source to single precision floats
-    ```
     -fsingle-precision-constant
-    ```
-
 
     Warn about float to double promotion
-    ```
     -Wdouble-promotion
-    ```
 
-    ```
     -ffast-math
-    ```
 
 ## Board view
     Two arduino compatibile shield were used to ease wired connections
