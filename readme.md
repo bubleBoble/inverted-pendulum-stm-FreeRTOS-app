@@ -16,8 +16,8 @@ https://github.com/bubleBoble/invertedPendulumPythonMatlabOptimizationMath
 <b> Hardware setup: </b>
 <img title="Finished pendulum" alt="" src="./images/allallinone.png">
 
-<b> Electronic moduls connections: </b>
-<img title="diagram" alt="" src="./images/moduls_connections.jpg">
+<b> Electronic modules connections: </b>
+<img title="diagram" alt="" src="./images/modules_connections.jpg">
 
 ## Note 1:
 From FreeRTOS/portable leave:

@@ -1,26 +1,15 @@
+# STM CubeIDE
 Middlewares/**
 Debug/**
-# .cproject
-# .mxproject
-# .project
-OLD_MAIN_CODE_2.TXT
-OLD_MAIN_CODE.TXT
-# STM32F429ZITX_FLASH.ld
-# STM32F429ZITX_RAM.ld
 test_freertos_dmc_ctrl_encoder Debug.launch
-notes.md
-launch.json
-settings.json
-tasks.json
-stare_freertoscli/
-FREERTOS_BASIC_CLI_HOWTO.pdf
-encoder_revolutions_pseudo_code.adam.txt
-OLD_ENCODERS_TEST_TASK
-nastawy_regulatorow.txt
-old_code
 
-FreeRTOS_OLD
+# vscode
+.vscode
 
+# etc
+xetc
+
+# FreeRTOS
 FreeRTOS/Source/portable/*
 !FreeRTOS/Source/portable/GCC/ARM_CM4F
 !FreeRTOS/Source/portable/MemMang
@@ -28,11 +17,8 @@ FreeRTOS/Source/portable/*
 FreeRTOS/Source/portable/MemMang/*
 !FreeRTOS/Source/portable/MemMang/heap_4.c
 
-notes_personal.md
-LIP/TODO.LOL.txt
+# Code line counter
 .VSCodeCounter/
 
-LIP/bibliografiaLOL.txt
-LIP/bibliografiaLOL2.txt
-
-trash_code
+# Todo from LIP directory
+LIP/TODO.txt
