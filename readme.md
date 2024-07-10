@@ -198,3 +198,9 @@ rest of porable code has to be excluded from the build
 
 ## Data type sizes arm gcc
     https://developer.arm.com/documentation/dui0491/i/C-and-C---Implementation-Details/Basic-data-types
+
+## Branches
+ * master
+   * Contains main app functionality, project is built using CubeIDE
+ * cube_to_make
+   * Contains main app functionality, project is built using make/cmake
