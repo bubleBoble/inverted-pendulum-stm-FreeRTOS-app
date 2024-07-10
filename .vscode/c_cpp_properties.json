@@ -3,27 +3,42 @@
         {
             "name": "stm32 F4",
             "includePath": [
-                "${workspaceFolder}/**",
                 "${workspaceFolder}/Core/Inc",
+                "${workspaceFolder}/Drivers/STM32F4xx_HAL_Driver/Inc",
+                "${workspaceFolder}/Drivers/STM32F4xx_HAL_Driver/Inc/Legacy",
+                "${workspaceFolder}/Drivers/CMSIS/Device/ST/STM32F4xx/Include",
+                "${workspaceFolder}/Drivers/CMSIS/Include",
                 "${workspaceFolder}/FreeRTOS/Source/include",
-                "${workspaceFolder}/FreeRTOS/Source/portable/GCC/ARM_CM4F"
-                // "${workspaceFolder}/FreeRTOS-CLI"
+                "${workspaceFolder}/FreeRTOS/Source/portable/GCC/ARM_CM4F",
+                "${workspaceFolder}/FreeRTOS-CLI",
+                "${workspaceFolder}/LIP/include",
+                "${workspaceFolder}/LIP/as5600_driver/src",
+                "${workspaceFolder}/LIP/as5600_driver/interface",
+                "${workspaceFolder}/LIP/as5600_driver/example"
             ],
-
             "defines": [
                 "_DEGUG",
                 "UNICODE",
                 "_UNICODE",
-                // z Makefile C_DEFS
-                "USE_HAL_DRIVER",
+                "USE_HAL_DRIVER", // z Makefile C_DEFS
                 "STM32F429xx"
             ],
             "intelliSenseMode": "gcc-arm",
-            "compilerPath": "${env:ARMGCC_DIR}/arm-none-eabi-gcc.exe",
-            // z Makefile "CFLAGS"
-            "compilerArgs": [
+            "compilerPath": "/usr/bin/arm-none-eabi-gcc",
+            "compilerArgs": [ // z Makefile "CFLAGS"
                 "-mcpu=cortex-m4",
-                "-mthumb"
+                "-mthumb",
+                "-mfpu=fpv4-sp-d16",
+                "-mfloat-abi=hard",
+                "-Wall",
+                "-fdata-sections",
+                "-ffunction-sections",
+                "-fsingle-precision-constant",
+                "-Wdouble-promotion",
+                "-ffast-math",
+                "-g",
+                "-gdwarf-2",
+                "-MMD -MP -MF\"$(@:%.o=%.d)\""
             ],
             "cStandard": "c11",
             "cppStandard": "c++17"

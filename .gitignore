@@ -1,10 +1,5 @@
-# STM CubeIDE
-Middlewares/**
-Debug/**
-test_freertos_dmc_ctrl_encoder Debug.launch
-
 # vscode
-.vscode
+.vscode/*
 
 # etc
 xetc
@@ -22,3 +17,6 @@ FreeRTOS/Source/portable/MemMang/*
 
 # Todo from LIP directory
 LIP/TODO.txt
+
+# build directory
+build/build/*
