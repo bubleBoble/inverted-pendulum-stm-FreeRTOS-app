@@ -9,10 +9,12 @@
 #     $make -j DEBUG=1
 # 
 ###############################################################################
+
 ###############################################################################
 # Phony targets
 ###############################################################################
 .PHONY: all clean
+
 
 ###############################################################################
 # Target
@@ -118,10 +120,10 @@ ifdef GCC_PATH
 	CP = $(GCC_PATH)/$(PREFIX)objcopy
 	SZ = $(GCC_PATH)/$(PREFIX)size
 else
-CC = $(PREFIX)gcc
-AS = $(PREFIX)gcc -x assembler-with-cpp
-CP = $(PREFIX)objcopy
-SZ = $(PREFIX)size
+	CC = $(PREFIX)gcc
+	AS = $(PREFIX)gcc -x assembler-with-cpp
+	CP = $(PREFIX)objcopy
+	SZ = $(PREFIX)size
 endif
 HEX = $(CP) -O ihex
 BIN = $(CP) -O binary -S
@@ -198,7 +200,7 @@ CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
 ###############################################################################
 # LDFLAGS
 ###############################################################################
-# link script
+# linker script
 # Libraries
 # -----------------------------------------------------------------------------
 # -lc: link C standard library aka libc.a
@@ -214,7 +216,6 @@ CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
 #                     removes any code and data sections which are not 
 #                     referenced anywhere in the program
 # -----------------------------------------------------------------------------
-
 LDSCRIPT = STM32F429ZITx_FLASH.ld
 LIBS = -lc -lm -lnosys
 LIBDIR =
@@ -229,44 +230,78 @@ $(LIBS) \
 
 
 ###############################################################################
-# build the application
+# Building the application
 ###############################################################################
-# list of objects
+# -----------------------------------------------------------------------------
+# List of objects from C files
+# $(notdir $(C_SOURCES:.c=.o)): Converts each .c file from C_SOURCES to .o file 
+#                               with the same name. Removes directory part.
+#                               `notdir` is make built-in function
 OBJECTS = $(addprefix $(BUILD_DIR)/,$(notdir $(C_SOURCES:.c=.o)))
+
+# $(sort $(dir $(C_SOURCES))): Extract and sort directories paths from 
+#                              C_SOURCES list of files, `sort` also remove 
+#                              duplicates
+# The whole line creates list of directories containing .c files from C_SOURCES
+# `vpath %.c` tells make where to look for c source files
+# -----------------------------------------------------------------------------
 vpath %.c $(sort $(dir $(C_SOURCES)))
-# list of ASM program objects
+
+# List of objects from assembly files (.s and .S), analogous to the above
 OBJECTS += $(addprefix $(BUILD_DIR)/,$(notdir $(ASM_SOURCES:.s=.o)))
 vpath %.s $(sort $(dir $(ASM_SOURCES)))
 OBJECTS += $(addprefix $(BUILD_DIR)/,$(notdir $(ASMM_SOURCES:.S=.o)))
 vpath %.S $(sort $(dir $(ASMM_SOURCES)))
 
+# Compile rules, C files into object files
+# -----------------------------------------------------------------------------
+# $(BUILD_DIR)/%.o: The target pattern for object files 
+# %.c: corresponding source file
+# Makefile: dependency that ensures the rule runs when this Makefile changes
+# | $(BUILD_DIR): indicates that the BUILD_DIR must exist before the target is 
+#                 build, but changes inside BUILD_DIR do not cause the target 
+#                 to be rebuilt
+# -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.c=.lst)): 
+#                 for asm to generate listing file, -Wa passes flags to the asm
+# -c: compile and assemble, but do not link
+# <: denotes dependency form the rule
+# -----------------------------------------------------------------------------
 $(BUILD_DIR)/%.o: %.c Makefile | $(BUILD_DIR)
-	$(CC) -c $(CFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.c=.lst)) $< -o $@
+	$(CC) -c $(CFLAGS) \
+	-Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.c=.lst)) \
+	$< -o $@
 
+# For .s and .S assembly files
 $(BUILD_DIR)/%.o: %.s Makefile | $(BUILD_DIR)
 	$(AS) -c $(CFLAGS) $< -o $@
 $(BUILD_DIR)/%.o: %.S Makefile | $(BUILD_DIR)
 	$(AS) -c $(CFLAGS) $< -o $@
 
+# Linking objects into ELF 
+# OBJECTS is a list of object files compiled and assembled from 
+# .c, .s and .S files
 $(BUILD_DIR)/$(TARGET).elf: $(OBJECTS) Makefile
 	$(CC) $(OBJECTS) $(LDFLAGS) -o $@
 	$(SZ) $@
 
+# objcopy from elf into ihex
 $(BUILD_DIR)/%.hex: $(BUILD_DIR)/%.elf | $(BUILD_DIR)
 	$(HEX) $< $@
 
+# objcopy from elf into bin
 $(BUILD_DIR)/%.bin: $(BUILD_DIR)/%.elf | $(BUILD_DIR)
 	$(BIN) $< $@
 
+# Rule for creating BUILD_DIR
 $(BUILD_DIR):
 	mkdir $@
 
 ###############################################################################
-# Default action: build all
+# Default action: build all, elf, ihex, bin
 ###############################################################################
 all: $(BUILD_DIR)/$(TARGET).elf \
-     $(BUILD_DIR)/$(TARGET).hex \
-     $(BUILD_DIR)/$(TARGET).bin
+$(BUILD_DIR)/$(TARGET).hex \
+$(BUILD_DIR)/$(TARGET).bin
 
 
 ###############################################################################
