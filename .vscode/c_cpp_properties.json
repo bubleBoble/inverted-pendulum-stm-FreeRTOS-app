@@ -14,18 +14,19 @@
                 "${workspaceFolder}/LIP/include",
                 "${workspaceFolder}/LIP/as5600_driver/src",
                 "${workspaceFolder}/LIP/as5600_driver/interface",
-                "${workspaceFolder}/LIP/as5600_driver/example"
+                "${workspaceFolder}/LIP/as5600_driver/example",
+                "/usr/arm-none-eabi/include"
             ],
             "defines": [
                 "_DEGUG",
                 "UNICODE",
                 "_UNICODE",
-                "USE_HAL_DRIVER", // z Makefile C_DEFS
+                "USE_HAL_DRIVER",
                 "STM32F429xx"
             ],
             "intelliSenseMode": "gcc-arm",
             "compilerPath": "/usr/bin/arm-none-eabi-gcc",
-            "compilerArgs": [ // z Makefile "CFLAGS"
+            "compilerArgs": [
                 "-mcpu=cortex-m4",
                 "-mthumb",
                 "-mfpu=fpv4-sp-d16",
