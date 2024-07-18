@@ -1,14 +1,31 @@
 ###############################################################################
-# --- 
-#
 # Specify gcc path
 #     $make -j GCC_PATH=/usr/bin
 # for gcc in `/usr/bin/arm-none-eabi-gcc`
 #
+# Or use it with arm-none-eabi-gcc already in system PATH:
+#     $make -j
+#
 # Build with debug information
 #     $make -j DEBUG=1
-# 
 ###############################################################################
+
+
+###############################################################################
+# Scipt for coloring make output, defines "runt". "runt" is used to color the
+# output of compilation command
+# 
+# Instead of:
+#     $(BUILD_DIR)/%.o: %.c Makefile | $(BUILD_DIR)
+#         $(CC) -c $(CFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.c=.lst)) $< -o $@
+# run:
+#     COMMAND = $(CC) -c $(CFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.c=.lst)) $< -o $@
+#     $(BUILD_DIR)/%.o: %.c Makefile | $(BUILD_DIR)
+#         @$(eval cmd=$(COMMAND))
+#         @$(call runt,$(cmd))
+###############################################################################
+include pretty.make
+
 
 ###############################################################################
 # Phony targets
@@ -261,54 +278,63 @@ vpath %.S $(sort $(dir $(ASMM_SOURCES)))
 # | $(BUILD_DIR): indicates that the BUILD_DIR must exist before the target is 
 #                 build, but changes inside BUILD_DIR do not cause the target 
 #                 to be rebuilt
+# -Wa: passes flags to the asm
 # -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.c=.lst)): 
-#                 for asm to generate listing file, -Wa passes flags to the asm
+#                 for asm to generate listing file
 # -c: compile and assemble, but do not link
 # <: denotes dependency form the rule
 # -----------------------------------------------------------------------------
+COMMAND = $(CC) -c $(CFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.c=.lst)) $< -o $@
 $(BUILD_DIR)/%.o: %.c Makefile | $(BUILD_DIR)
-	$(CC) -c $(CFLAGS) \
-	-Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.c=.lst)) \
-	$< -o $@
+	@$(eval cmd=$(COMMAND))
+	@$(call runt,$(cmd))
 
 # For .s and .S assembly files
 $(BUILD_DIR)/%.o: %.s Makefile | $(BUILD_DIR)
-	$(AS) -c $(CFLAGS) $< -o $@
+	@$(AS) -c $(CFLAGS) $< -o $@
 $(BUILD_DIR)/%.o: %.S Makefile | $(BUILD_DIR)
-	$(AS) -c $(CFLAGS) $< -o $@
+	@$(AS) -c $(CFLAGS) $< -o $@
 
 # Linking objects into ELF 
 # OBJECTS is a list of object files compiled and assembled from 
 # .c, .s and .S files
 $(BUILD_DIR)/$(TARGET).elf: $(OBJECTS) Makefile
-	$(CC) $(OBJECTS) $(LDFLAGS) -o $@
-	$(SZ) $@
+	@$(CC) $(OBJECTS) $(LDFLAGS) -o $@
+	@$(SZ) $@
 
 # objcopy from elf into ihex
 $(BUILD_DIR)/%.hex: $(BUILD_DIR)/%.elf | $(BUILD_DIR)
-	$(HEX) $< $@
+	@$(HEX) $< $@
 
 # objcopy from elf into bin
 $(BUILD_DIR)/%.bin: $(BUILD_DIR)/%.elf | $(BUILD_DIR)
-	$(BIN) $< $@
+	@$(BIN) $< $@
 
 # Rule for creating BUILD_DIR
 $(BUILD_DIR):
-	mkdir $@
+	@mkdir $@
 
 ###############################################################################
 # Default action: build all, elf, ihex, bin
 ###############################################################################
-all: $(BUILD_DIR)/$(TARGET).elf \
-     $(BUILD_DIR)/$(TARGET).hex \
-     $(BUILD_DIR)/$(TARGET).bin
+all: $(BUILD_DIR)/$(TARGET).elf $(BUILD_DIR)/$(TARGET).hex $(BUILD_DIR)/$(TARGET).bin
 
 
 ###############################################################################
 # clean up
 ###############################################################################
 clean:
-	-rm -fR $(BUILD_DIR)
+	@echo "[CLEANING]"
+	@-rm -fR $(BUILD_DIR)
+
+
+###############################################################################
+# Flashing the MCU
+###############################################################################
+flash_stlink: $(BUILD_DIR)/$(TARGET).bin
+	st-flash --reset \
+	write $(BUILD_DIR)/$(TARGET).bin \
+	0x08000000
 
 
 #######################################
