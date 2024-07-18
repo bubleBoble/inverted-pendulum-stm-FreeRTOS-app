@@ -284,23 +284,32 @@ vpath %.S $(sort $(dir $(ASMM_SOURCES)))
 # -c: compile and assemble, but do not link
 # <: denotes dependency form the rule
 # -----------------------------------------------------------------------------
-COMMAND = $(CC) -c $(CFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.c=.lst)) $< -o $@
+COMMAND1 = $(CC) -c $(CFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.c=.lst)) $< -o $@
 $(BUILD_DIR)/%.o: %.c Makefile | $(BUILD_DIR)
-	@$(eval cmd=$(COMMAND))
+	@$(eval cmd=$(COMMAND1))
 	@$(call runt,$(cmd))
 
 # For .s and .S assembly files
+COMMAND2 = $(AS) -c $(CFLAGS) $< -o $@
 $(BUILD_DIR)/%.o: %.s Makefile | $(BUILD_DIR)
-	@$(AS) -c $(CFLAGS) $< -o $@
+	@$(eval cmd=$(COMMAND2))
+	@$(call runt,$(cmd))
+
+COMMAND3 = $(AS) -c $(CFLAGS) $< -o $@
 $(BUILD_DIR)/%.o: %.S Makefile | $(BUILD_DIR)
-	@$(AS) -c $(CFLAGS) $< -o $@
+	@$(eval cmd=$(COMMAND3))
+	@$(call runt,$(cmd))
 
 # Linking objects into ELF 
 # OBJECTS is a list of object files compiled and assembled from 
 # .c, .s and .S files
+COMMAND4 = $(CC) $(OBJECTS) $(LDFLAGS) -o $@
 $(BUILD_DIR)/$(TARGET).elf: $(OBJECTS) Makefile
-	@$(CC) $(OBJECTS) $(LDFLAGS) -o $@
-	@$(SZ) $@
+	@$(eval cmd=$(COMMAND4))
+	@$(call runt,$(cmd))
+# @$(CC) $(OBJECTS) $(LDFLAGS) -o $@
+# @$(SZ) $@
+
 
 # objcopy from elf into ihex
 $(BUILD_DIR)/%.hex: $(BUILD_DIR)/%.elf | $(BUILD_DIR)

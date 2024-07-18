@@ -12,7 +12,7 @@ NO_COLOR    = \033[m
 OK_STRING    = "[OK]"
 ERROR_STRING = "[ERROR]"
 WARN_STRING  = "[WARNING]"
-COM_STRING   = "Compiling"
+COM_STRING   = "BUILDING"
 
 define runt
 printf "%b" "$(COM_COLOR)$(COM_STRING) $(OBJ_COLOR)$(@F)$(NO_COLOR)\r"; \
@@ -30,7 +30,3 @@ rm -f $@.log; \
 exit $$RESULT
 endef
 
-# Example use:
-# CC = gcc
-# all:
-# 	@$(call runt,$(CC) -c main.c -o main.o)
