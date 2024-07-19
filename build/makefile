@@ -8,6 +8,11 @@
 #
 # Build with debug information
 #     $make -j DEBUG=1
+#
+# In order for a target to appear in `make help`, right after target line
+# write help string starting with `##?`, eg.:
+#     all:
+#     ##? all - this says what all target does
 ###############################################################################
 
 
@@ -16,15 +21,15 @@
 # output of compilation command
 # 
 # Instead of:
-#     $(BUILD_DIR)/%.o: %.c Makefile | $(BUILD_DIR)
+#     $(BUILD_DIR)/%.o: %.c makefile | $(BUILD_DIR)
 #         $(CC) -c $(CFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.c=.lst)) $< -o $@
 # run:
 #     COMMAND = $(CC) -c $(CFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.c=.lst)) $< -o $@
-#     $(BUILD_DIR)/%.o: %.c Makefile | $(BUILD_DIR)
+#     $(BUILD_DIR)/%.o: %.c makefile | $(BUILD_DIR)
 #         @$(eval cmd=$(COMMAND))
-#         @$(call runt,$(cmd))
+#         @$(call runt,$(cmd),"BUILDING")
 ###############################################################################
-include pretty.make
+include pretty.mk
 
 
 ###############################################################################
@@ -274,7 +279,7 @@ vpath %.S $(sort $(dir $(ASMM_SOURCES)))
 # -----------------------------------------------------------------------------
 # $(BUILD_DIR)/%.o: The target pattern for object files 
 # %.c: corresponding source file
-# Makefile: dependency that ensures the rule runs when this Makefile changes
+# makefile: dependency that ensures the rule runs when this makefile changes
 # | $(BUILD_DIR): indicates that the BUILD_DIR must exist before the target is 
 #                 build, but changes inside BUILD_DIR do not cause the target 
 #                 to be rebuilt
@@ -285,69 +290,72 @@ vpath %.S $(sort $(dir $(ASMM_SOURCES)))
 # <: denotes dependency form the rule
 # -----------------------------------------------------------------------------
 COMMAND1 = $(CC) -c $(CFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.c=.lst)) $< -o $@
-$(BUILD_DIR)/%.o: %.c Makefile | $(BUILD_DIR)
+$(BUILD_DIR)/%.o: %.c makefile | $(BUILD_DIR)
 	@$(eval cmd=$(COMMAND1))
-	@$(call runt,$(cmd))
+	@$(call runt,$(cmd),"BUILDING")
 
 # For .s and .S assembly files
 COMMAND2 = $(AS) -c $(CFLAGS) $< -o $@
-$(BUILD_DIR)/%.o: %.s Makefile | $(BUILD_DIR)
+$(BUILD_DIR)/%.o: %.s makefile | $(BUILD_DIR)
 	@$(eval cmd=$(COMMAND2))
-	@$(call runt,$(cmd))
+	@$(call runt,$(cmd),"BUILDING")
 
 COMMAND3 = $(AS) -c $(CFLAGS) $< -o $@
-$(BUILD_DIR)/%.o: %.S Makefile | $(BUILD_DIR)
+$(BUILD_DIR)/%.o: %.S makefile | $(BUILD_DIR)
 	@$(eval cmd=$(COMMAND3))
-	@$(call runt,$(cmd))
+	@$(call runt,$(cmd),"BUILDING")
 
 # Linking objects into ELF 
 # OBJECTS is a list of object files compiled and assembled from 
 # .c, .s and .S files
 COMMAND4 = $(CC) $(OBJECTS) $(LDFLAGS) -o $@
-$(BUILD_DIR)/$(TARGET).elf: $(OBJECTS) Makefile
+$(BUILD_DIR)/$(TARGET).elf: $(OBJECTS) makefile
 	@$(eval cmd=$(COMMAND4))
-	@$(call runt,$(cmd))
+	@$(call runt,$(cmd),"LINKING")
+	$(SZ) $@
 # @$(CC) $(OBJECTS) $(LDFLAGS) -o $@
-# @$(SZ) $@
-
 
 # objcopy from elf into ihex
 $(BUILD_DIR)/%.hex: $(BUILD_DIR)/%.elf | $(BUILD_DIR)
-	@$(HEX) $< $@
+	$(HEX) $< $@
 
 # objcopy from elf into bin
 $(BUILD_DIR)/%.bin: $(BUILD_DIR)/%.elf | $(BUILD_DIR)
-	@$(BIN) $< $@
+	$(BIN) $< $@
 
 # Rule for creating BUILD_DIR
 $(BUILD_DIR):
 	@mkdir $@
 
+
 ###############################################################################
-# Default action: build all, elf, ihex, bin
+# Phony targets
 ###############################################################################
+help:
+##? help: This help message
+	@echo "Usage: "
+	@sed -n 's/^##?//p' ${MAKEFILE_LIST} | column -t -s ':' | sed -e 's/^//'
+
 all: $(BUILD_DIR)/$(TARGET).elf $(BUILD_DIR)/$(TARGET).hex $(BUILD_DIR)/$(TARGET).bin
+##? all: Build binaries .elf, .hex, .bin
 
-
-###############################################################################
-# clean up
-###############################################################################
 clean:
+##? clean: Clean build directory
 	@echo "[CLEANING]"
 	@-rm -fR $(BUILD_DIR)
 
-
-###############################################################################
-# Flashing the MCU
-###############################################################################
-flash_stlink: $(BUILD_DIR)/$(TARGET).bin
+flash: $(BUILD_DIR)/$(TARGET).bin
+##? flash: Flash binary image into MCU
 	st-flash --reset \
 	write $(BUILD_DIR)/$(TARGET).bin \
 	0x08000000
 
+com:
+##? com: minicom -b 115200 -o -D /dev/ttyACM0, ctrl+a, q to quit
+	minicom -b 115200 -o -D /dev/ttyACM0
 
-#######################################
+###############################################################################
 # dependencies
-#######################################
+###############################################################################
 -include $(wildcard $(BUILD_DIR)/*.d)
 
