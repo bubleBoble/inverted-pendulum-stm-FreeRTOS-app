@@ -1,18 +1,25 @@
 ###############################################################################
 # Specify gcc path
-#     $make -j GCC_PATH=/usr/bin
+#     > make -j GCC_PATH=/usr/bin
 # for gcc in `/usr/bin/arm-none-eabi-gcc`
 #
 # Or use it with arm-none-eabi-gcc already in system PATH:
-#     $make -j
+#     > make -j
 #
 # Build with debug information
-#     $make -j DEBUG=1
+#     > make -j DEBUG=1
+# or like this
+#     > make debug
+# Build release version (no debug info)
+#     > make release
 #
 # In order for a target to appear in `make help`, right after target line
 # write help string starting with `##?`, eg.:
 #     all:
 #     ##? all - this says what all target does
+#
+# Set VERBOSE=1 to print all compilation commands
+#     make VERBOSE=1, default is 0
 ###############################################################################
 
 
@@ -29,13 +36,16 @@
 #         @$(eval cmd=$(COMMAND))
 #         @$(call runt,$(cmd),"BUILDING")
 ###############################################################################
-include pretty.mk
-
-
 ###############################################################################
 # Phony targets
 ###############################################################################
-.PHONY: all clean
+.PHONY: help all clean flash com debug release
+
+
+###############################################################################
+# Pretty colors for build output info
+###############################################################################
+include pretty.mk
 
 
 ###############################################################################
@@ -48,13 +58,14 @@ TARGET = LIP_app_1
 ###############################################################################
 # Build variables
 ###############################################################################
-# Debug - Set this flag to 1 to build binary with debug information,
-# $make DEBUG=1
-DEBUG = 1
+# Debug - Set this flag to 1 to build binary with debug information
+DEBUG ?= 1
 
-# optimization
-OPT = -O0 # -O, -O0, -O1, -O2, -O3, -Ofast, -Og, -Os
+# Optimization
+OPT ?= -O0 # -O, -O0, -O1, -O2, -O3, -Ofast, -Og, -Os
 
+# Print or don't print compilation commands
+VERBOSE ?= 0
 
 ###############################################################################
 # Paths
@@ -206,7 +217,7 @@ CFLAGS += $(MCU) $(C_DEFS) $(C_INCLUDES) $(OPT) \
 
 # Add debug flags to CFLAGS if DEBUG mode enabled
 ifeq ($(DEBUG), 1)
-CFLAGS += -g -gdwarf-2
+	CFLAGS += -g -gdwarf-2
 endif
 
 # Generate dependency information
@@ -289,8 +300,14 @@ vpath %.S $(sort $(dir $(ASMM_SOURCES)))
 # -c: compile and assemble, but do not link
 # <: denotes dependency form the rule
 # -----------------------------------------------------------------------------
-COMMAND1 = $(CC) -c $(CFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.c=.lst)) $< -o $@
+COMMAND1 = \
+	$(CC) -c $(CFLAGS) \
+	-Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.c=.lst)) \
+	$< -o $@
 $(BUILD_DIR)/%.o: %.c makefile | $(BUILD_DIR)
+	@if [ "$(VERBOSE)" -eq "1" ]; then \
+		echo "$(COMMAND1)"; \
+	fi
 	@$(eval cmd=$(COMMAND1))
 	@$(call runt,$(cmd),"BUILDING")
 
@@ -313,7 +330,6 @@ $(BUILD_DIR)/$(TARGET).elf: $(OBJECTS) makefile
 	@$(eval cmd=$(COMMAND4))
 	@$(call runt,$(cmd),"LINKING")
 	$(SZ) $@
-# @$(CC) $(OBJECTS) $(LDFLAGS) -o $@
 
 # objcopy from elf into ihex
 $(BUILD_DIR)/%.hex: $(BUILD_DIR)/%.elf | $(BUILD_DIR)
@@ -346,13 +362,22 @@ clean:
 
 flash: $(BUILD_DIR)/$(TARGET).bin
 ##? flash: Flash binary image into MCU
-	st-flash --reset \
+	@st-flash --reset \
 	write $(BUILD_DIR)/$(TARGET).bin \
 	0x08000000
 
 com:
 ##? com: minicom -b 115200 -o -D /dev/ttyACM0, ctrl+a, q to quit
 	minicom -b 115200 -o -D /dev/ttyACM0
+
+debug:
+##? debug: Build the project in debug mode
+	@$(MAKE) -j DEBUG=1 all
+ 
+release: clean
+##? release: Build the project in release mode
+	@$(MAKE) -j DEBUG=0 OPT=-O2 all
+
 
 ###############################################################################
 # dependencies
