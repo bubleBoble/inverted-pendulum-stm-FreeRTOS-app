@@ -217,7 +217,7 @@ CFLAGS += $(MCU) $(C_DEFS) $(C_INCLUDES) $(OPT) \
 
 # Add debug flags to CFLAGS if DEBUG mode enabled
 ifeq ($(DEBUG), 1)
-	CFLAGS += -g -gdwarf-2
+	CFLAGS += -g3 -gdwarf-2
 endif
 
 # Generate dependency information

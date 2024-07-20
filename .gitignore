@@ -19,4 +19,4 @@ FreeRTOS/Source/portable/MemMang/*
 LIP/TODO.txt
 
 # build directory
-build/build/*
+build_make/build/*
