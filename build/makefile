@@ -363,7 +363,7 @@ clean:
 flash: $(BUILD_DIR)/$(TARGET).bin
 ##? flash: Flash binary image into MCU
 	@st-flash --reset \
-	write $(BUILD_DIR)/$(TARGET).bin \
+	write $< \
 	0x08000000
 
 com:
