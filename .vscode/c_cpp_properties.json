@@ -3,6 +3,7 @@
         {
             "name": "stm32 F4",
             "includePath": [
+                "${workspaceFolder}",
                 "${workspaceFolder}/Core/Inc",
                 "${workspaceFolder}/Drivers/STM32F4xx_HAL_Driver/Inc",
                 "${workspaceFolder}/Drivers/STM32F4xx_HAL_Driver/Inc/Legacy",
@@ -15,7 +16,13 @@
                 "${workspaceFolder}/LIP/as5600_driver/src",
                 "${workspaceFolder}/LIP/as5600_driver/interface",
                 "${workspaceFolder}/LIP/as5600_driver/example",
-                "/usr/arm-none-eabi/include"
+                "/usr/arm-none-eabi/include",
+                "/usr/arm-none-eabi/include/c++/14.1.0",
+                "/lib/gcc/arm-none-eabi/14.1.0/include",
+                "/lib/gcc/arm-none-eabi/14.1.0/include-fixed",
+                "/usr/arm-none-eabi/include/machine",
+                "/usr/arm-none-eabi/include/newlib-nano",
+                "/usr/arm-none-eabi/include/sys"
             ],
             "defines": [
                 "_DEGUG",
@@ -24,7 +31,7 @@
                 "USE_HAL_DRIVER",
                 "STM32F429xx"
             ],
-            "intelliSenseMode": "gcc-arm",
+            "intelliSenseMode": "gcc-arm", // linux-gcc-x64
             "compilerPath": "/usr/bin/arm-none-eabi-gcc",
             "compilerArgs": [
                 "-mcpu=cortex-m4",
@@ -42,7 +49,32 @@
                 "-MMD -MP -MF\"$(@:%.o=%.d)\""
             ],
             "cStandard": "c11",
-            "cppStandard": "c++17"
+            "cppStandard": "c++20",
+            "browse": 
+            {
+                "path": 
+                [
+                    "${workspaceFolder}",
+                    "${workspaceFolder}/Core/Inc",
+                    "${workspaceFolder}/Drivers/STM32F4xx_HAL_Driver/Inc",
+                    "${workspaceFolder}/Drivers/STM32F4xx_HAL_Driver/Inc/Legacy",
+                    "${workspaceFolder}/Drivers/CMSIS/Device/ST/STM32F4xx/Include",
+                    "${workspaceFolder}/Drivers/CMSIS/Include",
+                    "${workspaceFolder}/FreeRTOS/Source/include",
+                    "${workspaceFolder}/FreeRTOS/Source/portable/GCC/ARM_CM4F",
+                    "${workspaceFolder}/FreeRTOS-CLI",
+                    "${workspaceFolder}/LIP/include",
+                    "${workspaceFolder}/LIP/as5600_driver/src",
+                    "${workspaceFolder}/LIP/as5600_driver/interface",
+                    "${workspaceFolder}/LIP/as5600_driver/example",
+                    "/usr/arm-none-eabi/include",
+                    "/usr/arm-none-eabi/include/c++/14.1.0",
+                    "/lib/gcc/arm-none-eabi/14.1.0/include",
+                    "/lib/gcc/arm-none-eabi/14.1.0/include-fixed"
+                ],
+                "limitSymbolsToIncludedHeaders": true,
+                "databaseFilename": "${workspaceFolder}/.vscode/browse.vc.db"
+            }
         }
     ],
     "version": 4
