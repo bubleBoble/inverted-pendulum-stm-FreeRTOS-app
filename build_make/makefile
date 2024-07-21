@@ -26,7 +26,7 @@
 ###############################################################################
 # Scipt for coloring make output, defines "runt". "runt" is used to color the
 # output of compilation command
-# 
+#
 # Instead of:
 #     $(BUILD_DIR)/%.o: %.c makefile | $(BUILD_DIR)
 #         $(CC) -c $(CFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.c=.lst)) $< -o $@
@@ -145,7 +145,7 @@ ASMM_SOURCES = \
 PREFIX = arm-none-eabi-
 
 # The gcc compiler bin path can be either defined in make command via
-# GCC_PATH variable ($ make GCC_PATH=xxx) or it can be added to the PATH 
+# GCC_PATH variable ($ make GCC_PATH=xxx) or it can be added to the PATH
 # environment variable.
 ifdef GCC_PATH
 	CC = $(GCC_PATH)/$(PREFIX)gcc
@@ -209,13 +209,16 @@ ASFLAGS = $(MCU) $(AS_DEFS) $(AS_INCLUDES) $(OPT) \
 CFLAGS += $(MCU) $(C_DEFS) $(C_INCLUDES) $(OPT) \
 -Wall \
 -Wdouble-promotion \
+-Wshadow \
+-Wformat=2 -Wformat-truncation \
+-pedantic \
 -fdata-sections \
 -ffunction-sections \
 -fsingle-precision-constant \
 -ffast-math \
--pedantic
 
 # Add debug flags to CFLAGS if DEBUG mode enabled
+# (maybe use -ggdb instead of -gdwarf-2 ?)
 ifeq ($(DEBUG), 1)
 	CFLAGS += -g3 -gdwarf-2
 endif
@@ -229,6 +232,35 @@ endif
 # -----------------------------------------------------------------------------
 CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
 
+# C and C++ standards
+# -----------------------------------------------------------------------------
+# https://gcc.gnu.org/onlinedocs/gcc/Standards.html
+# 1. ANSI C aka C89 aka C90: -ansi, -std=c90 or -std=iso9899:1990
+# 2. C94 aka C95 (AMD1 - amendment 1): -std=iso9899:199409
+# 3. C99: -std=c99 or -std=iso9899:1999
+# 4. C11: -std=c11 or -std=iso9899:2011
+# 4. C17: -std=c17 or -std=iso9899:2017 (corrected C11)
+# 5. C23: -std=c23 or -std=iso9899:2024
+#
+# to obtain all diagnostics required by the standard use
+#     -pedantic (or -pedantic-errors)
+#
+# From GNU docs:
+# By default, GCC provides some extensions to the C language that, on rare
+# occasions conflict with the C standard. Some features that are part of the
+# C99 standard are accepted as extensions in C90 mode, and some features that
+# are part of the C11 standard are accepted as extensions in C90 and C99 modes.
+# Use of the -std options listed above disables these extensions where they
+# conflict with the C standard version selected. ou may also select an extended 
+# version of the C language explicitly with: 
+# 1. -std=gnu90 (for C90 with GNU extensions)
+# 2. -std=gnu99 (for C99 with GNU extensions)
+# 3. -std=gnu11 (for C11 with GNU extensions).
+#
+# The default, if no C language dialect options are given, is 
+# -------------------------------> -std=gnu17 <--------------------------------
+# -----------------------------------------------------------------------------
+CFLAGS += -std=c11
 
 ###############################################################################
 # LDFLAGS
@@ -238,7 +270,7 @@ CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
 # -----------------------------------------------------------------------------
 # -lc: link C standard library aka libc.a
 # -lm: link libm library
-# -lnosys: link nosys library, minimal sys calls implementation 
+# -lnosys: link nosys library, minimal sys calls implementation
 #          stubs for system calls
 # nano.specs: link newlib-nano, c std lib for embedded
 # -T: linker script
@@ -246,11 +278,17 @@ CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
 #      -Map: map file specification
 #      --cref: include cross reference table in the map file
 #      --gc-sections: linker performs garbage collection on unused sections,
-#                     removes any code and data sections which are not 
+#                     removes any code and data sections which are not
 #                     referenced anywhere in the program
 # -----------------------------------------------------------------------------
 LDSCRIPT = STM32F429ZITx_FLASH.ld
-LIBS = -lc -lm -lnosys
+LIBS = \
+-Wl,--start-group \
+-lc \
+-lm \
+-lnosys \
+-Wl,--end-group \
+-Wl,--print-memory-usage
 LIBDIR =
 LDFLAGS = \
 $(MCU) \
@@ -267,13 +305,13 @@ $(LIBS) \
 ###############################################################################
 # -----------------------------------------------------------------------------
 # List of objects from C files
-# $(notdir $(C_SOURCES:.c=.o)): Converts each .c file from C_SOURCES to .o file 
+# $(notdir $(C_SOURCES:.c=.o)): Converts each .c file from C_SOURCES to .o file
 #                               with the same name. Removes directory part.
 #                               `notdir` is make built-in function
 OBJECTS = $(addprefix $(BUILD_DIR)/,$(notdir $(C_SOURCES:.c=.o)))
 
-# $(sort $(dir $(C_SOURCES))): Extract and sort directories paths from 
-#                              C_SOURCES list of files, `sort` also remove 
+# $(sort $(dir $(C_SOURCES))): Extract and sort directories paths from
+#                              C_SOURCES list of files, `sort` also remove
 #                              duplicates
 # The whole line creates list of directories containing .c files from C_SOURCES
 # `vpath %.c` tells make where to look for c source files
@@ -288,14 +326,14 @@ vpath %.S $(sort $(dir $(ASMM_SOURCES)))
 
 # Compile rules, C files into object files
 # -----------------------------------------------------------------------------
-# $(BUILD_DIR)/%.o: The target pattern for object files 
+# $(BUILD_DIR)/%.o: The target pattern for object files
 # %.c: corresponding source file
 # makefile: dependency that ensures the rule runs when this makefile changes
-# | $(BUILD_DIR): indicates that the BUILD_DIR must exist before the target is 
-#                 build, but changes inside BUILD_DIR do not cause the target 
+# | $(BUILD_DIR): indicates that the BUILD_DIR must exist before the target is
+#                 build, but changes inside BUILD_DIR do not cause the target
 #                 to be rebuilt
 # -Wa: passes flags to the asm
-# -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.c=.lst)): 
+# -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.c=.lst)):
 #                 for asm to generate listing file
 # -c: compile and assemble, but do not link
 # <: denotes dependency form the rule
@@ -322,8 +360,8 @@ $(BUILD_DIR)/%.o: %.S makefile | $(BUILD_DIR)
 	@$(eval cmd=$(COMMAND3))
 	@$(call runt,$(cmd),"BUILDING")
 
-# Linking objects into ELF 
-# OBJECTS is a list of object files compiled and assembled from 
+# Linking objects into ELF
+# OBJECTS is a list of object files compiled and assembled from
 # .c, .s and .S files
 COMMAND4 = $(CC) $(OBJECTS) $(LDFLAGS) -o $@
 $(BUILD_DIR)/$(TARGET).elf: $(OBJECTS) makefile
@@ -372,11 +410,11 @@ com:
 
 debug:
 ##? debug: Build the project in debug mode
-	@$(MAKE) -j DEBUG=1 all
- 
+	@$(MAKE) -j DEBUG=1 all --no-print-directory
+
 release: clean
 ##? release: Build the project in release mode
-	@$(MAKE) -j DEBUG=0 OPT=-O2 all
+	@$(MAKE) -j DEBUG=0 OPT=-O2 all --no-print-directory
 
 
 ###############################################################################

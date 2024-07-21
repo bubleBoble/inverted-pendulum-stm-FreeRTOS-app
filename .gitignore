@@ -18,5 +18,11 @@ FreeRTOS/Source/portable/MemMang/*
 # Todo from LIP directory
 LIP/TODO.txt
 
-# build directory
+# make build directory
 build_make/build/*
+
+# cmake build directory
+build_cmake/*
+!build_cmake/startup_stm32f429xx.s
+!build_cmake/STM32F429ZITx_FLASH.ld
+!build_cmake/STM32F429ZITx_RAM.ld
