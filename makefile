@@ -33,16 +33,16 @@ help:
 	@echo "Usage: "
 	@sed -n 's/^##?//p' ${MAKEFILE_LIST} | column -t -s ':' | sed -e 's/^//'
 
-all: build
-##? all: Build binaries .elf, .hex, .bin
+all: debug
+##? all: Build binaries .elf, .hex, .bin, default is debug
 
-build: cmake
-	$(MAKE) -C ${BUILD_DIR} --no-print-directory
+debug: cmake_debug
+	@$(MAKE) -C ${BUILD_DIR} --no-print-directory
 
-cmake: ${BUILD_DIR}/Makefile
+cmake_debug: ${BUILD_DIR}/Makefile
 
 ${BUILD_DIR}/Makefile: CMakeLists.txt
-	cmake \
+	@cmake \
 		-G "$(BUILD_SYSTEM)" \
 		-B${BUILD_DIR} \
 		-DPROJECT_NAME=$(PROJECT_NAME) \
@@ -66,6 +66,10 @@ format-linux: $(addsuffix .format-linux,$(FORMAT_LINUX))
 flash: build
 ##? flash: Flash binary image into MCU
 	@st-flash --reset write $< 0x08000000
+
+com:
+##? com: minicom -b 115200 -o -D /dev/ttyACM0, ctrl+a, q to quit
+	minicom -b 115200 -o -D /dev/ttyACM0
 
 clean:
 ##? clean: Clean build directory
