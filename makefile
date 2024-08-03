@@ -37,16 +37,39 @@ all: debug
 ##? all: Build binaries .elf, .hex, .bin, default is debug
 
 debug: cmake_debug
-	@$(MAKE) -C ${BUILD_DIR} --no-print-directory
+##? debug: Build binary debug image
+	@$(MAKE) -C ${BUILD_DIR}/debug --no-print-directory
 
-cmake_debug: ${BUILD_DIR}/Makefile
+cmake_debug: ${BUILD_DIR}/debug ${BUILD_DIR}/debug/Makefile
 
-${BUILD_DIR}/Makefile: CMakeLists.txt
+${BUILD_DIR}/debug:
+	@mkdir ${BUILD_DIR}/debug
+
+${BUILD_DIR}/debug/Makefile: CMakeLists.txt
 	@cmake \
 		-G "$(BUILD_SYSTEM)" \
-		-B${BUILD_DIR} \
+		-B${BUILD_DIR}/debug \
 		-DPROJECT_NAME=$(PROJECT_NAME) \
-		-DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
+		-DCMAKE_BUILD_TYPE=Debug \
+		-DPROJECT_DIR=${PROJECT_DIR} \
+		-DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+		-DDUMP_ASM=OFF
+
+release: cmake_release
+##? release: Build binary release image
+	@$(MAKE) -C ${BUILD_DIR}/release --no-print-directory
+
+cmake_release: ${BUILD_DIR}/release ${BUILD_DIR}/release/Makefile
+
+${BUILD_DIR}/release:
+	@mkdir ${BUILD_DIR}/release
+
+${BUILD_DIR}/release/Makefile: CMakeLists.txt
+	@cmake \
+		-G "$(BUILD_SYSTEM)" \
+		-B${BUILD_DIR}/release \
+		-DPROJECT_NAME=$(PROJECT_NAME) \
+		-DCMAKE_BUILD_TYPE=Release \
 		-DPROJECT_DIR=${PROJECT_DIR} \
 		-DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
 		-DDUMP_ASM=OFF
@@ -63,15 +86,24 @@ format-linux: $(addsuffix .format-linux,$(FORMAT_LINUX))
 %.format-linux: %
 	$(if $(filter $(PLATFORM),Linux),dos2unix -q $<,)
 
-flash: build
-##? flash: Flash binary image into MCU
+flash-debug: debug
+##? flash-debug: Flash binary debug image into MCU
 	@st-flash --reset write $< 0x08000000
+
+flash-release: release
+##? flash-release: Flash binary release image into MCU
+	@st-flash --reset write $< 0x08000000
+
+clean-debug:
+##? clean-debug: Clean debug build directory
+	@echo "[CLEANING-DEBUG]"
+	@cd $(BUILD_DIR)/debug; make clean --no-print-directory
+
+clean-release:
+##? clean-release: Clean release build directory
+	@echo "[CLEANING-RELEASE]"
+	@cd $(BUILD_DIR)/release; make clean --no-print-directory
 
 com:
 ##? com: minicom -b 115200 -o -D /dev/ttyACM0, ctrl+a, q to quit
 	minicom -b 115200 -o -D /dev/ttyACM0
-
-clean:
-##? clean: Clean build directory
-	@echo "[CLEANING]"
-	@cd $(BUILD_DIR); make clean --no-print-directory
