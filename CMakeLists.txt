@@ -4,11 +4,18 @@ cmake_minimum_required(VERSION 3.12)
 # Include toolchain cmake file
 include(${CMAKE_CURRENT_SOURCE_DIR}/gcc-arm-none-eabi.cmake)
 
-# Project name and main project source code folder location
-project(LIP_app_1_f429zi)
-set(PROJECT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/LIP)
+# Project name and main project source code folder location,
+# PROJECT_NAME can be set in makefile
+if ("${PROJECT_NAME}" STREQUAL "")
+    set(PROJECT_NAME firmware) # LIP_app_1_f429zi
+endif()
+project(${PROJECT_NAME})
 
-option(DUMP_ASM "Create full assembly of final executable" OFF)
+# Set debug build as default
+if ("${CMAKE_BUILD_TYPE}" STREQUAL "")
+    set(CMAKE_BUILD_TYPE Debug)
+endif()
+message("Build type: ${CMAKE_BUILD_TYPE}")
 
 # MCU info
 set(MCU_FAMILY STM32F4xx)
@@ -20,8 +27,8 @@ set(MCU_PARAMETERS
     -mfloat-abi=hard)
 
 # Startup and linker scripts
-set(STARTUP_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/build_cmake/startup_stm32f429xx.s)
-set(MCU_LINKER_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/build_cmake/STM32F429ZITx_FLASH.ld)
+set(STARTUP_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/startup_stm32f429xx.s)
+set(MCU_LINKER_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/STM32F429ZITx_FLASH.ld)
 
 # Executable
 set(EXECUTABLE ${CMAKE_PROJECT_NAME})
@@ -33,6 +40,7 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS ON)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+# set(CMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES ${CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES})
 set(CMAKE_CXX_EXTENSIONS ON)
 
 # Includes
@@ -141,6 +149,7 @@ add_executable(${EXECUTABLE}
 
 # Defines
 target_compile_definitions(${EXECUTABLE} PRIVATE
+    $<$<CONFIG:Debug>:DEBUG> # add DEBUG to the compile definitions if current config is debug
     ${MCU_MODEL}
     USE_HAL_DRIVER)
 
@@ -166,7 +175,7 @@ target_compile_options(${EXECUTABLE} PRIVATE
     -fsingle-precision-constant
     -ffast-math
     $<$<COMPILE_LANGUAGE:CXX>:
-        -Wconversion # STM libraries!
+        -Wconversion # STM libraries
         -Wno-volatile
         -Wold-style-cast
         -Wuseless-cast
@@ -179,9 +188,11 @@ target_link_options(${EXECUTABLE} PRIVATE
     ${MCU_PARAMETERS}
     -T${MCU_LINKER_SCRIPT}
     -Wl,-Map=${CMAKE_PROJECT_NAME}.map,--cref
+    $<$<VERSION_GREATER:$<C_COMPILER_VERSION>,10.3.1>:-Wl,--no-warn-rwx-segments>
     -Wl,--start-group
     -lc
     -lm
+    # -lstdc++
     -Wl,--end-group
     -Wl,--print-memory-usage)
 
@@ -194,5 +205,5 @@ add_custom_command(TARGET ${EXECUTABLE} POST_BUILD
 
 if (${DUMP_ASM})
     add_custom_command(TARGET ${EXECUTABLE} POST_BUILD
-        COMMAND ${CMAKE_OBJDUMP} -D $<TARGET_FILE:${EXECUTABLE}> > ${EXECUTABLE}.s)
+        COMMAND ${CMAKE_OBJDUMP} -D -C $<TARGET_FILE:${EXECUTABLE}> > ${EXECUTABLE}.s)
 endif()
