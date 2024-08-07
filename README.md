@@ -35,13 +35,13 @@ Python/matlab part that includes more mathematical parts of the project:\
                                 | [ ][ ]                       |                        [ ][ ] |
      ard. shield 2 ____________ | [ ][ ]_______________________|                        [ ][ ] |
                                 | [ ][ ]                                                [ ][ ] |
-                   3.3V         | [x][ ]                                                [ ][x] |   PA6 (pwm tim3 ch1)
-                     5V         | [x][ ]                                                [ ][x] |   PA7 (pwm tim3 ch2)
-                    GND         | [x][ ]                                                [ ][ ] |
+     3.3V                       | [x][ ]                                                [ ][x] |   PA6 (pwm tim3 ch1)
+     5V                         | [x][ ]                                                [ ][x] |   PA7 (pwm tim3 ch2)
+     GND                        | [x][ ]                                                [ ][ ] |
                                 | [ ][ ]                                                [ ][ ] |
                                 | [ ][ ]                                                [ ][ ] |
                                 |                                                              |
-       PA3 (adc_pot / ADC3/3)   | [x][ ]                                                [ ][x] |
+     PA3 (adc_pot / ADC3/3)     | [x][ ]                                                [ ][x] |
                                 | [ ][ ]                                                [ ][ ] |
      PC3 (adc_dcm_R_i ADC3/13)  | [x][ ]                                                [ ][ ] |
      PF3 (adc_dcm_L_i ADC3/9)   | [x][ ]                                                [ ][x] |   PF14 limit NO switch left EXTI 13
