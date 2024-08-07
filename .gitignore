@@ -22,3 +22,6 @@ FreeRTOS/Source/portable/MemMang/*
 
 # Todo from LIP directory
 LIP/TODO.txt
+
+# Cmake build files
+build_cmake
