@@ -111,7 +111,7 @@ int main(void)
 
   /* USER CODE END 2 */
 
-  /* Call init function for freertos objects (in freertos.c) */
+  /* Call init function for freertos objects (in cmsis_os2.c) */
   // MX_FREERTOS_Init();
 
   /* Start scheduler */

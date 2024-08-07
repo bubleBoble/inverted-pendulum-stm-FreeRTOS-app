@@ -1,10 +1,5 @@
-# STM CubeIDE
-Middlewares/**
-Debug/**
-test_freertos_dmc_ctrl_encoder Debug.launch
-
 # vscode
-.vscode
+.vscode/*
 
 # etc
 xetc
@@ -23,5 +18,11 @@ FreeRTOS/Source/portable/MemMang/*
 # Todo from LIP directory
 LIP/TODO.txt
 
-# Cmake build files
-build_cmake
+# make build directory
+build_make/build/*
+
+# cmake build directory
+build_cmake/*
+!build_cmake/startup_stm32f429xx.s
+!build_cmake/STM32F429ZITx_FLASH.ld
+!build_cmake/STM32F429ZITx_RAM.ld
