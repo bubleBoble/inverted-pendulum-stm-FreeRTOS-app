@@ -1,4 +1,4 @@
-.PHONY: help all build cmake format-linux flash clean
+.PHONY: help all debug cmake_debug release cmake_release format-linux flash-debug flash-release clean-debug clean-release
 
 PROJECT_NAME ?= firmware
 BUILD_TYPE ?= Debug
