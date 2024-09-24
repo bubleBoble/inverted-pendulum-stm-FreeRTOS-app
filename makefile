@@ -36,14 +36,14 @@ help:
 all: debug
 ##? all: Build binaries .elf, .hex, .bin, default is debug
 
-debug: cmake_debug
+debug: ${BUILD_DIR}/debug cmake_debug
 ##? debug: Build binary debug image
 	@$(MAKE) -C ${BUILD_DIR}/debug --no-print-directory
 
-cmake_debug: ${BUILD_DIR}/debug ${BUILD_DIR}/debug/Makefile
-
 ${BUILD_DIR}/debug:
-	@mkdir ${BUILD_DIR}/debug
+	@mkdir -p ${BUILD_DIR}/debug
+
+cmake_debug: ${BUILD_DIR}/debug/Makefile
 
 ${BUILD_DIR}/debug/Makefile: CMakeLists.txt
 	@cmake \
@@ -55,14 +55,14 @@ ${BUILD_DIR}/debug/Makefile: CMakeLists.txt
 		-DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
 		-DDUMP_ASM=OFF
 
-release: cmake_release
+release: ${BUILD_DIR}/release $(BUILD_DIR)/release cmake_release
 ##? release: Build binary release image
 	@$(MAKE) -C ${BUILD_DIR}/release --no-print-directory
 
-cmake_release: ${BUILD_DIR}/release ${BUILD_DIR}/release/Makefile
-
 ${BUILD_DIR}/release:
-	@mkdir ${BUILD_DIR}/release
+	@mkdir -p ${BUILD_DIR}/release
+
+cmake_release: ${BUILD_DIR}/release ${BUILD_DIR}/release/Makefile
 
 ${BUILD_DIR}/release/Makefile: CMakeLists.txt
 	@cmake \

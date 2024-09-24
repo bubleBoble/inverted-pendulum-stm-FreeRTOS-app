@@ -1,3 +1,14 @@
+# How to compile the project
+## prerequisites
+cmake
+make
+arm-none-eabi toolchain
+
+To see available build options run
+```bash
+make help
+```
+
 # About
 This is an application for the STM32F4 microcontroller with FreeRTOS+CLI, designed to control a linear inverted pendulum (abbreviated as LIP). The control system is based on full state feedback, with compensation for the DC motor voltage deadzone.
 
