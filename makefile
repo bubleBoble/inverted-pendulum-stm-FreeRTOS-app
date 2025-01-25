@@ -3,7 +3,8 @@
 PROJECT_NAME ?= firmware
 BUILD_TYPE ?= Debug
 BUILD_DIR ?= build_cmake
-FIRMWARE := $(BUILD_DIR)/$(PROJECT_NAME).bin
+FIRMWARE_DEBUG := $(BUILD_DIR)/debug/$(PROJECT_NAME).bin
+FIRMWARE_RELEASE := $(BUILD_DIR)/release/$(PROJECT_NAME).bin
 PLATFORM = $(if $(OS),$(OS),$(shell uname -s))
 PROJECT_DIR := LIP
 
@@ -88,11 +89,11 @@ format-linux: $(addsuffix .format-linux,$(FORMAT_LINUX))
 
 flash-debug: debug
 ##? flash-debug: Flash binary debug image into MCU
-	@st-flash --reset write $< 0x08000000
+	@st-flash --reset write $(FIRMWARE_DEBUG) 0x08000000
 
 flash-release: release
 ##? flash-release: Flash binary release image into MCU
-	@st-flash --reset write $< 0x08000000
+	@st-flash --reset write $(FIRMWARE_RELEASE) 0x08000000
 
 clean-debug:
 ##? clean-debug: Clean debug build directory

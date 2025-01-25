@@ -45,10 +45,10 @@ Send:
 Send: pend angle, pend speed, 0,
       cart position, cart speed, cart position setpoint,
       output voltage, tick time */
-// #define COM_SEND_DEFAULT
+#define COM_SEND_DEFAULT
 
 /* If defined communication task will send angle setpoint for upc. */
-#define COM_SEND_UPC
+// #define COM_SEND_UPC
 
 /* If defined communication task will send angle setpoint for dpc. */
 // #define COM_SEND_DPC
