@@ -1,3 +1,4 @@
+# Makefile based on: https://github.com/prtzl/stm32/blob/master/Makefile
 .PHONY: help all debug cmake_debug release cmake_release format-linux flash-debug flash-release clean-debug clean-release
 
 PROJECT_NAME ?= firmware
@@ -108,3 +109,44 @@ clean-release:
 com:
 ##? com: minicom -b 115200 -o -D /dev/ttyACM0, ctrl+a, q to quit
 	minicom -b 115200 -o -D /dev/ttyACM0
+
+
+###############################################################################
+# Container related
+###############################################################################
+UID ?= $(shell id -u)
+GID ?= $(shell id -g)
+USER ?= $(shell id -un)
+GROUP ?= $(if $(filter $(PLATFORM), Windows_NT),$(shell id -un),$(shell id -gn))
+
+CONTAINER_FILE ?= build_podman/Containerfile
+IMAGE_NAME := fedora-stm-build-base
+IMAGE_VERSION := v1.0
+CONTAINER_NAME := fedora-stm-build-base
+
+# Build container image
+podman-build: $(CONTAINER_FILE)
+##? podman-build: build container image for building the app
+	podman build \
+			--tag "$(IMAGE_NAME):$(IMAGE_VERSION)" \
+			--file=$(CONTAINER_FILE) \
+			--build-arg UID=$(UID) \
+			--build-arg GID=$(GID) \
+			--build-arg USERNAME=$(USER) \
+			--build-arg GROUPNAME=$(GROUP) \
+			./build_podman
+
+podman-run:
+##? podman-run: run build container
+	podman run \
+			--name $(CONTAINER_NAME) \
+			--rm=true \
+			--interactive \
+			--tty \
+			--userns=keep-id \
+			--volume $$(pwd):/workdir \
+			--workdir /workdir \
+			--security-opt label=disable \
+			--hostname $(CONTAINER_NAME) \
+			"$(IMAGE_NAME):$(IMAGE_VERSION)" \
+			bash
