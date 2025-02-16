@@ -39,7 +39,7 @@ all: debug
 ##? all: Build binaries .elf, .hex, .bin, default is debug
 
 debug: ${BUILD_DIR}/debug cmake_debug
-##? debug: Build binary debug image
+##? debug: Build binary in debug mode
 	@$(MAKE) -C ${BUILD_DIR}/debug --no-print-directory
 
 ${BUILD_DIR}/debug:
@@ -58,7 +58,7 @@ ${BUILD_DIR}/debug/Makefile: CMakeLists.txt
 		-DDUMP_ASM=OFF
 
 release: ${BUILD_DIR}/release $(BUILD_DIR)/release cmake_release
-##? release: Build binary release image
+##? release: Build binary in release mode
 	@$(MAKE) -C ${BUILD_DIR}/release --no-print-directory
 
 ${BUILD_DIR}/release:
@@ -106,6 +106,17 @@ clean-release:
 	@echo "[CLEANING-RELEASE]"
 	@cd $(BUILD_DIR)/release; make clean --no-print-directory
 
+clean-cmake-cache:
+##? clean-cmake-cache: Clean cmake cache
+	rm -rf ./build_cmake/debug/CMakeFiles
+	rm -f ./build_cmake/debug/cmake_install.cmake
+	rm -f ./build_cmake/debug/CMakeCache.txt
+	rm -f ./build_cmake/debug/Makefile
+	rm -rf ./build_cmake/release/CMakeFiles
+	rm -f ./build_cmake/release/cmake_install.cmake
+	rm -f ./build_cmake/release/CMakeCache.txt
+	rm -f ./build_cmake/release/Makefile
+
 com:
 ##? com: minicom -b 115200 -o -D /dev/ttyACM0, ctrl+a, q to quit
 	minicom -b 115200 -o -D /dev/ttyACM0
@@ -124,9 +135,8 @@ IMAGE_NAME := fedora-stm-build-base
 IMAGE_VERSION := v1.0
 CONTAINER_NAME := fedora-stm-build-base
 
-# Build container image
-podman-build: $(CONTAINER_FILE)
-##? podman-build: build container image for building the app
+podman-build-image: $(CONTAINER_FILE)
+##? podman-build-image: Build container image for building the app
 	podman build \
 			--tag "$(IMAGE_NAME):$(IMAGE_VERSION)" \
 			--file=$(CONTAINER_FILE) \
@@ -136,17 +146,34 @@ podman-build: $(CONTAINER_FILE)
 			--build-arg GROUPNAME=$(GROUP) \
 			./build_podman
 
-podman-run:
-##? podman-run: run build container
-	podman run \
-			--name $(CONTAINER_NAME) \
-			--rm=true \
+REMOVE_AFTER_BUILD = true
+CONTAINER_RUN = podman run \
+						--name $(CONTAINER_NAME) \
+						--rm=$(REMOVE_AFTER_BUILD) \
+						--userns=keep-id \
+						--volume $$(pwd):/workdir \
+						--workdir /workdir \
+						--security-opt label=disable \
+						--hostname $(CONTAINER_NAME)
+
+podman-run-container:
+##? podman-run-container: Run build container in interactive mode with bash shell
+	$(CONTAINER_RUN) \
 			--interactive \
 			--tty \
-			--userns=keep-id \
-			--volume $$(pwd):/workdir \
-			--workdir /workdir \
-			--security-opt label=disable \
-			--hostname $(CONTAINER_NAME) \
 			"$(IMAGE_NAME):$(IMAGE_VERSION)" \
 			bash
+
+podman-build-release:
+##? podman-build-release: Build binary in release mode inside a container
+	rm -rf ./build_cmake/release/*
+	$(CONTAINER_RUN) \
+			"$(IMAGE_NAME):$(IMAGE_VERSION)" \
+			bash -lc "make release -j"
+
+podman-build-debug:
+##? podman-build-debug: Build binary in debug mode inside a container
+	rm -rf ./build_cmake/debug/*
+	$(CONTAINER_RUN) \
+			"$(IMAGE_NAME):$(IMAGE_VERSION)" \
+			bash -lc "make debug -j"
