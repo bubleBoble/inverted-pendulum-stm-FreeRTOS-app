@@ -27,5 +27,5 @@ build_cmake/*
 !build_cmake/STM32F429ZITx_FLASH.ld
 !build_cmake/STM32F429ZITx_RAM.ld
 
-todo
-TODO
+todo*
+TODO*
