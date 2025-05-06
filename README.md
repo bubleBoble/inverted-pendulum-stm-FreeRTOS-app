@@ -1,18 +1,19 @@
 # About (short)
-This is an application for the STM32F4 microcontroller with FreeRTOS+CLI, designed to control a linear inverted pendulum.
+This is an application for the STM32F4 microcontroller with FreeRTOS + CLI over
+UART, designed to control a linear inverted pendulum.
 
-# How to compile the project
+# Tools, Project Structure, Compilation
 ## Target platfom
 Project was compiled for STM32F429ZI MCU. Tested on STM32F429ZI Nucleo board.
 
 ## Prerequisites
-This project was compiled using the following Linux tools and versions:
-  - **cmake** - tested with version **3.12**
-  - **make** - tested with GNU Make **4.4.1**
+This project was compiled using the following tools with respective versions:
+  - **cmake** - **3.12**
+  - **make** - GNU Make **4.4.1**
   - **arm-none-eabi toolchain** version **10.3.2021.10-x86_64** - [download here](https://developer.arm.com/downloads/-/gnu-rm)
-  - **podman** - tested with version **5.3.2**
+  - **podman** - **5.3.2**
 
-ST Drivers ([github page](https://github.com/STMicroelectronics/STM32CubeF4))
+ST Drivers - [repositories on github](https://github.com/STMicroelectronics/STM32CubeF4)
 :
   - **CMSIS**
   - **STM32F4xx_HAL_Driver**
@@ -23,16 +24,23 @@ From the repository root:
   - [Drivers](./Drivers) - CMSIS and HAL drivers
   - [FreeRTOS](./FreeRTOS) - FreeRTOS source code
   - [FreeRTOS-CLI](./FreeRTOS-CLI) - FreeRTOS CLI source code
-  - [LIP](LIP) - Business logic for the Inverted Pendulum (LIP - Linear Inverted Pendulum)
-  - [build_make](./build_make) - Directory with Makefile to build the app with make alone
-  - [build_podman](./build_podman) - Directory with `Containerfile` used to build the project inside Linux container
-  - [makefile](./makefile) - Top-level Makefile, used for convenience as a wrapper for building the project with CMake or inside a container
+  - [LIP](LIP) - Business logic for the Inverted Pendulum (LIP - Linear 
+    Inverted Pendulum)
+  - [build_make](./build_make) - Directory with Makefile to build the app with
+    make alone
+  - [build_podman](./build_podman) - Directory with `Containerfile` used to
+    build the project inside Linux container
   - [startup_stm32f429xx.s](./startup_stm32f429xx.s) - startup script
-  - [startup_stm32f429xx.s](STM32F429ZITx_FLASH.ld), [STM32F429ZITx_RAM.ld](STM32F429ZITx_RAM.ld) - linker scripts
+  - [startup_stm32f429xx.s](STM32F429ZITx_FLASH.ld), 
+    [STM32F429ZITx_RAM.ld](STM32F429ZITx_RAM.ld) - linker scripts
+  - [makefile](./makefile) - Top-level Makefile, used for convenience 
+     as a wrapper for building the project with CMake or inside a container
 
 
 ## Building
-Project can be built using cmake, make alone or using cmake inside a Linux container (based on this nice project [link](https://github.com/prtzl/stm32)).
+Project can be built using cmake, make alone or using cmake inside a Linux 
+container (based on this amazing template project 
+[link](https://github.com/prtzl/stm32)).
 
 To see available build options run
 ```bash
@@ -41,45 +49,70 @@ make help
 
 ### Building using `make`
 ```sh
+# Run it from 'build_make' directory
 cd build_make
-make help       # To see available options
+make help       # to see available options
 make release    # or this
 make debug      # or use this for debug config
 ```
-All build artifacts and output binaries are stored in [build_make/build](./build_make/build)
+All build artifacts and output binaries are stored in 
+[build_make/build](./build_make/build)
 
 ### Building using cmake
 ```sh
-make help       # To see available options
+# run from repo root directory
+make help       # to see available options
 make release    # use this
 make debug      # or use this for debug config
 ```
-All build artifacts and output binaries are stored in [build_cmake/debug](./build_cmake/debug) or [build_cmake/release](./build_cmake/release)
+All build artifacts and output binaries are stored in 
+[build_cmake/debug](./build_cmake/debug) or 
+[build_cmake/release](./build_cmake/release)
 
 ### Build using cmake inside container
 ```sh
-make help                    # To see available options
+make help                    # to see available options
 make podman-build-image      # Build container image
 make podman-build-release    # run container to build the app
-make podman-build-release    # or use this for debug config
+make podman-build-debug      # or use this for debug config
 ```
 
 # About (Longer)
-This is an application for the STM32F4 microcontroller with FreeRTOS+CLI, designed to control a linear inverted pendulum (abbreviated as LIP). The control system is based on full state feedback, with compensation for the DC motor voltage deadzone.
+This is an application for the STM32F4 microcontroller with FreeRTOS+CLI, 
+designed to control a linear inverted pendulum (LIP). The control system is 
+based on full state feedback, with compensation for the DC motor voltage 
+deadzone.
 
-The control system includes stabilization of the pendulum arm in the upright position, oscillation damping in the downward position, and a swing-up mechanism. The swing-up operates in open-loop mode, and the trajectory of the input voltage is calculated using dynamic system trajectory optimization.
+The control system includes stabilization of the pendulum arm in the upright 
+position, oscillation damping in the downward position, and a swing-up 
+mechanism. The swing-up operates in open-loop mode, and the trajectory of the 
+input voltage is calculated using dynamic system trajectory optimization 
+(Matlab library `OptimTraj` by Mathew Kelly - 
+[source](https://www.mathworks.com/matlabcentral/fileexchange/54386-optimtraj-trajectory-optimization-library)).
 
-Several low-pass filters are implemented for numerical derivatives by discretizing the transfer function $\mathrm{G}(\mathrm{s})=\frac{1}{\mathrm{T}\mathrm{s}+1}$. The project includes basic implementations of some FIR and IIR filters, although these were not used in the final control functionality.
+Several low-pass filters are implemented for *"smoothing out"* numerical 
+derivatives by discretizing the transfer function 
+$\mathrm{G}(\mathrm{s})=\frac{1}{\mathrm{T}\mathrm{s}+1}$. 
+The project includes basic implementations of some FIR and IIR filters, 
+although these were not used in the final control functionality.
 
-The application features its own CLI (*Command Line Interface*), based on the FreeRTOS CLI command interpreter, which is ported to work with the STM32F4. The CLI operates over the same UART as the STLink programmer/debugger, eliminating the need to connect an additional USB cable to the board.
+The application features its own CLI (*Command Line Interface*), based on the 
+FreeRTOS CLI command interpreter, which is ported to work with the STM32F4. 
+The CLI operates over the same UART as the STLink programmer/debugger.
 
-Initially, the project’s base code was autogenerated using STM32 CubeMX. The project was later moved from the CubeIDE environment to a CMake and Makefile setup. The CMake-based build can be initiated using the makefile in the project's root directory, which acts as a wrapper for CMake commands. This makefile is based on the [github/prtzl/stm32](https://github.com/prtzl/stm32/tree/master) base project.
+Initially, the project’s base code was autogenerated using STM32 CubeMX. The 
+project was later moved from the CubeIDE environment to a CMake and Makefile 
+setup. The CMake-based build can be initiated using the makefile in the 
+project's root directory, which acts as a wrapper for CMake commands. 
+This makefile is based on the 
+[github/prtzl/stm32](https://github.com/prtzl/stm32/tree/master) 
+template project.
 
-Python/matlab part that includes more mathematical parts of the project:\
-[github/bubleBoble/LIPMatlab](https://github.com/bubleBoble/inverted-pendulum-python-matlab-optimization-math)
+Python/matlab part that includes more theoretical parts of the project:
+  - [github/bubleBoble/LIPMatlab](https://github.com/bubleBoble/inverted-pendulum-python-matlab-optimization-math)
 
-Videos of real device and simulation:\
-https://www.youtube.com/playlist?list=PLLyk_frqcOGw6XyiyMOqAa3b0tapfJQMq
+Videos of real device and simulation:
+  - https://www.youtube.com/playlist?list=PLLyk_frqcOGw6XyiyMOqAa3b0tapfJQMq
 
 ## Hardware setup:
 <img title="Finished pendulum" alt="" src="./images/allallinone.png">
@@ -242,7 +275,7 @@ or add manually `-u _printf_float` in linker flags.
   - https://www.tablesgenerator.com/text_tables
   - https://textart.io/table
 
-### Make freeRTOS cli better
+### Make freeRTOS CLI better
   - https://www.edwinfairchild.com/2022/10/making-freertos-cli-more-cli-ish.html
 
 ### Data type sizes arm gcc
