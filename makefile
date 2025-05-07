@@ -1,6 +1,8 @@
 # Makefile based on: https://github.com/prtzl/stm32/blob/master/Makefile
 .PHONY: help all debug cmake_debug release cmake_release format-linux flash-debug flash-release clean-debug clean-release
 
+SHELL := /bin/bash
+
 PROJECT_NAME ?= firmware
 BUILD_TYPE ?= Debug
 BUILD_DIR ?= build_cmake
@@ -76,7 +78,7 @@ ${BUILD_DIR}/release/Makefile: CMakeLists.txt
 		-DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
 		-DDUMP_ASM=OFF
 
-# Formats all CubeMX generated sources to unix style - removes \r from line 
+# Formats all CubeMX generated sources to unix style - removes \r from line
 # endings
 HIDDEN_FILES := .mxproject .project .cproject
 FOUND_HIDDEN_FILES := $(shell for f in $(HIDDEN_FILES);do if [[ -e $$f ]]; then echo $$f;fi; done)
