@@ -93,8 +93,17 @@ ${BUILD_DIR}/release/Makefile: CMakeLists.txt
 # Formats all CubeMX generated sources to unix style - removes \r from line
 # endings
 HIDDEN_FILES := .mxproject .project .cproject
-FOUND_HIDDEN_FILES := $(shell for f in $(HIDDEN_FILES);do if [[ -e $$f ]]; then echo $$f;fi; done)
-FORMAT_LINUX := $(shell find Core Drivers -name '*' -type f; find . -name '*.ioc') $(FOUND_HIDDEN_FILES)
+FOUND_HIDDEN_FILES := $(shell \
+    for f in $(HIDDEN_FILES); do \
+        if [[ -e $$f ]]; then \
+            echo $$f; \
+        fi; \
+    done)
+
+FORMAT_LINUX := $(shell \
+    find Core Drivers LIP -name '*' -type f; \
+    find . -name '*.ioc') \
+    $(FOUND_HIDDEN_FILES)
 
 format-linux: $(addsuffix .format-linux,$(FORMAT_LINUX))
 ##? format-linux: format \r\n to \n
