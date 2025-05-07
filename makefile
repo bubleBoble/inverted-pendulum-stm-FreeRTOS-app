@@ -36,11 +36,18 @@ endif
 ###############################################################################
 help:
 ##? help: This help message
-	@echo "Usage:"
+	@echo "********************************************************************************"
+	@echo "                                     Usage"
+	@echo "********************************************************************************"
+	@echo ""
 	@sed -n 's/^##?//p' ${MAKEFILE_LIST} | column -t -s ':' | sed 's/^/   /'
 	@echo ""
-	@echo "Note:"
+	@echo "********************************************************************************"
+	@echo "                                     Note"
+	@echo "********************************************************************************"
+	@echo ""
 	@sed -n 's/^#NOTE#//p' ${MAKEFILE_LIST} | column -t -s ':' | sed 's/^//'
+	@echo ""
 
 all: debug
 ##? all: Build binaries .elf, .hex, .bin, default is debug
@@ -109,7 +116,8 @@ clean-debug:
 	@cd $(BUILD_DIR)/debug; make clean --no-print-directory
 
 clean-debug-full:
-##? clean-debug-full: Clean debug build directory and all cmake generated files
+##? clean-debug-full: Clean debug build directory and all cmake generated
+##? : files
 	@echo "[CLEANING-DEBUG]"
 	@rm -rf ./build_cmake/debug/*
 
@@ -119,7 +127,8 @@ clean-release:
 	@cd $(BUILD_DIR)/release; make clean --no-print-directory
 
 clean-release-full:
-##? clean-release-full: Clean release build directory and all cmake generated files
+##? clean-release-full: Clean release build directory and all cmake generated
+##? : files
 	@echo "[CLEANING-RELEASE]"
 	@rm -rf ./build_cmake/release/*
 
@@ -135,7 +144,8 @@ clean-cmake-cache:
 	rm -f ./build_cmake/release/Makefile
 
 com:
-##? com: minicom -b 115200 -o -D /dev/ttyACM0, ctrl+a, q to quit
+##? com: minicom -b 115200 -o -D /dev/ttyACM0, ctrl+a, q to
+##? : quit
 	minicom -b 115200 -o -D /dev/ttyACM0
 
 
@@ -147,7 +157,8 @@ podman-build-image: build_podman/Containerfile
 	./build_podman/podman_build.sh
 
 podman-run-container:
-##? podman-run-container: Run build container in interactive mode with bash shell
+##? podman-run-container: Run build container in interactive mode with bash
+##? : shell
 	./build_podman/podman_run.sh --it
 
 podman-build-release:
