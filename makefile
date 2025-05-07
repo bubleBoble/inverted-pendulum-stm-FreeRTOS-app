@@ -90,6 +90,12 @@ ${BUILD_DIR}/release/Makefile: CMakeLists.txt
 		-DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
 		-DDUMP_ASM=OFF
 
+# Formats all user modified source files (add ones that are missing)
+SRCS := $(shell find ${PROJECT_DIR} -name '*.[ch]' -or -name '*.[ch]pp') Core/Src/main.c
+format: $(addsuffix .format,$(SRCS))
+%.format: %
+	clang-format -i $<
+
 # Formats all CubeMX generated sources to unix style - removes \r from line
 # endings
 HIDDEN_FILES := .mxproject .project .cproject
