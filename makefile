@@ -1,5 +1,7 @@
-# Makefile based on: https://github.com/prtzl/stm32/blob/master/Makefile
-.PHONY: help all debug cmake_debug release cmake_release format-linux flash-debug flash-release clean-debug clean-release
+.PHONY: \
+	help all debug cmake_debug release cmake_release format-linux \
+	flash-debug flash-release clean-debug clean-release podman-build-image \
+	podman-run-container podman-build-release podman-build-debug
 
 SHELL := /bin/bash
 
@@ -30,12 +32,15 @@ endif
 
 
 ###############################################################################
-# Phony targets
+# Targets
 ###############################################################################
 help:
 ##? help: This help message
-	@echo "Usage: "
-	@sed -n 's/^##?//p' ${MAKEFILE_LIST} | column -t -s ':' | sed -e 's/^//'
+	@echo "Usage:"
+	@sed -n 's/^##?//p' ${MAKEFILE_LIST} | column -t -s ':' | sed 's/^/   /'
+	@echo ""
+	@echo "Note:"
+	@sed -n 's/^#NOTE#//p' ${MAKEFILE_LIST} | column -t -s ':' | sed 's/^//'
 
 all: debug
 ##? all: Build binaries .elf, .hex, .bin, default is debug
@@ -103,10 +108,20 @@ clean-debug:
 	@echo "[CLEANING-DEBUG]"
 	@cd $(BUILD_DIR)/debug; make clean --no-print-directory
 
+clean-debug-full:
+##? clean-debug-full: Clean debug build directory and all cmake generated files
+	@echo "[CLEANING-DEBUG]"
+	@rm -rf ./build_cmake/debug/*
+
 clean-release:
 ##? clean-release: Clean release build directory
 	@echo "[CLEANING-RELEASE]"
 	@cd $(BUILD_DIR)/release; make clean --no-print-directory
+
+clean-release-full:
+##? clean-release-full: Clean release build directory and all cmake generated files
+	@echo "[CLEANING-RELEASE]"
+	@rm -rf ./build_cmake/release/*
 
 clean-cmake-cache:
 ##? clean-cmake-cache: Clean cmake cache
@@ -127,55 +142,23 @@ com:
 ###############################################################################
 # Container related
 ###############################################################################
-UID ?= $(shell id -u)
-GID ?= $(shell id -g)
-USER ?= $(shell id -un)
-GROUP ?= $(if $(filter $(PLATFORM), Windows_NT),$(shell id -un),$(shell id -gn))
-
-CONTAINER_FILE ?= build_podman/Containerfile
-IMAGE_NAME := fedora-stm-build-base
-IMAGE_VERSION := v1.0
-CONTAINER_NAME := fedora-stm-build-base
-
-podman-build-image: $(CONTAINER_FILE)
+podman-build-image: build_podman/Containerfile
 ##? podman-build-image: Build container image for building the app
-	podman build \
-			--tag "$(IMAGE_NAME):$(IMAGE_VERSION)" \
-			--file=$(CONTAINER_FILE) \
-			--build-arg UID=$(UID) \
-			--build-arg GID=$(GID) \
-			--build-arg USERNAME=$(USER) \
-			--build-arg GROUPNAME=$(GROUP) \
-			./build_podman
-
-REMOVE_AFTER_BUILD = true
-CONTAINER_RUN = podman run \
-						--name $(CONTAINER_NAME) \
-						--rm=$(REMOVE_AFTER_BUILD) \
-						--userns=keep-id \
-						--volume $$(pwd):/workdir \
-						--workdir /workdir \
-						--security-opt label=disable \
-						--hostname $(CONTAINER_NAME)
+	./build_podman/podman_build.sh
 
 podman-run-container:
 ##? podman-run-container: Run build container in interactive mode with bash shell
-	$(CONTAINER_RUN) \
-			--interactive \
-			--tty \
-			"$(IMAGE_NAME):$(IMAGE_VERSION)" \
-			bash
+	./build_podman/podman_run.sh --it
 
 podman-build-release:
 ##? podman-build-release: Build binary in release mode inside a container
-	rm -rf ./build_cmake/release/*
-	$(CONTAINER_RUN) \
-			"$(IMAGE_NAME):$(IMAGE_VERSION)" \
-			bash -lc "make release -j"
+	./build_podman/podman_run.sh --release
 
 podman-build-debug:
 ##? podman-build-debug: Build binary in debug mode inside a container
-	rm -rf ./build_cmake/debug/*
-	$(CONTAINER_RUN) \
-			"$(IMAGE_NAME):$(IMAGE_VERSION)" \
-			bash -lc "make debug -j"
+	./build_podman/podman_run.sh --debug
+
+
+#NOTE# : You should run `clean-release-full` and `clean-debug-full` only when
+#NOTE# : switching from building with CMake on your system to building inside
+#NOTE# : a container. Both methods use the same CMake build directory for output.
