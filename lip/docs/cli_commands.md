@@ -1,0 +1,17 @@
+# Implemented CLI commands
+- `task-stats`       -    Displays a table showing the state of each FreeRTOS task
+- `<enter-key>`      -    Start/stop data streaming
+- `home`             -    Go to home cart position - center of the track, no controller used
+- `reset/rr`         -    Reset uC
+- `vol`              -    Manually set DC motor voltage
+- `br`               -    Brake, sets output voltage to zero, suspend any active control task
+- `sp`               -    Change cart possition setpoint source to CLI
+- `sppot`            -    Change cart possition setpoint source to potentiometer
+- `spcli`            -    Change cart possition setpoint source to CLI
+- `dpc`              -    Turn on/off down position controller, default cart pos. setpoint is current cart position
+- `dpci`             -    Turn on/off down position controller with integral action on cart position error
+- `upc`              -    Turn on/off up position controller
+- `upci`             -    Turn on/off up position controller with integral action on cart position error
+- `swingup`          -    Turn on pendulum swingup procedure
+- `swingdown`
+- `bounceoff`        -    Turn on or off cart min max bounce off protection

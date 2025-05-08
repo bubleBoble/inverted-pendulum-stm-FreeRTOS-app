@@ -190,6 +190,9 @@ rest of porable code has to be excluded from the build
    - disable "generate IRQ handler" for "System service call via SWI instruction"
    - disable "generate IRQ handler" for "Pendable request for system service"
 
+## FreeRTOS-CLI demo
+https://www.freertos.org/FreeRTOS-Plus/FreeRTOS_Plus_IO/Demo_Applications/LPCXpresso_LPC1769/NXP_LPC1769_Demo_Description.html
+
 ## GPIOs for motor pwm (TIM3)
   - PA6 for CH1 (alias pwm1_dcmA1)
   - PA7 for CH2 (alias pwm2_dcmA2)

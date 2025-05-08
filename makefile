@@ -11,7 +11,7 @@ BUILD_DIR ?= build_cmake
 FIRMWARE_DEBUG := $(BUILD_DIR)/debug/$(PROJECT_NAME).bin
 FIRMWARE_RELEASE := $(BUILD_DIR)/release/$(PROJECT_NAME).bin
 PLATFORM = $(if $(OS),$(OS),$(shell uname -s))
-PROJECT_DIR := LIP
+PROJECT_DIR := lip
 
 # STM32 Device
 DEVICE ?= STM32F429ZI
@@ -107,7 +107,7 @@ FOUND_HIDDEN_FILES := $(shell \
     done)
 
 FORMAT_LINUX := $(shell \
-    find Core Drivers LIP -name '*' -type f; \
+    find Core Drivers lip -name '*' -type f; \
     find . -name '*.ioc') \
     $(FOUND_HIDDEN_FILES)
 
