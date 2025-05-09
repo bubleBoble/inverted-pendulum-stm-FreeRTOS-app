@@ -16,13 +16,22 @@
                 "${workspaceFolder}/lip/as5600_driver/src",
                 "${workspaceFolder}/lip/as5600_driver/interface",
                 "${workspaceFolder}/lip/as5600_driver/example",
+                // Fedora
                 "/usr/arm-none-eabi/include",
                 "/usr/arm-none-eabi/include/c++/14.1.0",
                 "/lib/gcc/arm-none-eabi/14.1.0/include",
                 "/lib/gcc/arm-none-eabi/14.1.0/include-fixed",
                 "/usr/arm-none-eabi/include/machine",
                 "/usr/arm-none-eabi/include/newlib-nano",
-                "/usr/arm-none-eabi/include/sys"
+                "/usr/arm-none-eabi/include/sys",
+                // Debian
+                "/lib/arm-none-eabi/include",
+                "/lib/arm-none-eabi/include/c++/*",
+                "/lib/arm-none-eabi/include/machine",
+                "/lib/arm-none-eabi/include/nano",
+                "/lib/arm-none-eabi/include/sys",
+                "/lib/gcc/arm-none-eabi/*/include",
+                "/lib/gcc/arm-none-eabi/*/include-fixed"
             ],
             "defines": [
                 "_DEGUG",
@@ -50,10 +59,8 @@
             ],
             "cStandard": "c11",
             "cppStandard": "c++20",
-            "browse": 
-            {
-                "path": 
-                [
+            "browse": {
+                "path": [
                     "${workspaceFolder}",
                     "${workspaceFolder}/Core/Inc",
                     "${workspaceFolder}/Drivers/STM32F4xx_HAL_Driver/Inc",
@@ -67,10 +74,22 @@
                     "${workspaceFolder}/lip/as5600_driver/src",
                     "${workspaceFolder}/lip/as5600_driver/interface",
                     "${workspaceFolder}/lip/as5600_driver/example",
+                    // Fedora
                     "/usr/arm-none-eabi/include",
                     "/usr/arm-none-eabi/include/c++/14.1.0",
                     "/lib/gcc/arm-none-eabi/14.1.0/include",
-                    "/lib/gcc/arm-none-eabi/14.1.0/include-fixed"
+                    "/lib/gcc/arm-none-eabi/14.1.0/include-fixed",
+                    "/usr/arm-none-eabi/include/machine",
+                    "/usr/arm-none-eabi/include/newlib-nano",
+                    "/usr/arm-none-eabi/include/sys",
+                    // Debian
+                    "/lib/arm-none-eabi/include",
+                    "/lib/arm-none-eabi/include/c++/*",
+                    "/lib/arm-none-eabi/include/machine",
+                    "/lib/arm-none-eabi/include/nano",
+                    "/lib/arm-none-eabi/include/sys",
+                    "/lib/gcc/arm-none-eabi/*/include",
+                    "/lib/gcc/arm-none-eabi/*/include-fixed"
                 ],
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": "${workspaceFolder}/.vscode/browse.vc.db"
