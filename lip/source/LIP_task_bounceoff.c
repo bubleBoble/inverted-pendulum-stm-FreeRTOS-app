@@ -1,13 +1,14 @@
-/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- * When cart is in freezing zone (see watchdog task), app should 
- * instantly stop it. 
- * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/* =============================================================================
+ * When cart is in freezing zone (see watchdog task), app should  instantly 
+ * stop it. 
+ * =============================================================================
  */
 #include "LIP_tasks_common.h"
 #include "math.h"
 
-/* Defined in LIP_tasks_common.c. */
-// extern float cart_position[ 2 ];
+// =============================================================================
+// App globals defined in LIP_tasks_common.c
+// =============================================================================
 extern enum cart_position_zones cart_current_zone;
 extern float cart_position_setpoint_cm_cli_raw;
 extern uint32_t bounceoff_resumed;

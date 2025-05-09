@@ -1,15 +1,17 @@
-/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/* =============================================================================
  * This file provides task that pendulum swingup routine. This task should run
  * with sampling period of 10ms.
  *
  * Lookup table for swingup input voltage is saved
  * in swingup_input_voltage_lookup_table.c.
- * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ * =============================================================================
  */
 #include "LIP_tasks_common.h"
 #include <math.h>
 
-/* These are defined in LIP_tasks_common.c */
+// =============================================================================
+// App globals defined in LIP_tasks_common.c
+// =============================================================================
 extern float pend_angle[ 2 ];
 extern float pend_speed[ 2 ];
 extern float cart_position[ 2 ];
@@ -20,23 +22,24 @@ extern enum cart_position_zones cart_current_zone;
 extern uint32_t reset_lookup_index;
 extern float cart_position_setpoint_cm_cli_raw;
 
-/* Keeps track of current app state, defined in LIP_tasks_common.c */
+// Keeps track of current app state, defined in LIP_tasks_common.c
 extern enum lip_app_states app_current_state;
 
-/* Defined in LIP_tasks_common.c. This flag indicates that the swingup task is running. */
+// Defined in LIP_tasks_common.c. This flag indicates that the swingup task 
+// is running
 extern uint32_t swingup_task_resumed;
 
-/* Down position controller stask handle. */
+// Down position controller stask handle
 extern TaskHandle_t ctrl_downposition_task_handle;
 
-/* Voltage lookup tables for swingup. Comment/uncomment one or the other. */
-/* swingup_control_1 lookup table. */
+// Voltage lookup tables for swingup. Comment/uncomment one or the other.
+// swingup_control_1 lookup table
 // #define SWINGUP_START_POSITION 20.0f
 // #define N_LOOKUP_SAMPLES 300
 // #define LOOKUP_TABLE swingup_control_1
 // extern float LOOKUP_TABLE[ 301 ];
 
-/* swingup_control_2 lookup table. */
+// swingup_control_2 lookup table
 #define SWINGUP_START_POSITION 11.0f
 #define N_LOOKUP_SAMPLES 220
 // #define N_LOOKUP_SAMPLES 180

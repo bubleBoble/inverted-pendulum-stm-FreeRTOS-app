@@ -1,11 +1,12 @@
-/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- * This file provides task that implements uC to PC communication over uart. Data is 
- * sent in form of raw bytes, HAL_UART_Transmit_IT (non-blocking mode) is used. 
+/* =============================================================================
+ * This file provides task that implements uC to PC communication over uart. 
+ * Data is sent in form of raw bytes, HAL_UART_Transmit_IT (non-blocking mode) 
+ * is used 
  * 
  * For human readable com, com_task() is provided.
  * 
- * This task only reads global state and related variables defined in LIP_tasks_common.c.
- * This task shouldn't write to these variables.
+ * This task only reads global state and related variables defined in 
+ * LIP_tasks_common.c. This task shouldn't write to these variables.
  * 
  * Note:
  *     115200 baudrate is used by com_send() function
@@ -15,11 +16,13 @@
  *     which is 1.6(6) < 2 ms for one data packet
  *     Tx loop sample period is 10 ms so should be
  *     allright
- * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ * =============================================================================
  */
 #include "LIP_tasks_common.h"
 
-/* These are defined in LIP_tasks_common.c */
+// =============================================================================
+// App globals defined in LIP_tasks_common.c
+// =============================================================================
 extern float pend_angle[ 2 ];
 extern float pend_speed[ 2 ];
 extern float cart_position[ 2 ];
@@ -28,15 +31,14 @@ extern float *cart_position_setpoint_cm;
 
 void raw_com_task( void *pvParameters )
 {
-    /* For RTOS vTaskDelayUntil() */
+    // For RTOS vTaskDelayUntil()
     TickType_t xLastWakeTime = xTaskGetTickCount();
 
-    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-     * Raw data transmission for matlab/simulink com
-     * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-    /* Message structure */
-    typedef struct
-    {
+    // =========================================================================
+    // Raw data transmission for matlab/simulink com
+    // =========================================================================
+    // Message structure
+    typedef struct {
         float cart_pos;     // float has 4 Bytes
         float cart_speed;   
         float angle;        
@@ -47,10 +49,9 @@ void raw_com_task( void *pvParameters )
     tx_data data;
     char tx_buff[ 24 ];
 
-    /* Task mainloop */
-    for (;;)
-    {
-        /* Message content */
+    // Task mainloop
+    for (;;) {
+        // Message content
         data.cart_pos       = cart_position[ 0 ];
         data.cart_speed     = cart_speed[ 0 ];
         data.angle          = pend_angle[ 0 ];
@@ -59,10 +60,9 @@ void raw_com_task( void *pvParameters )
         data.cart_setpoint  = *cart_position_setpoint_cm;
         memcpy( tx_buff, &data, 24 );
 
-        /* Serial send */
+        // Serial send
         com_send( tx_buff, 24 );
 
-        /* Task delay */
         vTaskDelayUntil( &xLastWakeTime, dt );
     }
 }

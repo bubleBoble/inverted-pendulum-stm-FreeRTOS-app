@@ -1,18 +1,21 @@
-/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- * This file provides task that implements uC to PC communication over uart. Data is 
- * sent in form of human readable chars, HAL_UART_Transmit_IT (non-blocking mode) 
- * is used. This way really helpful app can be used to quickly analyze generated data.
+/* =============================================================================
+ * This file provides task that implements uC to PC communication over uart. 
+ * Data is sent in form of human readable chars, HAL_UART_Transmit_IT 
+ * (non-blocking mode) is used. This way this helpful app can be used to
+ * quickly analyze generated data.
  *     serial oscilloscope: https://x-io.co.uk/serial-oscilloscope/
- * 
+ *
  * For raw byte transmission, raw_com_task() task is provided.
- * 
- * This task only reads global state and related variables defined in LIP_tasks_common.h.
- * This task shouldn't write to these variables.
- * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ *
+ * This task only reads global state and related variables defined in 
+ * LIP_tasks_common.h, it shouldn't write to these variables.
+ * =============================================================================
  */
 #include "LIP_tasks_common.h"
 
-/* These are defined in LIP_tasks_common.c */
+// =============================================================================
+// App globals defined in LIP_tasks_common.c
+// =============================================================================
 extern float pend_angle[ 2 ];
 extern float pend_speed_raw[ 2 ];
 extern float pend_speed[ 2 ];
@@ -36,17 +39,16 @@ extern float pendulum_arm_angle_setpoint_rad_upc;
 
 void com_task( void *pvParameters )
 {
-    /* For RTOS vTaskDelayUntil() */
+    // for RTOS vTaskDelayUntil()
     TickType_t xLastWakeTime = xTaskGetTickCount();
 
-    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-     * For serial osciloscope - testing/debug purposes
-     * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+    // =========================================================================
+    //  For serial osciloscope - testing/debug purposes
+    // =========================================================================
     char msg[ 256 ]; // msg for uart data transfer
     
-    /* Task mainloop */
-    for (;;)
-    {
+    // Task mainloop
+    for (;;) {
         #ifdef COM_SEND_CTRL_DEBUG
             sprintf( msg,
                     "%f,%f,0,%f,%f,0\r\n", 
@@ -56,12 +58,12 @@ void com_task( void *pvParameters )
                     ( double ) ctrl_Dt
             );
 
-            /* Serial send */
+            // Serial send
             com_send( msg, strlen(msg) );
 
             vTaskDelay( dt_com );
             xLastWakeTime = xTaskGetTickCount();
-        #endif /* COM_SEND_CTRL_DEBUG */
+        #endif // COM_SEND_CTRL_DEBUG
 
         #ifdef COM_SEND_UPC
             sprintf( msg,
@@ -82,7 +84,7 @@ void com_task( void *pvParameters )
             com_send( msg, strlen(msg) );        
             vTaskDelay( dt_com );
             xLastWakeTime = xTaskGetTickCount();
-        #endif /* COM_SEND_UPC */
+        #endif // COM_SEND_UPC
 
         #ifdef COM_SEND_DPC
             sprintf( msg,
@@ -103,10 +105,10 @@ void com_task( void *pvParameters )
             com_send( msg, strlen(msg) );        
             vTaskDelay( dt_com );
             xLastWakeTime = xTaskGetTickCount();
-        #endif /* COM_SEND_DPC */
+        #endif // COM_SEND_DPC
 
         #ifdef COM_SEND_DEFAULT
-            /* Message content */
+            // Message content
             sprintf( msg,
                     "%f,%f,0,%f,%f,0,%f,%ld\r\n",
                     // for pendulum
@@ -123,26 +125,26 @@ void com_task( void *pvParameters )
                     xLastWakeTime
             );
 
-            /* Serial send */
+            // Serial send
             com_send( msg, strlen(msg) );
         
-            /* Problem with vTaskDelayUntil: 
-            vTaskDelayUntil uses xLastWakeTime argument to 
-            calculate next wakeup time, it increments its value internally.
-            If the task is suspended, value of xLastWakeTime doesn't get 
-            incremented, so when task gets resumed, tickCount maybe for eg.1000, 
-            and last saved xLastWakeTime might have value 100, 
-            with delay tick count of 100, then, vTaskDelayUntil
-            has to be called at least 10 times to increment xLastWakeTime to the
-            value of current tickCount. */  
+            // Problem with vTaskDelayUntil: 
+            //     vTaskDelayUntil uses xLastWakeTime argument to calculate next
+            //     wakeup time, it increments its value internally. If the task
+            //     is suspended, value of xLastWakeTime doesn't get incremented,
+            //     so when task gets resumed, tickCount maybe for e.g. 1000, and
+            //     last saved xLastWakeTime might have value 100, with delay 
+            //     tick count of 100, then, vTaskDelayUntil has to be called at
+            //     least 10 times to increment xLastWakeTime to the value of 
+            //     current tickCount.  
             // vTaskDelayUntil( &xLastWakeTime, dt_com );
             
-            /* This delay function doesn't guarantee exact tick delay
-            eq. When tested with dt_com=50 (ms), messages were received
-            with frequency 18Hz (not 20Hz as expected). So use this 
-            function only if data logging rate isn't a great concern. */
+            // This delay function doesn't guarantee exact tick delay
+            // eq. When tested with dt_com=50 (ms), messages were received
+            // with frequency 18Hz (not 20Hz as expected). So, use this function
+            // only if the data logging rate is not a major concern
             vTaskDelay( dt_com );
             xLastWakeTime = xTaskGetTickCount();
-        #endif /* COM_SEND_DEFAULT */
+        #endif // COM_SEND_DEFAULT
     }
 }
