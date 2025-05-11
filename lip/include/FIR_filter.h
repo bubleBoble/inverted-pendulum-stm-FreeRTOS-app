@@ -1,10 +1,11 @@
-/*
+/* =============================================================================
  *  eg. use
- *      #include filter_coeffs.h                            // Defines for filter coeffs
+ *      #include filter_coeffs.h // Defines for filter coeffs
  *      ...
- *      FIR_filter low_pass_FIR;                            // FIR filter struct
- *      float filter_coeffs[ FIR_BUFF_LEN ] = FIR_1;        // Filter coeffs array
- *      FIR_init( &low_pass_FIR, filter_coeffs );           // Init filter struct and assign coeffs
+ *      FIR_filter low_pass_FIR; // FIR filter struct
+ *      float filter_coeffs[ FIR_BUFF_LEN ] = FIR_1; // Filter coeffs array
+ *      FIR_init( &low_pass_FIR, filter_coeffs );
+ * =============================================================================
  */
 
 #ifndef FIR_FILTER_H

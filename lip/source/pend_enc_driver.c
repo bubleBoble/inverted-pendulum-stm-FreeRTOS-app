@@ -1,4 +1,4 @@
-/*
+/* =============================================================================
  * Description: Wrapper for AS5600 magnetic encoder driver functionality
  *
  * Created at: 07/10/2023
@@ -9,7 +9,7 @@
  *             PB9 for i2c1 sda (alias I2C1_SDA)
  *
  * The code is almost the same as in driver_as5600_basic.c/h
- * 
+ * =============================================================================
  */
 
 #include "pend_enc_driver.h"
@@ -25,14 +25,14 @@ uint8_t pend_enc_init( void )
 {
     uint8_t res;
     
-     /* link interface function */
+    // link interface function
     DRIVER_AS5600_LINK_INIT( &gs_handle, as5600_handle_t );
     DRIVER_AS5600_LINK_IIC_INIT( &gs_handle, as5600_interface_iic_init );
     DRIVER_AS5600_LINK_IIC_DEINIT( &gs_handle, as5600_interface_iic_deinit );
     DRIVER_AS5600_LINK_IIC_READ( &gs_handle, as5600_interface_iic_read );
-    DRIVER_AS5600_LINK_IIC_WRITE( &gs_handle, as5600_interface_iic_write );
-    DRIVER_AS5600_LINK_DELAY_MS( &gs_handle, as5600_interface_delay_ms );
-    DRIVER_AS5600_LINK_DEBUG_PRINT( &gs_handle, as5600_interface_debug_print );
+    DRIVER_AS5600_LINK_IIC_WRITE(&gs_handle, as5600_interface_iic_write );
+    DRIVER_AS5600_LINK_DELAY_MS(&gs_handle, as5600_interface_delay_ms );
+    DRIVER_AS5600_LINK_DEBUG_PRINT(&gs_handle, as5600_interface_debug_print );
     
     res = as5600_init( &gs_handle );
     if ( res != 0 )
@@ -46,7 +46,7 @@ uint8_t pend_enc_init( void )
 
 uint8_t pend_enc_read_angle_deg( float *angle )
 {
-    /* Writes angle value in degree into &angle */
+    // Writes angle value in degree into &angle
     as5600_read( &gs_handle, &angle_raw, angle );
 
     return 0;
@@ -54,11 +54,12 @@ uint8_t pend_enc_read_angle_deg( float *angle )
 
 uint8_t pend_enc_read_angle_rad( float *angle )
 {
-    /* Writes raw angle value into &angle_raw */
+    // Writes raw angle value into &angle_raw
     as5600_get_raw_angle( &gs_handle, &angle_raw );
 
-    *angle = ( float ) angle_raw * 0.001533980788; // 0.001533980788 = 1 / 4096.0f * PI2;
-    
+    // 0.001533980788 = 1 / 4096.0f * PI2;
+    *angle = ( float ) angle_raw * 0.001533980788;
+
     return 0;
 }
 
@@ -74,21 +75,21 @@ uint8_t pend_enc_deinit( void )
     }
 }
 
-/* Have to be called often enough, at least 3 times per revolution (from some arduino library) */
+// Have to be called often enough, at least 3 times per revolution 
+// (from some arduino library)
 int32_t pend_enc_get_cumulative_count( void )
 {
     // as5600_read_raw_fast(&gs_handle, &angle_raw);
     as5600_get_raw_angle(&gs_handle, &angle_raw);
-    if ( ( last_count > 2048 ) && ( angle_raw < (last_count - 2048) ) )
-    {
+    if ((last_count > 2048) && 
+        (angle_raw < (last_count - 2048))) {
         cumulative_count = cumulative_count + 4096 - last_count + angle_raw;
-        // REMOVE IT
         num_of_revolutions += 1;
     }
-    else if ( ( angle_raw > 2048 ) && ( last_count < ( angle_raw - 2048 ) ) )
-    {
-        cumulative_count = cumulative_count - 4096 - last_count + angle_raw;
-        // REMOVE IT
+    else if ((angle_raw > 2048) && 
+             (last_count < ( angle_raw - 2048))) {
+        cumulative_count = 
+            cumulative_count - 4096 - last_count + angle_raw;
         num_of_revolutions -= 1;
     }
     else
@@ -106,8 +107,8 @@ int32_t pend_enc_get_base_count( void )
     return angle_raw;
 }
 
-/* Get number of full pendulum revolutions, negative number indicates negative revolution. */
-// REMOVE IT
+// Get number of full pendulum revolutions, negative number indicates 
+// negative revolution
 int32_t get_num_of_revolutions( void )
 {
     return num_of_revolutions;

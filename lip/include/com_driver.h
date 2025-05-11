@@ -3,4 +3,4 @@
 
 void com_send(char* message, uint8_t len);
 
-#endif /* _COMDRIVER */
+#endif // _COMDRIVER

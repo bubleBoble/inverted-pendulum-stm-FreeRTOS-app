@@ -18,20 +18,15 @@ extern TaskHandle_t swingdown_task_handle;
 
 void test_task( void *pvParameters )
 {
-    /* Holds value retrieved from task notification. */
+    // Holds value retrieved from task notification
     uint32_t notifValueReceived;
 
-    for( ;; )
-    {   
-        /* Wait for notification at index 0. */
-        xTaskNotifyWaitIndexed( 0,                     /* Notification index */
-                                0x00,                  /* Bits to clear on entry (before save). */ 
-                                ULONG_MAX,             /* Bits to clear on exit (after save). */
-                                &notifValueReceived,   /* Value of received notification. Can be set to NULL if not used. */
-                                portMAX_DELAY );       /* Block time (while waiting for notification). */
-        if( notifValueReceived == TEST_1 )
-        {
-            /* Test procedure nr. 1 selected */
+    for (;;) {
+        // Wait for notification at index 0
+        xTaskNotifyWaitIndexed(0, 0x00, ULONG_MAX, &notifValueReceived,
+                               portMAX_DELAY);
+        if (notifValueReceived == TEST_1) {
+            // Test procedure nr. 1 selected
             testProcedure1();
         }
 
@@ -40,25 +35,25 @@ void test_task( void *pvParameters )
 
 void testProcedure1( void )
 {
-    /* If this function is run, it means that the app is in TEST state. */
+    // If this function is run, it means that the app is in TEST state
     
-    /* For RTOS vTaskDelayUntil(). */
+    // For RTOS vTaskDelayUntil()
     TickType_t xLastWakeTime = xTaskGetTickCount();
 
     // char msg[128];
 
-    // /* [ 01 ] dpc on */
+    // [ 01 ] dpc on
     // if( cart_current_zone != FREEZING_ZONE_L || cart_current_zone != FREEZING_ZONE_R )
     // {
-    //     /* Ensure that setpoint for cart postion from cli is the same as the setpoint used by controller tasks.
-    //     If it's not true, this means that the user changed source of cart pos. setpoint for controllers. 
-    //     ALL CONTROLLER TASKS SHOULD BE TURNING ON WITH CART POS. SETPOINT SOURCE SET TO CLI, OTHERWISE DON'T TURN ON CONTROLLER. */
+    //     // Ensure that setpoint for cart postion from cli is the same as the setpoint used by controller tasks.
+    //     // If it's not true, this means that the user changed source of cart pos. setpoint for controllers. 
+    //     // ALL CONTROLLER TASKS SHOULD BE TURNING ON WITH CART POS. SETPOINT SOURCE SET TO CLI, OTHERWISE DON'T TURN ON CONTROLLER. */
     //     if( cart_position_setpoint_cm == &cart_position_setpoint_cm_cli )
     //     {
-    //         /* Turn on down position controller, "dcp on" / "dpc 1" are both valid commands. */
+    //         // Turn on down position controller, "dcp on" / "dpc 1" are both valid commands. */
     //         vTaskResume( ctrl_downposition_task_handle );
             
-    //         /* Change app state to "down position controller" state. 
+    //         // Change app state to "down position controller" state. 
     //         This will ensure that some cli commands can't be called. */
     //         // app_current_state = DPC;
     //     }
@@ -76,7 +71,7 @@ void testProcedure1( void )
     // }
     // vTaskDelayUntil( &xLastWakeTime, 2000 );
 
-    // /* [ 02 ] home */
+    // // [ 02 ] home
     // cart_position_setpoint_cm_cli_raw = 20.0f;
 
     // /* [ 03 ] wait 2 sec. */
@@ -129,69 +124,70 @@ void testProcedure1( void )
     // // app_current_state = DEFAULT;
     // dcm_set_output_volatage( 0.0f );
 
-    /* [ 19 ] swingup */
-    /* App is in DEFAULT STATE and cart position is at position 20cm pm 1cm.
-    Swingup can be started. */
+    // [ 19 ] swingup
+    // App is in DEFAULT STATE and cart position is at position 20cm pm 1cm.
+    // Swingup can be started.
     
-    /* Reset lookup_index in swingup task for loop. */
+    // Reset lookup_index in swingup task for loop
     reset_lookup_index = 1;
 
-    /* Global flag to indicate that swingup is running and to tell watchdog task to
-    start keeping track of pendulum angle to switch between swingup and up position controller. */
+    // Global flag to indicate that swingup is running and to tell watchdog
+    // task to start keeping track of pendulum angle to switch between 
+    // swingup and up position controller
     swingup_task_resumed = 1;
-    
-    /* Change app state to swingup. */
+
+    // Change app state to swingup
     app_current_state = SWINGUP;
     
-    /* Resume swingup task. */
+    // Resume swingup task
     vTaskResume( swingup_task_handle );
     
-    /* [ 20 ] wait 6 sec. */
+    // [ 20 ] wait 6 sec
     vTaskDelayUntil( &xLastWakeTime, 6000 );
 
-    /* [ 21 ] home */
+    // [ 21 ] home
     cart_position_setpoint_cm_cli_raw = 20.0f;
 
-    /* [ 22 ] wait 2 sec. */
+    // [ 22 ] wait 2 sec
     vTaskDelayUntil( &xLastWakeTime, 3000 );
 
-    /* [ 23 ] sp 10 */
+    // [ 23 ] sp 10
     cart_position_setpoint_cm_cli_raw = 10.0f;
 
-    /* [ 24 ] wait 2 sec. */
+    // [ 24 ] wait 2 sec
     vTaskDelayUntil( &xLastWakeTime, 3000 );
 
-    /* [ 25 ] sp 30 */
+    // [ 25 ] sp 30
     cart_position_setpoint_cm_cli_raw = 30.0f;
 
-    /* [ 26 ] wait 2 sec. */
+    // [ 26 ] wait 2 sec
     vTaskDelayUntil( &xLastWakeTime, 3000 );
 
-    /* [ 27 ] sp 10 */
+    // [ 27 ] sp 10
     cart_position_setpoint_cm_cli_raw = 10.0f;
 
-    /* [ 28 ] wait 2 sec. */
+    // [ 28 ] wait 2 sec
     vTaskDelayUntil( &xLastWakeTime, 3000 );
 
-    /* [ 29 ] sp 30 */
+    // [ 29 ] sp 30
     cart_position_setpoint_cm_cli_raw = 30.0f;
 
-    /* [ 30 ] wait 2 sec. */
+    // [ 30 ] wait 2 sec
     vTaskDelayUntil( &xLastWakeTime, 3000 );
 
-    /* [ 31 ] sp 10 */
+    // [ 31 ] sp 10
     cart_position_setpoint_cm_cli_raw = 10.0f;
 
-    /* [ 32 ] wait 2 sec. */
+    // [ 32 ] wait 2 sec
     vTaskDelayUntil( &xLastWakeTime, 3000 );
 
-    /* [ 32 ] sp 30 */
+    // [ 32 ] sp 30
     cart_position_setpoint_cm_cli_raw = 30.0f;
 
-    /* [ 33 ] wait 2 sec. */
+    // [ 33 ] wait 2 sec
     vTaskDelayUntil( &xLastWakeTime, 3000 );
     
-    /* [ 34 ] home */
+    // [ 34 ] home
     cart_position_setpoint_cm_cli_raw = 20.0f;
     
     // /* [ 35 ] swingdown */

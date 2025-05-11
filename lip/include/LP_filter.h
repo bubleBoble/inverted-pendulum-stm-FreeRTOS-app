@@ -1,8 +1,9 @@
-/*
+/* =============================================================================
  * First order low pass filter with transfer function: 
  * 1/(T*s+1)
  * T - time constant
- * Discretized with Tustin (trapezoid) method. 
+ * Discretized with Tustin (trapezoid) method.
+ * =============================================================================
  */
 
 #ifndef LP_FILTER_H
