@@ -23,46 +23,46 @@
 // =============================================================================
 // App globals defined in LIP_tasks_common.c
 // =============================================================================
-extern float pend_angle[ 2 ];
-extern float pend_speed[ 2 ];
-extern float cart_position[ 2 ];
-extern float cart_speed[ 2 ];
+extern float pend_angle[2];
+extern float pend_speed[2];
+extern float cart_position[2];
+extern float cart_speed[2];
 extern float *cart_position_setpoint_cm;
 
-void raw_com_task( void *pvParameters )
+void raw_com_task(void *pvParameters)
 {
-    // For RTOS vTaskDelayUntil()
-    TickType_t xLastWakeTime = xTaskGetTickCount();
+        // For RTOS vTaskDelayUntil()
+        TickType_t xLastWakeTime = xTaskGetTickCount();
 
-    // =========================================================================
-    // Raw data transmission for matlab/simulink com
-    // =========================================================================
-    // Message structure
-    typedef struct {
-        float cart_pos;     // float has 4 Bytes
-        float cart_speed;   
-        float angle;        
-        float pend_speed;   
-        float volt_setting; 
-        float cart_setpoint;
-    } tx_data;              // sum: 24 Bytes
-    tx_data data;
-    char tx_buff[ 24 ];
+        // =====================================================================
+        // Raw data transmission for matlab/simulink com
+        // =====================================================================
+        // Message structure
+        typedef struct {
+                float cart_pos; // float has 4 Bytes
+                float cart_speed;
+                float angle;
+                float pend_speed;
+                float volt_setting;
+                float cart_setpoint;
+        } tx_data; // sum: 24 Bytes
+        tx_data data;
+        char tx_buff[24];
 
-    // Task mainloop
-    for (;;) {
-        // Message content
-        data.cart_pos       = cart_position[ 0 ];
-        data.cart_speed     = cart_speed[ 0 ];
-        data.angle          = pend_angle[ 0 ];
-        data.pend_speed     = pend_speed[ 0 ];
-        data.volt_setting   = dcm_get_output_voltage();
-        data.cart_setpoint  = *cart_position_setpoint_cm;
-        memcpy( tx_buff, &data, 24 );
+        // Task mainloop
+        for (;;) {
+                // Message content
+                data.cart_pos = cart_position[0];
+                data.cart_speed = cart_speed[0];
+                data.angle = pend_angle[0];
+                data.pend_speed = pend_speed[0];
+                data.volt_setting = dcm_get_output_voltage();
+                data.cart_setpoint = *cart_position_setpoint_cm;
+                memcpy(tx_buff, &data, 24);
 
-        // Serial send
-        com_send( tx_buff, 24 );
+                // Serial send
+                com_send(tx_buff, 24);
 
-        vTaskDelayUntil( &xLastWakeTime, dt );
-    }
+                vTaskDelayUntil(&xLastWakeTime, dt);
+        }
 }

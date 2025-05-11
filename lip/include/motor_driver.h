@@ -29,12 +29,12 @@
 // from precalculated value from PSC & ARR(autoreload register)
 #define DCM_PWM_FREQ 1000
 
-void dcm_init( void );
-void dcm_zero_output_voltage( void );
-void dcm_set_output_volatage( float inV );
-float dcm_get_output_voltage( void );
+void dcm_init(void);
+void dcm_zero_output_voltage(void);
+void dcm_set_output_volatage(float inV);
+float dcm_get_output_voltage(void);
 
-void dcm_set_ch1_dutycycle( uint16_t dtc );
-void dcm_set_ch2_dutycycle( uint16_t dtc );
+void dcm_set_ch1_dutycycle(uint16_t dtc);
+void dcm_set_ch2_dutycycle(uint16_t dtc);
 
 #endif /* DCM_DRIVER */

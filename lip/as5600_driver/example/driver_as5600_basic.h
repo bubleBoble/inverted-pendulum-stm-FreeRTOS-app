@@ -4,7 +4,7 @@
 #include "driver_as5600_interface.h"
 
 #ifdef __cplusplus
-extern "C"{
+extern "C" {
 #endif
 
 uint8_t as5600_basic_init(void);

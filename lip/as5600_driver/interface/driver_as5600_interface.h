@@ -10,16 +10,18 @@
 #include "driver_as5600.h"
 
 #ifdef __cplusplus
-extern "C"{
+extern "C" {
 #endif
 
 uint8_t as5600_interface_iic_init(void);
 
 uint8_t as5600_interface_iic_deinit(void);
 
-uint8_t as5600_interface_iic_read(uint8_t addr, uint8_t reg, uint8_t *buf, uint16_t len);
+uint8_t as5600_interface_iic_read(uint8_t addr, uint8_t reg, uint8_t *buf,
+                                  uint16_t len);
 
-uint8_t as5600_interface_iic_write(uint8_t addr, uint8_t reg, uint8_t *buf, uint16_t len);
+uint8_t as5600_interface_iic_write(uint8_t addr, uint8_t reg, uint8_t *buf,
+                                   uint16_t len);
 
 void as5600_interface_delay_ms(uint32_t ms);
 

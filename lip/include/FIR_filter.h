@@ -15,15 +15,14 @@
 
 #define FIR_BUFF_LEN 16 // the same as FIR impulse response length
 
-typedef struct 
-{
-    float buf[ FIR_BUFF_LEN ];
-    uint8_t buf_index;
-    float out;
-    float FIR_COEFFS[ FIR_BUFF_LEN ];
+typedef struct {
+        float buf[FIR_BUFF_LEN];
+        uint8_t buf_index;
+        float out;
+        float FIR_COEFFS[FIR_BUFF_LEN];
 } FIR_filter;
 
-void FIR_init( FIR_filter *fir, float coeffs[FIR_BUFF_LEN]);
-float FIR_update( FIR_filter *fir, float inp );
+void FIR_init(FIR_filter *fir, float coeffs[FIR_BUFF_LEN]);
+float FIR_update(FIR_filter *fir, float inp);
 
 #endif // FIR_FILTER_H

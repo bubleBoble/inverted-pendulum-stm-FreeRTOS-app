@@ -24,20 +24,19 @@
 float dutycycle; // PWM dutycycle of currently active PWM timer channel
 
 float voltage_sign = 1.0f; // 1 for positive, -1 for negative output voltage
-                                                                                                   
+
 // =============================================================================
 // Function to initialize pwm GPIOs and set initial pwm to 0 DC
 // =============================================================================
 void dcm_init(void)
 {
-
-    // start timer
-    HAL_TIM_PWM_Start( &TIMER_HANDLE, TIM_CHANNEL_1 );
-    HAL_TIM_PWM_Start( &TIMER_HANDLE, TIM_CHANNEL_2 );
-    // set initial dutycycle to zero on both channels
-    // or use dcm_set_output_voltage(0); instead
-    dcm_set_ch1_dutycycle( 0 ); // ch1 to 0% duty cycle
-    dcm_set_ch1_dutycycle( 0 ); // ch2 to 0% duty cycle
+        // start timer
+        HAL_TIM_PWM_Start(&TIMER_HANDLE, TIM_CHANNEL_1);
+        HAL_TIM_PWM_Start(&TIMER_HANDLE, TIM_CHANNEL_2);
+        // set initial dutycycle to zero on both channels
+        // or use dcm_set_output_voltage(0); instead
+        dcm_set_ch1_dutycycle(0); // ch1 to 0% duty cycle
+        dcm_set_ch1_dutycycle(0); // ch2 to 0% duty cycle
 }
 
 // =============================================================================
@@ -45,48 +44,45 @@ void dcm_init(void)
 // =============================================================================
 void dcm_zero_output_voltage(void)
 {
-    dcm_set_ch1_dutycycle( 0 );
-    dcm_set_ch2_dutycycle( 0 );
+        dcm_set_ch1_dutycycle(0);
+        dcm_set_ch2_dutycycle(0);
 }
 
 // =============================================================================
 // Function to set output voltage in range [-12, 12]V
 // =============================================================================
-void dcm_set_output_volatage( float inV )
+void dcm_set_output_volatage(float inV)
 {
-    if ( inV >= 0 ) // ch1>0V, ch2=0V
-    {
-                if ( inV > MAX_INPUT_VOLTAGE_POSITIVE )
-                {
+        if (inV >= 0) // ch1>0V, ch2=0V
+        {
+                if (inV > MAX_INPUT_VOLTAGE_POSITIVE) {
                         inV = MAX_INPUT_VOLTAGE_POSITIVE;
                 }
                 dutycycle = inV / MAX_INPUT_VOLTAGE_POSITIVE; // normalize
                 dutycycle = dutycycle * 1000.0; // map to [0, 1000]
-                dcm_set_ch2_dutycycle( 0 ); // zero the other channel first
-                dcm_set_ch1_dutycycle( (uint16_t)dutycycle ); // round ?
+                dcm_set_ch2_dutycycle(0); // zero the other channel first
+                dcm_set_ch1_dutycycle((uint16_t)dutycycle); // round ?
                 voltage_sign = 1.0f;
-        }
-    else if ( inV < 0 ) // ch1=0V, ch2>0V
-    {
-                if ( inV < MAX_INPUT_VOLTAGE_NEGATIVE )
-                {
+        } else if (inV < 0) // ch1=0V, ch2>0V
+        {
+                if (inV < MAX_INPUT_VOLTAGE_NEGATIVE) {
                         inV = MAX_INPUT_VOLTAGE_NEGATIVE;
                 }
                 dutycycle = inV / MAX_INPUT_VOLTAGE_NEGATIVE;
                 dutycycle = dutycycle * 1000.0;
-                dcm_set_ch1_dutycycle( 0 );
-                dcm_set_ch2_dutycycle( (uint16_t)dutycycle );
+                dcm_set_ch1_dutycycle(0);
+                dcm_set_ch2_dutycycle((uint16_t)dutycycle);
                 voltage_sign = -1.0f;
         }
 }
 
 // =============================================================================
-// Function returns current output voltage setting calculated from the 
+// Function returns current output voltage setting calculated from the
 // value of dutycycle
 // =============================================================================
-float dcm_get_output_voltage( void )
+float dcm_get_output_voltage(void)
 {
-        float out = 
+        float out =
                 dutycycle / 1000.0f * MAX_INPUT_VOLTAGE_POSITIVE * voltage_sign;
         return out;
 }
@@ -97,12 +93,10 @@ float dcm_get_output_voltage( void )
 // =============================================================================
 void dcm_set_ch1_dutycycle(uint16_t dtc)
 {
-    __HAL_TIM_SET_COMPARE(&TIMER_HANDLE, TIM_CHANNEL_1, dtc);
+        __HAL_TIM_SET_COMPARE(&TIMER_HANDLE, TIM_CHANNEL_1, dtc);
 }
 
 void dcm_set_ch2_dutycycle(uint16_t dtc)
 {
-    __HAL_TIM_SET_COMPARE(&TIMER_HANDLE, TIM_CHANNEL_2, dtc);
+        __HAL_TIM_SET_COMPARE(&TIMER_HANDLE, TIM_CHANNEL_2, dtc);
 }
-
-

@@ -31,7 +31,7 @@
 // Max encoder timer count
 #define ENC_MAX_CNT 6488
 // #define TRACK_LEN_MAX_CM 47.0f
-#define TRACK_LEN_MAX_CM 40.7f
+#define TRACK_LEN_MAX_CM   40.7f
 #define ENCODER_MULTIPLIER 40.7f / 6488.0f
 
 // Start encoder timer in encoder mode

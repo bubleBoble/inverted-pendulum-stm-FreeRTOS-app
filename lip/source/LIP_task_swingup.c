@@ -12,10 +12,10 @@
 // =============================================================================
 // App globals defined in LIP_tasks_common.c
 // =============================================================================
-extern float pend_angle[ 2 ];
-extern float pend_speed[ 2 ];
-extern float cart_position[ 2 ];
-extern float cart_speed[ 2 ];
+extern float pend_angle[2];
+extern float pend_speed[2];
+extern float cart_position[2];
+extern float cart_speed[2];
 extern float *cart_position_setpoint_cm;
 extern float pendulum_arm_angle_setpoint_rad;
 extern enum cart_position_zones cart_current_zone;
@@ -25,7 +25,7 @@ extern float cart_position_setpoint_cm_cli_raw;
 // Keeps track of current app state, defined in LIP_tasks_common.c
 extern enum lip_app_states app_current_state;
 
-// Defined in LIP_tasks_common.c. This flag indicates that the swingup task 
+// Defined in LIP_tasks_common.c. This flag indicates that the swingup task
 // is running
 extern uint32_t swingup_task_resumed;
 
@@ -41,89 +41,89 @@ extern TaskHandle_t ctrl_downposition_task_handle;
 
 // swingup_control_2 lookup table
 #define SWINGUP_START_POSITION 11.0f
-#define N_SAMPLES 220
+#define N_SAMPLES              220
 // #define N_SAMPLES 180
 #define LOOKUP_TABLE swingup_control_2
-extern float LOOKUP_TABLE[ 220 ];
+extern float LOOKUP_TABLE[220];
 
-void swingup_task( void *pvParameters )
+void swingup_task(void *pvParameters)
 {
-    // For RTOS vTaskDelayUntil()
-    TickType_t xLastWakeTime = xTaskGetTickCount();
+        // For RTOS vTaskDelayUntil()
+        TickType_t xLastWakeTime = xTaskGetTickCount();
 
-    // char msg[128];
+        // char msg[128];
 
-    for (;;) {
-        xLastWakeTime = xTaskGetTickCount();
-
-        // APP HAS TO BE IN DEFAULT STATE - Cart position already 
-        // calibrated
-
-        for (uint32_t lookup_i = 0; lookup_i < N_SAMPLES; lookup_i++) {
-            // This task can be suspended any time while in this for loop
-
-            if (reset_lookup_index) {
-                // This procedure runs on every call to "swingup" command
-
-                // Global reset lookup index variable was set to 1,
-                // this means that command "swingup" was called and
-                // lookup_index should be set to zero
-                lookup_i = 0;
-                reset_lookup_index = 0;
-
-                // Change to DPC state
-                vTaskResume( ctrl_downposition_task_handle );
-                // app_current_state = DPC;
-                // com_send( "\r\nDPC ON\r\n", 10 );
-                
-                // Change DPC setpoint to necessary swingup cart 
-                // start position
-                cart_position_setpoint_cm_cli_raw = SWINGUP_START_POSITION;
-                // sprintf(msg, 
-                //         "\r\nSETPOINT CHANGED TO: %f\r\n", 
-                //         (double) SWINGUP_START_POSITION);
-                // com_send( msg, strlen(msg) );
-
-                // Wait for 3 seconds - should be enough for cart to reach
-                // SWINGUP_START_POSITION
-                vTaskDelay( 3000 );
-                vTaskSuspend( ctrl_downposition_task_handle );
-                app_current_state = SWINGUP;
-
-                // com_send( "\r\nswingup in: 3.\r\n",  18 );
-                // vTaskDelay( 1000 );
-                // com_send(     "swingup in: 2.\r\n",  16 );
-                // vTaskDelay( 1000 );
-                // com_send(     "swingup in: 1.\r\n",  16 );
-                // vTaskDelay( 1000 );
-                // com_send(     "swingup in: 0.\r\n",  16 );
-
-                // Reset task last wake time, so that when this task gets 
-                // resumed, timing works properly
+        for (;;) {
                 xLastWakeTime = xTaskGetTickCount();
-            }
 
-            // Use the values from swingup_control lookup table to set
-            // dc motor voltage
-            dcm_set_output_volatage( LOOKUP_TABLE[ lookup_i ] );
+                // APP HAS TO BE IN DEFAULT STATE - Cart position already
+                // calibrated
 
-            // Delay for 10ms exacly
-            vTaskDelayUntil( &xLastWakeTime, dt_swingup );
-            // vTaskDelay( dt_swingup );
-        }
+                for (uint32_t lookup_i = 0; lookup_i < N_SAMPLES; lookup_i++) {
+                        // This task can be suspended any time while in this for 
+                        // loop
 
-    // No more data in the lookup table, set zero voltage
-    dcm_set_output_volatage( 0.0f );
+                        if (reset_lookup_index) {
+                                // This procedure runs on every call to 
+                                // "swingup" command
 
-    // If this task wasn't suspended ealier it means that up position 
-    // controller didn't take over control, and app should remain 
-    // in DEFAULT state
-    app_current_state = DEFAULT;
+                                // Global reset lookup index variable was set to
+                                // 1, this means that command "swingup" was 
+                                // called and lookup_index should be set to zero
+                                lookup_i = 0;
+                                reset_lookup_index = 0;
 
-    // Suspend this task
-    vTaskSuspend( NULL );
-    } // for( ;; ){ ... }
+                                // Change to DPC state
+                                vTaskResume(ctrl_downposition_task_handle);
+                                // app_current_state = DPC;
+                                // com_send( "\r\nDPC ON\r\n", 10 );
+
+                                // Change DPC setpoint to necessary swingup cart
+                                // start position
+                                cart_position_setpoint_cm_cli_raw =
+                                        SWINGUP_START_POSITION;
+                                // sprintf(msg,
+                                //         "\r\nSETPOINT CHANGED TO: %f\r\n",
+                                //         (double) SWINGUP_START_POSITION);
+                                // com_send( msg, strlen(msg) );
+
+                                // Wait for 3 seconds - should be enough for 
+                                // cart to reach SWINGUP_START_POSITION
+                                vTaskDelay(3000);
+                                vTaskSuspend(ctrl_downposition_task_handle);
+                                app_current_state = SWINGUP;
+
+                                // com_send( "\r\nswingup in: 3.\r\n",  18 );
+                                // vTaskDelay( 1000 );
+                                // com_send(     "swingup in: 2.\r\n",  16 );
+                                // vTaskDelay( 1000 );
+                                // com_send(     "swingup in: 1.\r\n",  16 );
+                                // vTaskDelay( 1000 );
+                                // com_send(     "swingup in: 0.\r\n",  16 );
+
+                                // Reset task last wake time, so that when this 
+                                // task gets resumed, timing works properly
+                                xLastWakeTime = xTaskGetTickCount();
+                        }
+
+                        // Use the values from swingup_control lookup table to 
+                        // set dc motor voltage
+                        dcm_set_output_volatage(LOOKUP_TABLE[lookup_i]);
+
+                        // Delay for 10ms exacly
+                        vTaskDelayUntil(&xLastWakeTime, dt_swingup);
+                        // vTaskDelay( dt_swingup );
+                }
+
+                // No more data in the lookup table, set zero voltage
+                dcm_set_output_volatage(0.0f);
+
+                // If this task wasn't suspended ealier it means that up 
+                // position controller didn't take over control, and app should 
+                // remain in DEFAULT state
+                app_current_state = DEFAULT;
+
+                // Suspend this task
+                vTaskSuspend(NULL);
+        } // for( ;; ){ ... }
 }
-
-
-

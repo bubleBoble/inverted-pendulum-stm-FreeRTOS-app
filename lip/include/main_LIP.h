@@ -36,14 +36,14 @@
 // Note: define only one COM_SEND_* form below
 // =============================================================================
 
-// If defined communication task will send components of LQR controller control 
+// If defined communication task will send components of LQR controller control
 // signal. Sends:
-//     ctrl error cart position, ctrl error pendulum angle, 0,  
+//     ctrl error cart position, ctrl error pendulum angle, 0,
 //     ctrl error cart speed, ctrl error pendulum speed, 0
 // #define COM_SEND_CTRL_DEBUG
 
-// If defained communication task will send default info. 
-// Sends: 
+// If defained communication task will send default info.
+// Sends:
 //     pend angle, pend speed, 0,
 //     cart position, cart speed, cart position setpoint,
 //     output voltage, tick time
@@ -58,46 +58,47 @@
 // =============================================================================
 
 // Used inside limit switch ISR
-#define READ_ZERO_POSITION_REACHED HAL_GPIO_ReadPin( \
-    limitSW_left_GPIO_Port, limitSW_left_Pin )
-#define READ_MAX_POSITION_REACHED HAL_GPIO_ReadPin( \
-    limitSW_right_GPIO_Port, limitSW_right_Pin )
+#define READ_ZERO_POSITION_REACHED \
+        HAL_GPIO_ReadPin(limitSW_left_GPIO_Port, limitSW_left_Pin)
+#define READ_MAX_POSITION_REACHED \
+        HAL_GPIO_ReadPin(limitSW_right_GPIO_Port, limitSW_right_Pin)
 
+// TODO
 // Sampling period in ms for controllers and util tasks
-#define dt                  10
+#define dt 10
 // multiply by dt_inv instead of dividing by dt
-#define dt_inv              100.0f
+#define dt_inv 100.0f
 // Sampling period in ms for watchdog task
-#define dt_watchdog         25
+#define dt_watchdog 25
 // Sampling period in ms for console task
-#define dt_console          50
+#define dt_console 50
 // Sampling period in ms for communication task
-#define dt_com              10
+#define dt_com 10
 // Sampling period in ms for worker task
-#define dt_cartworker       50
-// Sampling period in ms for swingup task. Don't change this value or swingup 
-// rutine will not work properly. Swingup output voltage lookup table was 
+#define dt_cartworker 50
+// Sampling period in ms for swingup task. Don't change this value or swingup
+// rutine will not work properly. Swingup output voltage lookup table was
 // calculated with 10ms sampling period
-#define dt_swingup          10
+#define dt_swingup 10
 
 // Priority for watchdog task
-#define PRIORITY_WATCHDOG   4 
+#define PRIORITY_WATCHDOG 4
 // Priority for util task - has to be the same as for controler task
-#define PRIORITY_UTIL       3 
+#define PRIORITY_UTIL 3
 // Priority for any controller task
-#define PRIORITY_CTRL       3 
+#define PRIORITY_CTRL 3
 // Priority for console task
-#define PRIORITY_CONSOLE    2 
+#define PRIORITY_CONSOLE 2
 // Priority for communication task
-#define PRIORITY_COM        1 
+#define PRIORITY_COM 1
 // Priority for cartworker task
-#define PRIORITY_CARTWORKER 1 
+#define PRIORITY_CARTWORKER 1
 // Priority for test task
-#define PRIORITY_TEST 2 
+#define PRIORITY_TEST 2
 
 // For freertos config
-#define RTOS_USE_PREEMPTION     1
-#define RTOS_USE_TIME_SLICING   0
+#define RTOS_USE_PREEMPTION   1
+#define RTOS_USE_TIME_SLICING 0
 
 void main_LIP_init(void);
 void main_LIP_run(void);

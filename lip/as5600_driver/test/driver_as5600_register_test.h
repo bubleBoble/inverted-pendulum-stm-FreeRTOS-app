@@ -40,7 +40,7 @@
 #include "driver_as5600_interface.h"
 
 #ifdef __cplusplus
-extern "C"{
+extern "C" {
 #endif
 
 /**

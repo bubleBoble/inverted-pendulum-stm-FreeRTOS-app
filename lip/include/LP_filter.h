@@ -11,17 +11,15 @@
 
 #include <stdint.h>
 
-typedef struct
-{
-    float timeConstant;
-    float samplingTime;
-    float out[ 2 ];
-    float in[ 2 ];
-
+typedef struct {
+        float timeConstant;
+        float samplingTime;
+        float out[2];
+        float in[2];
 } LP_filter;
 
-void LP_init( LP_filter *lp, float timeConstant, float samplingTime );
-float LP_update( LP_filter *lp, float in );
-void LP_update_time_Constant( LP_filter *lp, float newTimeConstant );
+void LP_init(LP_filter *lp, float timeConstant, float samplingTime);
+float LP_update(LP_filter *lp, float in);
+void LP_update_time_Constant(LP_filter *lp, float newTimeConstant);
 
 #endif // LP_FILTER_H
