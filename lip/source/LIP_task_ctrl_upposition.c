@@ -99,7 +99,7 @@ void ctrl_5_FSF_uppos_task(void *pvParameters)
                         switch_angle_high > pendulum_angle_in_base_range_upc;
 
                 if (is_pend_angle_ok) {
-                        // Controller should only work when pendulum arm angle 
+                        // Controller should only work when pendulum arm angle
                         // is in range [switch_angle_low, switch_angle_high]
 
                         // Calculate state varialbes errors
@@ -111,11 +111,11 @@ void ctrl_5_FSF_uppos_task(void *pvParameters)
                                 pend_angle[0];
                         pend_speed_error = -pend_speed[0];
 
-                        // Calculate control signal contribution of each state 
-                        // variable error Non linear cart position gain. When 
+                        // Calculate control signal contribution of each state
+                        // variable error Non linear cart position gain. When
                         // cart postion error is >0 linear feedback with offset
-                        // +1V is used to compensate for voltage deadzone, 
-                        // for <0 error, y-axis mirror is used. 
+                        // +1V is used to compensate for voltage deadzone,
+                        // for <0 error, y-axis mirror is used.
                         // graph: https://www.desmos.com/calculator/ycgnqpyy9y
 
                         // Default cart position error gain is gains[0]

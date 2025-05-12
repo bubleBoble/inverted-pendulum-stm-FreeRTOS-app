@@ -38,7 +38,7 @@ void swingdown_task(void *pvParameters)
 
                 if (reset_swingdown) {
                         if (pendulum_angle_in_base_range_upc < 0.0f) {
-                                // Change cart position setpoint to the track 
+                                // Change cart position setpoint to the track
                                 // center
                                 cart_position_setpoint_cm_cli_raw =
                                         TRACK_LEN_MAX_CM / 2.0f;

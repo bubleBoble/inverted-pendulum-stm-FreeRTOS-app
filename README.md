@@ -284,3 +284,21 @@ or add manually `-u _printf_float` in linker flags.
 ### Data type sizes arm gcc
   - https://developer.arm.com/documentation/dui0491/i/C-and-C---Implementation-Details/Basic-data-types
 
+# FreeRTOS naming conventions
+Source: https://www.freertos.org/Documentation/02-Kernel/06-Coding-guidelines/02-FreeRTOS-Coding-Standard-and-Style-Guide
+- Prefixes for variables:
+  - ul - uint32_t
+  - us - uint16_t
+  - uc - uint8_t
+  - x - prefix for non stdint typed variables
+    - > Examples include BaseType_t and TickType_t, which are portable layer defined typedefs for the type that is the natural or most efficient type for the architecture, and the type used to hold the RTOS tick count, respectively
+  - u - unsinged for non stdint types and `size_t`, e.g. `size_t uxDupa`
+  - p - for pointer, e.g. pus - pointer to unsigned short (uint16_t *)
+  - c - for chars permitted to hold only ASCII chars
+  - pc - for pointers to ASCII strings (char **)
+- Prefixes for functions:
+  - prv - File scope static (private) functions
+  - v - API functions are prefixed with their return type, as per the convention 
+    defined for variables with the addition of the prefix v for void
+  - API function names start with the name of the file in which they are defined. 
+    For example vTaskDelete is defined in tasks.c, and has a void return type.

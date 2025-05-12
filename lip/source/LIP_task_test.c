@@ -44,7 +44,7 @@ void testProcedure1(void)
         // [ 01 ] dpc on
         // if( cart_current_zone != FREEZING_ZONE_L || cart_current_zone != FREEZING_ZONE_R )
         // {
-        //     // Ensure that setpoint for cart postion from cli is the same as 
+        //     // Ensure that setpoint for cart postion from cli is the same as
         //     // the setpoint used by controller tasks.
         //     // If it's not true, this means that the user changed source of cart pos. setpoint for controllers.
         //     // ALL CONTROLLER TASKS SHOULD BE TURNING ON WITH CART POS. SETPOINT SOURCE SET TO CLI, OTHERWISE DON'T TURN ON CONTROLLER. */

@@ -32,12 +32,12 @@ void cart_worker_task(void *pvParameters)
                 xTaskNotifyWaitIndexed(0, 0x00, ULONG_MAX,
                                        &notif_value_received, portMAX_DELAY);
 
-                // notif_value_received possible values: GO_RIGHT, 
+                // notif_value_received possible values: GO_RIGHT,
                 // GO_RIGHT+GO_LEFT, GO_LEFT, SP_HOME cart_position_calibrated
                 if (notif_value_received == GO_RIGHT) {
-                        // app is uninitialized state and cart is already in 
-                        // zero position OR app is in default state 
-                        // (cart position calibrated). Move cart to the right 
+                        // app is uninitialized state and cart is already in
+                        // zero position OR app is in default state
+                        // (cart position calibrated). Move cart to the right
                         // until track center reached
 
                         // debouncing
@@ -65,7 +65,7 @@ void cart_worker_task(void *pvParameters)
                         }
                         dcm_set_output_volatage(0.0f);
                 } else if (notif_value_received == GO_LEFT + GO_RIGHT) {
-                        // app is in uninitialized state and cart position has 
+                        // app is in uninitialized state and cart position has
                         // to be calibrated.
 
                         // debouncing
@@ -87,11 +87,11 @@ void cart_worker_task(void *pvParameters)
                         }
                         dcm_set_output_volatage(0.0f);
                 } else if (notif_value_received == SP_HOME) {
-                        // App is in UPC or DPC state. Change setpoint to home 
-                        // postion. Write new setpoint to *_raw cli setpoint 
-                        // (unfiltered). cart_position_setpoint_cm_cli_raw acts 
-                        // as input to cart_position_setpoint_cm_cli low-pass 
-                        // filter. Low-pass filter is used for both setpoint 
+                        // App is in UPC or DPC state. Change setpoint to home
+                        // postion. Write new setpoint to *_raw cli setpoint
+                        // (unfiltered). cart_position_setpoint_cm_cli_raw acts
+                        // as input to cart_position_setpoint_cm_cli low-pass
+                        // filter. Low-pass filter is used for both setpoint
                         // sources to smooth out discontinous input
                         cart_position_setpoint_cm_cli_raw =
                                 TRACK_LEN_MAX_CM / 2.0f;

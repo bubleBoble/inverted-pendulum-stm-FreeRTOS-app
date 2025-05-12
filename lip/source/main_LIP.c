@@ -5,13 +5,15 @@
 #include "main_LIP.h"
 
 // Used inside limit switch ISR
-// #define READ_ZERO_POSITION_REACHED HAL_GPIO_ReadPin( \
-//     limitSW_left_GPIO_Port, limitSW_left_Pin \
-// )
-// #define READ_MAX_POSITION_REACHED HAL_GPIO_ReadPin( \
-//     limitSW_right_GPIO_Port, \
-//     limitSW_right_Pin \
-// )
+/*
+#define READ_ZERO_POSITION_REACHED HAL_GPIO_ReadPin( \
+    limitSW_left_GPIO_Port, limitSW_left_Pin \
+)
+#define READ_MAX_POSITION_REACHED HAL_GPIO_ReadPin( \
+    limitSW_right_GPIO_Port, \
+    limitSW_right_Pin \
+)
+*/
 
 extern ADC_HandleTypeDef hadc3;
 extern volatile uint16_t adc_data_pot;

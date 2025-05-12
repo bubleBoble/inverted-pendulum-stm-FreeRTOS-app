@@ -87,7 +87,7 @@ void watchdog_task(void *pvParameters)
                                 }
 
                                 // UPC or DPC controller was on, this means that
-                                // app was already initialized (in default 
+                                // app was already initialized (in default
                                 // state). Change app state back to default
                                 app_current_state = DEFAULT;
                         } else if (cart_position[0] > OK_ZONE_LOWER_LIMIT &&
@@ -116,8 +116,8 @@ void watchdog_task(void *pvParameters)
                                         dcm_set_output_volatage(0.0f);
                                 }
 
-                                // UPC or DPC controller was on, this means that 
-                                // app was already initialized (in default 
+                                // UPC or DPC controller was on, this means that
+                                // app was already initialized (in default
                                 // state). Change app state back to default
                                 app_current_state = DEFAULT;
                         }
@@ -137,16 +137,16 @@ void watchdog_task(void *pvParameters)
                         vTaskSuspend(ctrl_downposition_task_handle);
                         vTaskSuspend(ctrl_upposition_task_handle);
 
-                        // Set output voltage to zero again in case any 
+                        // Set output voltage to zero again in case any
                         // controller task managed to set any output voltage
                         dcm_set_output_volatage(0.0f);
 
-                        // Leftmost switch was closed, zero cart position 
+                        // Leftmost switch was closed, zero cart position
                         // encoder
                         dcm_enc_zero_counter();
 
                         // UPC or DPC controller was on, this means that app was
-                        // already initialized (in default state). Change app 
+                        // already initialized (in default state). Change app
                         // state back to default
                         app_current_state = DEFAULT;
                 } else if (READ_MAX_POSITION_REACHED) {
@@ -162,12 +162,12 @@ void watchdog_task(void *pvParameters)
                         vTaskSuspend(ctrl_downposition_task_handle);
                         vTaskSuspend(ctrl_upposition_task_handle);
 
-                        // Set output voltage to zero again in case any 
+                        // Set output voltage to zero again in case any
                         // controller task managed to set any output voltage
                         dcm_set_output_volatage(0.0f);
 
                         // UPC or DPC controller was on, this means that app was
-                        // already initialized (in default state). Change app 
+                        // already initialized (in default state). Change app
                         // state back to default
                         if (app_current_state != UNINITIALIZED) {
                                 app_current_state = DEFAULT;
@@ -184,7 +184,7 @@ void watchdog_task(void *pvParameters)
                                           pend_angle[0];
                         if ((ang_error < 126.0f * PI / 180.0f) &&
                             (ang_error > 0.0f)) {
-                                // Pendulum angle error is within pm. 25 degrees 
+                                // Pendulum angle error is within pm. 25 degrees
                                 // from up position
 
                                 // Suspend swingup task

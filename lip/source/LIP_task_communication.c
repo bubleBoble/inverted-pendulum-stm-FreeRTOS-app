@@ -114,19 +114,19 @@ void com_task(void *pvParameters)
                 com_send(msg, strlen(msg));
 
                 // Problem with vTaskDelayUntil:
-                //     vTaskDelayUntil uses xLastWakeTime argument to calculate 
-                //     next wakeup time, it increments its value internally. If 
+                //     vTaskDelayUntil uses xLastWakeTime argument to calculate
+                //     next wakeup time, it increments its value internally. If
                 //     the task is suspended, value of xLastWakeTime doesn't get
-                //     incremented, so when task gets resumed, tickCount maybe 
-                //     for e.g. 1000, and last saved xLastWakeTime might have 
-                //     value 100, with delay tick count of 100, then, 
-                //     vTaskDelayUntil has to be called at least 10 times to 
+                //     incremented, so when task gets resumed, tickCount maybe
+                //     for e.g. 1000, and last saved xLastWakeTime might have
+                //     value 100, with delay tick count of 100, then,
+                //     vTaskDelayUntil has to be called at least 10 times to
                 //     increment xLastWakeTime to the value of current tickCount
                 // vTaskDelayUntil( &xLastWakeTime, dt_com );
 
                 // This delay function doesn't guarantee exact tick delay
                 // eq. When tested with dt_com=50 (ms), messages were received
-                // with frequency 18Hz (not 20Hz as expected). So, use this 
+                // with frequency 18Hz (not 20Hz as expected). So, use this
                 // function only if the data logging rate is not a major concern
                 vTaskDelay(dt_com);
                 xLastWakeTime = xTaskGetTickCount();

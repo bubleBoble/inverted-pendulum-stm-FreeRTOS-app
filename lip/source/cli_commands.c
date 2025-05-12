@@ -255,7 +255,7 @@ void vRegisterCLICommands(void)
         }
 }
 
-//==============================================================================
+// =============================================================================
 // CLI commands callback functions definitions
 // =============================================================================
 // command: task-stats
@@ -350,8 +350,9 @@ static portBASE_TYPE home_command(int8_t *pcWriteBuffer, size_t xWriteBufferLen,
                 // "home" command should change cart position setpoint to home
                 // position (center of the track). Command not avaliable in
                 // swinggup state.
-                if (cart_position_setpoint_cm ==
-                    &cart_position_setpoint_cm_cli) {
+                uint8_t is_pos_from_cli = cart_position_setpoint_cm ==
+                                          &cart_position_setpoint_cm_cli;
+                if (is_pos_from_cli) {
                         // This command should only make changes to cart
                         // position setpoint value - if and only if - the source
                         // of setpoint is set to setpoint from cli command
@@ -366,8 +367,7 @@ static portBASE_TYPE home_command(int8_t *pcWriteBuffer, size_t xWriteBufferLen,
         } else {
                 // App is in swingup state
                 strcpy((char *)pcWriteBuffer,
-                       "\r\nERROR: COMMAND NOT AVAILABLE IN SWINGUP "
-                       "STATE.\r\n");
+                       "\r\nERROR: COMMAND NOT AVAILABLE IN SWINGUP STATE.\r\n");
         }
 
         return pdFALSE;
@@ -391,8 +391,11 @@ static portBASE_TYPE dpc_command(int8_t *pcWriteBuffer, size_t xWriteBufferLen,
         // terminate arguemnt string
         pcParameter1[xParameter1StringLength] = 0x00;
 
-        if (!strcmp((const char *)pcParameter1, "off") ||
-            !strcmp((const char *)pcParameter1, "0")) {
+        uint8_t is_param_off = !strcmp((const char *)pcParameter1, "off") ||
+                               !strcmp((const char *)pcParameter1, "0");
+        uint8_t is_param_on = !strcmp((const char *)pcParameter1, "on") ||
+                              !strcmp((const char *)pcParameter1, "1");
+        if (is_param_off) {
                 // turn off down position controller, "dcp off" / "dpc 0"
                 // are both valid commands
                 vTaskSuspend(ctrl_downposition_task_handle);
@@ -400,10 +403,10 @@ static portBASE_TYPE dpc_command(int8_t *pcWriteBuffer, size_t xWriteBufferLen,
 
                 // change current app state back to DEFAULT
                 app_current_state = DEFAULT;
-        } else if (!strcmp((const char *)pcParameter1, "on") ||
-                   !strcmp((const char *)pcParameter1, "1")) {
-                if (cart_current_zone != FREEZING_ZONE_L ||
-                    cart_current_zone != FREEZING_ZONE_R) {
+        } else if (is_param_on) {
+                uint8_t in_freeze_zone = cart_current_zone != FREEZING_ZONE_L ||
+                                         cart_current_zone != FREEZING_ZONE_R;
+                if (in_freeze_zone) {
                         // controller turn on case, even if controller is turned
                         // on, it will only work if the pendulum angle is in
                         // range [switch_angle_low, switch_angle_high].
@@ -415,8 +418,9 @@ static portBASE_TYPE dpc_command(int8_t *pcWriteBuffer, size_t xWriteBufferLen,
                         // CONTROLLER TASKS SHOULD BE TURNING ON WITH CART POS.
                         // SETPOINT SOURCE SET TO CLI, OTHERWISE DON'T TURN ON
                         // CONTROLLER
-                        if (cart_position_setpoint_cm ==
-                            &cart_position_setpoint_cm_cli) {
+                        uint8_t pos_from_cli = cart_position_setpoint_cm ==
+                                               &cart_position_setpoint_cm_cli;
+                        if (pos_from_cli) {
                                 // set starting setpoint for cart position to
                                 // its current position, so that the cart won't
                                 // instantly jump when the controller is turned

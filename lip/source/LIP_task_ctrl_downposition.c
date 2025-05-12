@@ -104,10 +104,10 @@ void ctrl_3_FSF_downpos_task(void *pvParameters)
                                 pend_angle[0];
                         pend_speed_error = -pend_speed[0];
 
-                        // Calculate control signal contribution of each state 
-                        // variable error, non linear cart position gain. When 
-                        // cart postion error is >0 linear feedback with offset 
-                        // +1V is used to compensate for voltage deadzone, 
+                        // Calculate control signal contribution of each state
+                        // variable error, non linear cart position gain. When
+                        // cart postion error is >0 linear feedback with offset
+                        // +1V is used to compensate for voltage deadzone,
                         // for <0 error, y-axis mirror is used
                         // graph: https://www.desmos.com/calculator/ycgnqpyy9y
 

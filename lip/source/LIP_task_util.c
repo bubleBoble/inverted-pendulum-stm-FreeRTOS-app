@@ -164,13 +164,13 @@ void util_task(void *pvParameters)
                         (float)adc_data_pot / 4096.0f * TRACK_LEN_MAX_CM;
 
                 // =============================================================
-                // Low pass filter for cart position setpoint (pot and cli), 
+                // Low pass filter for cart position setpoint (pot and cli),
                 // 0.2sec time constant, 0dc gain.
                 // =============================================================
                 // input is cart_position_setpoint_cm_pot_raw or
                 // cart_position_setpoint_cm_cli_raw, output samples are stored
-                // internally in sp_filter struct. The latest sample is assiged 
-                // to cart_position_setpoint_cm_pot or 
+                // internally in sp_filter struct. The latest sample is assiged
+                // to cart_position_setpoint_cm_pot or
                 // cart_position_setpoint_cm_cli_raw
                 LP_update(&sp_filter_pot, cart_position_setpoint_cm_pot_raw);
                 cart_position_setpoint_cm_pot = sp_filter_pot.out[0];
@@ -179,12 +179,12 @@ void util_task(void *pvParameters)
                 cart_position_setpoint_cm_cli = sp_filter_cli.out[0];
 
                 if (app_current_state == DEFAULT) {
-                        // While in DEFAULT state, cart setpoint is current 
+                        // While in DEFAULT state, cart setpoint is current
                         // position.
 
                         // Value of cart_position_setpoint_cm_cli_raw should be
-                        // constantly updated to the value of current cart 
-                        // position to avoid discontinuity in cart position 
+                        // constantly updated to the value of current cart
+                        // position to avoid discontinuity in cart position
                         // setpoint
                         cart_position_setpoint_cm_cli_raw = cart_position[0];
                 }
@@ -195,7 +195,7 @@ void util_task(void *pvParameters)
                 // setpoint.
                 //
                 // This method uses modulus operation but implemented as
-                // "floored division" rather than "truncated division" 
+                // "floored division" rather than "truncated division"
                 // implemented in math.h in mod, fmod, fmodf etc.
                 // More info about modulus operation:
                 //     https://en.wikipedia.org/wiki/Modulo#In_programming_languages
@@ -209,7 +209,7 @@ void util_task(void *pvParameters)
 
                 // Calculate pendulum angle in base range [0, 2PI].
                 // This range stays the same as original range in the model, so
-                // that pendulum angle of 180 degree or PI radians still 
+                // that pendulum angle of 180 degree or PI radians still
                 // corresponds to down position
                 pendulum_angle_in_base_range_dpc =
                         pend_angle[0] -

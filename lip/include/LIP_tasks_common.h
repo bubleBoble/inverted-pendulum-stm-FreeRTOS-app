@@ -13,22 +13,22 @@
 #define LIP_APP_STATES_ENUM
 enum lip_app_states {
         // Uninitialized state: app state before call to "zero" cli command.
-        // This state indicates that current cart position reading is not 
+        // This state indicates that current cart position reading is not
         // correct, pendulum cart has to be moved to zero position.
-        // Available commands: 
+        // Available commands:
         //     zero, <enter_key>
         UNINITIALIZED,
-        // Default state: All sesnor readings should be correct in this app 
+        // Default state: All sesnor readings should be correct in this app
         // state. Down position controller can be started.
         // Available commands:
         //     zero, home, dpc, sp, <enter_key>
         DEFAULT,
         // DPC state: Down Position Controller turned on.
-        // Available commands: 
+        // Available commands:
         //     home, dpc, spcli, sppot, sp, swingup, <enter_key>
         DPC,
         // UPC state: Up Position Controller turned on.
-        // Available commands: 
+        // Available commands:
         //     home, upc, spcli, sppot, sp, swingdown, <enter_key>
         UPC,
         // SWINGUP state

@@ -60,15 +60,15 @@ void swingup_task(void *pvParameters)
                 // calibrated
 
                 for (uint32_t lookup_i = 0; lookup_i < N_SAMPLES; lookup_i++) {
-                        // This task can be suspended any time while in this for 
+                        // This task can be suspended any time while in this for
                         // loop
 
                         if (reset_lookup_index) {
-                                // This procedure runs on every call to 
+                                // This procedure runs on every call to
                                 // "swingup" command
 
                                 // Global reset lookup index variable was set to
-                                // 1, this means that command "swingup" was 
+                                // 1, this means that command "swingup" was
                                 // called and lookup_index should be set to zero
                                 lookup_i = 0;
                                 reset_lookup_index = 0;
@@ -87,7 +87,7 @@ void swingup_task(void *pvParameters)
                                 //         (double) SWINGUP_START_POSITION);
                                 // com_send( msg, strlen(msg) );
 
-                                // Wait for 3 seconds - should be enough for 
+                                // Wait for 3 seconds - should be enough for
                                 // cart to reach SWINGUP_START_POSITION
                                 vTaskDelay(3000);
                                 vTaskSuspend(ctrl_downposition_task_handle);
@@ -101,12 +101,12 @@ void swingup_task(void *pvParameters)
                                 // vTaskDelay( 1000 );
                                 // com_send(     "swingup in: 0.\r\n",  16 );
 
-                                // Reset task last wake time, so that when this 
+                                // Reset task last wake time, so that when this
                                 // task gets resumed, timing works properly
                                 xLastWakeTime = xTaskGetTickCount();
                         }
 
-                        // Use the values from swingup_control lookup table to 
+                        // Use the values from swingup_control lookup table to
                         // set dc motor voltage
                         dcm_set_output_volatage(LOOKUP_TABLE[lookup_i]);
 
@@ -118,8 +118,8 @@ void swingup_task(void *pvParameters)
                 // No more data in the lookup table, set zero voltage
                 dcm_set_output_volatage(0.0f);
 
-                // If this task wasn't suspended ealier it means that up 
-                // position controller didn't take over control, and app should 
+                // If this task wasn't suspended ealier it means that up
+                // position controller didn't take over control, and app should
                 // remain in DEFAULT state
                 app_current_state = DEFAULT;
 
