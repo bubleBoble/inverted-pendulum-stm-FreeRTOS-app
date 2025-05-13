@@ -1,4 +1,4 @@
-/* =============================================================================
+/*
  * Description: Basic functionality for interfaceing incremental encoder.
  *
  * Notes:
@@ -17,9 +17,7 @@
  *
  *	GPIOs used: PD12 for CH1 (alias enc_A)
  *		    	PD13 for CH2 (alias enc_B)
- * =============================================================================
  */
-
 #include "tim.h"
 
 #ifndef DCM_ENC_DRIVER

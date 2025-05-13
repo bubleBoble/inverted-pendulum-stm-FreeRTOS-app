@@ -61,14 +61,14 @@ extern "C" {
  */
 typedef enum {
         AS5600_BOOL_FALSE = 0x00, /**< disable */
-        AS5600_BOOL_TRUE = 0x01, /**< enable */
+        AS5600_BOOL_TRUE  = 0x01, /**< enable */
 } as5600_bool_t;
 
 /**
  * @brief as5600 power mode enumeration definition
  */
 typedef enum {
-        AS5600_POWER_MODE_NOM = 0x00, /**< normal */
+        AS5600_POWER_MODE_NOM  = 0x00, /**< normal */
         AS5600_POWER_MODE_LPM1 = 0x01, /**< low power 1 */
         AS5600_POWER_MODE_LPM2 = 0x02, /**< low power 2 */
         AS5600_POWER_MODE_LPM3 = 0x03, /**< low power 3 */
@@ -78,7 +78,7 @@ typedef enum {
  * @brief as5600 hysteresis enumeration definition
  */
 typedef enum {
-        AS5600_HYSTERESIS_OFF = 0x00, /**< off */
+        AS5600_HYSTERESIS_OFF  = 0x00, /**< off */
         AS5600_HYSTERESIS_1LSB = 0x01, /**< 1 lsb */
         AS5600_HYSTERESIS_2LSB = 0x02, /**< 2 lsb */
         AS5600_HYSTERESIS_3LSB = 0x03, /**< 3 lsb */
@@ -110,9 +110,9 @@ typedef enum {
  */
 typedef enum {
         AS5600_SLOW_FILTER_16X = 0x00, /**< 16x */
-        AS5600_SLOW_FILTER_8X = 0x01, /**< 8x */
-        AS5600_SLOW_FILTER_4X = 0x02, /**< 4x */
-        AS5600_SLOW_FILTER_2X = 0x03, /**< 2x */
+        AS5600_SLOW_FILTER_8X  = 0x01, /**< 8x */
+        AS5600_SLOW_FILTER_4X  = 0x02, /**< 4x */
+        AS5600_SLOW_FILTER_2X  = 0x03, /**< 2x */
 } as5600_slow_filter_t;
 
 /**
@@ -121,9 +121,9 @@ typedef enum {
 typedef enum {
         AS5600_FAST_FILTER_THRESHOLD_SLOW_FILTER_ONLY =
                 0x00, /**< slow filter only */
-        AS5600_FAST_FILTER_THRESHOLD_6LSB = 0x01, /**< 6 lsb */
-        AS5600_FAST_FILTER_THRESHOLD_7LSB = 0x02, /**< 7 lsb */
-        AS5600_FAST_FILTER_THRESHOLD_9LSB = 0x03, /**< 9 lsb */
+        AS5600_FAST_FILTER_THRESHOLD_6LSB  = 0x01, /**< 6 lsb */
+        AS5600_FAST_FILTER_THRESHOLD_7LSB  = 0x02, /**< 7 lsb */
+        AS5600_FAST_FILTER_THRESHOLD_9LSB  = 0x03, /**< 9 lsb */
         AS5600_FAST_FILTER_THRESHOLD_10LSB = 0x07, /**< 10 lsb */
         AS5600_FAST_FILTER_THRESHOLD_18LSB = 0x04, /**< 18 lsb */
         AS5600_FAST_FILTER_THRESHOLD_21LSB = 0x05, /**< 21 lsb */
@@ -145,9 +145,9 @@ typedef enum {
  * @brief as5600 burn enumeration definition
  */
 typedef enum {
-        AS5600_BURN_CMD1 = 0x01, /**< load the actual otp content command 1 */
-        AS5600_BURN_CMD2 = 0x11, /**< load the actual otp content command 2 */
-        AS5600_BURN_CMD3 = 0x10, /**< load the actual otp content command 3 */
+        AS5600_BURN_CMD1  = 0x01, /**< load the actual otp content command 1 */
+        AS5600_BURN_CMD2  = 0x11, /**< load the actual otp content command 2 */
+        AS5600_BURN_CMD3  = 0x10, /**< load the actual otp content command 3 */
         AS5600_BURN_ANGLE = 0x80, /**< angle */
         AS5600_BURN_SETTING = 0x40, /**< setting */
 } as5600_burn_t;
@@ -176,14 +176,14 @@ typedef struct as5600_handle_s {
  * @brief as5600 information structure definition
  */
 typedef struct as5600_info_s {
-        char chip_name[32]; /**< chip name */
-        char manufacturer_name[32]; /**< manufacturer name */
-        char interface[8]; /**< chip interface name */
-        float supply_voltage_min_v; /**< chip min supply voltage */
-        float supply_voltage_max_v; /**< chip max supply voltage */
-        float max_current_ma; /**< chip max current */
-        float temperature_min; /**< chip min operating temperature */
-        float temperature_max; /**< chip max operating temperature */
+        char     chip_name[32]; /**< chip name */
+        char     manufacturer_name[32]; /**< manufacturer name */
+        char     interface[8]; /**< chip interface name */
+        float    supply_voltage_min_v; /**< chip min supply voltage */
+        float    supply_voltage_max_v; /**< chip max supply voltage */
+        float    max_current_ma; /**< chip max current */
+        float    temperature_min; /**< chip min operating temperature */
+        float    temperature_max; /**< chip max operating temperature */
         uint32_t driver_version; /**< driver version */
 } as5600_info_t;
 
@@ -464,7 +464,7 @@ uint8_t as5600_get_watch_dog(as5600_handle_t *handle, as5600_bool_t *enable);
  * @note      none
  */
 uint8_t
-as5600_set_fast_filter_threshold(as5600_handle_t *handle,
+as5600_set_fast_filter_threshold(as5600_handle_t               *handle,
                                  as5600_fast_filter_threshold_t threshold);
 
 /**
@@ -479,7 +479,7 @@ as5600_set_fast_filter_threshold(as5600_handle_t *handle,
  * @note       none
  */
 uint8_t
-as5600_get_fast_filter_threshold(as5600_handle_t *handle,
+as5600_get_fast_filter_threshold(as5600_handle_t                *handle,
                                  as5600_fast_filter_threshold_t *threshold);
 
 /**
@@ -493,7 +493,7 @@ as5600_get_fast_filter_threshold(as5600_handle_t *handle,
  *            - 3 handle is not initialized
  * @note      none
  */
-uint8_t as5600_set_slow_filter(as5600_handle_t *handle,
+uint8_t as5600_set_slow_filter(as5600_handle_t     *handle,
                                as5600_slow_filter_t filter);
 
 /**
@@ -507,7 +507,7 @@ uint8_t as5600_set_slow_filter(as5600_handle_t *handle,
  *             - 3 handle is not initialized
  * @note       none
  */
-uint8_t as5600_get_slow_filter(as5600_handle_t *handle,
+uint8_t as5600_get_slow_filter(as5600_handle_t      *handle,
                                as5600_slow_filter_t *filter);
 
 /**
@@ -521,7 +521,7 @@ uint8_t as5600_get_slow_filter(as5600_handle_t *handle,
  *            - 3 handle is not initialized
  * @note      none
  */
-uint8_t as5600_set_pwm_frequency(as5600_handle_t *handle,
+uint8_t as5600_set_pwm_frequency(as5600_handle_t       *handle,
                                  as5600_pwm_frequency_t freq);
 
 /**
@@ -535,7 +535,7 @@ uint8_t as5600_set_pwm_frequency(as5600_handle_t *handle,
  *             - 3 handle is not initialized
  * @note       none
  */
-uint8_t as5600_get_pwm_frequency(as5600_handle_t *handle,
+uint8_t as5600_get_pwm_frequency(as5600_handle_t        *handle,
                                  as5600_pwm_frequency_t *freq);
 
 /**
@@ -549,7 +549,7 @@ uint8_t as5600_get_pwm_frequency(as5600_handle_t *handle,
  *            - 3 handle is not initialized
  * @note      none
  */
-uint8_t as5600_set_output_stage(as5600_handle_t *handle,
+uint8_t as5600_set_output_stage(as5600_handle_t      *handle,
                                 as5600_output_stage_t stage);
 
 /**
@@ -563,7 +563,7 @@ uint8_t as5600_set_output_stage(as5600_handle_t *handle,
  *             - 3 handle is not initialized
  * @note       none
  */
-uint8_t as5600_get_output_stage(as5600_handle_t *handle,
+uint8_t as5600_get_output_stage(as5600_handle_t       *handle,
                                 as5600_output_stage_t *stage);
 
 /**
@@ -577,7 +577,7 @@ uint8_t as5600_get_output_stage(as5600_handle_t *handle,
  *            - 3 handle is not initialized
  * @note      none
  */
-uint8_t as5600_set_hysteresis(as5600_handle_t *handle,
+uint8_t as5600_set_hysteresis(as5600_handle_t    *handle,
                               as5600_hysteresis_t hysteresis);
 
 /**
@@ -591,7 +591,7 @@ uint8_t as5600_set_hysteresis(as5600_handle_t *handle,
  *             - 3 handle is not initialized
  * @note       none
  */
-uint8_t as5600_get_hysteresis(as5600_handle_t *handle,
+uint8_t as5600_get_hysteresis(as5600_handle_t     *handle,
                               as5600_hysteresis_t *hysteresis);
 
 /**
@@ -605,7 +605,7 @@ uint8_t as5600_get_hysteresis(as5600_handle_t *handle,
  *            - 3 handle is not initialized
  * @note      none
  */
-uint8_t as5600_set_power_mode(as5600_handle_t *handle,
+uint8_t as5600_set_power_mode(as5600_handle_t    *handle,
                               as5600_power_mode_t mode);
 
 /**
@@ -619,7 +619,7 @@ uint8_t as5600_set_power_mode(as5600_handle_t *handle,
  *             - 3 handle is not initialized
  * @note       none
  */
-uint8_t as5600_get_power_mode(as5600_handle_t *handle,
+uint8_t as5600_get_power_mode(as5600_handle_t     *handle,
                               as5600_power_mode_t *mode);
 
 /**

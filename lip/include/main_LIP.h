@@ -1,15 +1,14 @@
-/* =============================================================================
- * main.h
- * =============================================================================
+/*
+ * main_LIP.h
  */
 #ifndef LIP_MAIN
 #define LIP_MAIN
 
-#include "stdarg.h"
-#include "stdint.h"
-#include "stdio.h"
-#include "stdlib.h"
-#include "string.h"
+#include <stdarg.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -107,6 +106,6 @@ void main_LIP_run(void);
 void LIP_create_Tasks(void);
 
 // Defined in cli_commands.c
-void vRegisterCLICommands(void);
+void register_CLI_commands(void);
 
 #endif // LIP_MAIN

@@ -1,4 +1,4 @@
-/* =============================================================================
+/*
  * Description: Basic interface for dcmotor
  *
  * Notes: Timer for PWM motor control is tim3 (htim3) (APB1@84MHz)
@@ -13,9 +13,7 @@
  *
  *	GPIOs used: PA6 for CH1 (alias pwm1_dcmA1)
  *		        PA7 for CH2 (alias pwm2_dcmA2)
- * =============================================================================
  */
-
 #ifndef DCM_DRIVER
 #define DCM_DRIVER
 
@@ -29,9 +27,9 @@
 // from precalculated value from PSC & ARR(autoreload register)
 #define DCM_PWM_FREQ 1000
 
-void dcm_init(void);
-void dcm_zero_output_voltage(void);
-void dcm_set_output_volatage(float inV);
+void  dcm_init(void);
+void  dcm_zero_output_voltage(void);
+void  dcm_set_output_volatage(float inV);
 float dcm_get_output_voltage(void);
 
 void dcm_set_ch1_dutycycle(uint16_t dtc);

@@ -1,7 +1,7 @@
 #include "dcm_encoder_driver.h"
 
 static uint16_t enc_read_raw = 0;
-static float cart_position = 0.0f;
+static float    cart_pos     = 0.0f;
 
 // Start encoder timer in encoder mode
 void enc_init(void)
@@ -30,6 +30,6 @@ float dcm_enc_get_cart_position_cm(void)
 {
         enc_read_raw = enc_get_count();
         // div by (float) ENC_MAX_CNT mult by TRACK_LEN_MAX_CM;
-        cart_position = (float)enc_read_raw * ENCODER_MULTIPLIER;
-        return cart_position;
+        cart_pos = (float)enc_read_raw * ENCODER_MULTIPLIER;
+        return cart_pos;
 }

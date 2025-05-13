@@ -48,24 +48,24 @@ static as5600_handle_t gs_handle; /**< as5600 handle */
  */
 uint8_t as5600_register_test(void)
 {
-        uint8_t res;
-        uint8_t status;
-        uint8_t agc;
-        uint16_t magnitude;
-        uint16_t pos;
-        uint16_t pos_check;
-        uint16_t ang;
-        uint16_t ang_check;
-        uint16_t reg;
-        float deg;
-        float deg_check;
-        as5600_info_t info;
-        as5600_bool_t enable;
-        as5600_power_mode_t mode;
-        as5600_slow_filter_t filter;
-        as5600_pwm_frequency_t freq;
-        as5600_output_stage_t stage;
-        as5600_hysteresis_t hysteresis;
+        uint8_t                        res;
+        uint8_t                        status;
+        uint8_t                        agc;
+        uint16_t                       magnitude;
+        uint16_t                       pos;
+        uint16_t                       pos_check;
+        uint16_t                       ang;
+        uint16_t                       ang_check;
+        uint16_t                       reg;
+        float                          deg;
+        float                          deg_check;
+        as5600_info_t                  info;
+        as5600_bool_t                  enable;
+        as5600_power_mode_t            mode;
+        as5600_slow_filter_t           filter;
+        as5600_pwm_frequency_t         freq;
+        as5600_output_stage_t          stage;
+        as5600_hysteresis_t            hysteresis;
         as5600_fast_filter_threshold_t threshold;
 
         /* link interface function */

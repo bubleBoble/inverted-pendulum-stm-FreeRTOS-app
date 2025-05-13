@@ -1,4 +1,4 @@
-## simple solution to use of nonreentrant sprintf
+## simple solution to use nonreentrant sprintf
 wrap all sprintf in critical section (disable interrupts = disable context switching)
 https://www.freertos.org/taskENTER_CRITICAL_taskEXIT_CRITICAL.html
 
@@ -13,7 +13,7 @@ solution
     split float into decimal and fractional parts
     use modf from math.h
 
-## newlib / newlib nano isnot reentrant
+## newlib / newlib nano is not reentrant
 Functions like printf may use non reentrant mem alloc functions like malloc.
 More info:
     https://mcuoneclipse.com/2017/07/02/using-freertos-with-newlib-and-newlib-nano/ 
@@ -22,7 +22,7 @@ More info:
 
     https://mcuoneclipse.com/2020/11/15/steps-to-use-freertos-with-newlib-reentrant-memory-allocation/
 
-Couldn't disable dynamic mem allocation becouse FreeRTOS_CLI uses it internally.
+Couldn't disable dynamic mem allocation because FreeRTOS_CLI uses it internally.
 
 Solution
     Write new CLI functionality not based on freeRTOS cli

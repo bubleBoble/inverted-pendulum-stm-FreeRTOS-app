@@ -682,7 +682,7 @@ uint8_t as5600_get_watch_dog(as5600_handle_t *handle, as5600_bool_t *enable)
  * @note      none
  */
 uint8_t
-as5600_set_fast_filter_threshold(as5600_handle_t *handle,
+as5600_set_fast_filter_threshold(as5600_handle_t               *handle,
                                  as5600_fast_filter_threshold_t threshold)
 {
         uint8_t prev;
@@ -730,7 +730,7 @@ as5600_set_fast_filter_threshold(as5600_handle_t *handle,
  * @note       none
  */
 uint8_t
-as5600_get_fast_filter_threshold(as5600_handle_t *handle,
+as5600_get_fast_filter_threshold(as5600_handle_t                *handle,
                                  as5600_fast_filter_threshold_t *threshold)
 {
         uint8_t prev;
@@ -770,7 +770,7 @@ as5600_get_fast_filter_threshold(as5600_handle_t *handle,
  *            - 3 handle is not initialized
  * @note      none
  */
-uint8_t as5600_set_slow_filter(as5600_handle_t *handle,
+uint8_t as5600_set_slow_filter(as5600_handle_t     *handle,
                                as5600_slow_filter_t filter)
 {
         uint8_t prev;
@@ -817,7 +817,7 @@ uint8_t as5600_set_slow_filter(as5600_handle_t *handle,
  *             - 3 handle is not initialized
  * @note       none
  */
-uint8_t as5600_get_slow_filter(as5600_handle_t *handle,
+uint8_t as5600_get_slow_filter(as5600_handle_t      *handle,
                                as5600_slow_filter_t *filter)
 {
         uint8_t prev;
@@ -855,7 +855,7 @@ uint8_t as5600_get_slow_filter(as5600_handle_t *handle,
  *            - 3 handle is not initialized
  * @note      none
  */
-uint8_t as5600_set_pwm_frequency(as5600_handle_t *handle,
+uint8_t as5600_set_pwm_frequency(as5600_handle_t       *handle,
                                  as5600_pwm_frequency_t freq)
 {
         uint8_t prev;
@@ -902,7 +902,7 @@ uint8_t as5600_set_pwm_frequency(as5600_handle_t *handle,
  *             - 3 handle is not initialized
  * @note       none
  */
-uint8_t as5600_get_pwm_frequency(as5600_handle_t *handle,
+uint8_t as5600_get_pwm_frequency(as5600_handle_t        *handle,
                                  as5600_pwm_frequency_t *freq)
 {
         uint8_t prev;
@@ -941,7 +941,7 @@ uint8_t as5600_get_pwm_frequency(as5600_handle_t *handle,
  *            - 3 handle is not initialized
  * @note      none
  */
-uint8_t as5600_set_output_stage(as5600_handle_t *handle,
+uint8_t as5600_set_output_stage(as5600_handle_t      *handle,
                                 as5600_output_stage_t stage)
 {
         uint8_t prev;
@@ -988,7 +988,7 @@ uint8_t as5600_set_output_stage(as5600_handle_t *handle,
  *             - 3 handle is not initialized
  * @note       none
  */
-uint8_t as5600_get_output_stage(as5600_handle_t *handle,
+uint8_t as5600_get_output_stage(as5600_handle_t       *handle,
                                 as5600_output_stage_t *stage)
 {
         uint8_t prev;
@@ -1027,7 +1027,7 @@ uint8_t as5600_get_output_stage(as5600_handle_t *handle,
  *            - 3 handle is not initialized
  * @note      none
  */
-uint8_t as5600_set_hysteresis(as5600_handle_t *handle,
+uint8_t as5600_set_hysteresis(as5600_handle_t    *handle,
                               as5600_hysteresis_t hysteresis)
 {
         uint8_t prev;
@@ -1074,7 +1074,7 @@ uint8_t as5600_set_hysteresis(as5600_handle_t *handle,
  *             - 3 handle is not initialized
  * @note       none
  */
-uint8_t as5600_get_hysteresis(as5600_handle_t *handle,
+uint8_t as5600_get_hysteresis(as5600_handle_t     *handle,
                               as5600_hysteresis_t *hysteresis)
 {
         uint8_t prev;
@@ -1159,7 +1159,7 @@ uint8_t as5600_set_power_mode(as5600_handle_t *handle, as5600_power_mode_t mode)
  *             - 3 handle is not initialized
  * @note       none
  */
-uint8_t as5600_get_power_mode(as5600_handle_t *handle,
+uint8_t as5600_get_power_mode(as5600_handle_t     *handle,
                               as5600_power_mode_t *mode)
 {
         uint8_t prev;
@@ -1512,10 +1512,10 @@ uint8_t as5600_info(as5600_info_t *info)
                 SUPPLY_VOLTAGE_MIN; /* set minimal supply voltage */
         info->supply_voltage_max_v =
                 SUPPLY_VOLTAGE_MAX; /* set maximum supply voltage */
-        info->max_current_ma = MAX_CURRENT; /* set maximum current */
+        info->max_current_ma  = MAX_CURRENT; /* set maximum current */
         info->temperature_max = TEMPERATURE_MAX; /* set minimal temperature */
         info->temperature_min = TEMPERATURE_MIN; /* set maximum temperature */
-        info->driver_version = DRIVER_VERSION; /* set driver version */
+        info->driver_version  = DRIVER_VERSION; /* set driver version */
 
         return 0; /* success return 0 */
 }

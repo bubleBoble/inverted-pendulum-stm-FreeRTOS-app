@@ -1,16 +1,15 @@
-/* =============================================================================
+/*
  * This file contains task that implements freeRTOS cli.
  * With prompt and backspace support.
  * Awesome tutorial on how to make freeRTOS console better:
  *     https://www.edwinfairchild.com/p/making-freertos-cli-more-cli-ish_14.html
- * =============================================================================
  */
 #include "LIP_tasks_common.h"
 
 // =============================================================================
 // App globals defined in LIP_tasks_common.c
 // =============================================================================
-extern uint8_t cRxedChar;
+extern uint8_t             rx_char;
 extern enum lip_app_states app_current_state;
 
 // =============================================================================
@@ -19,27 +18,27 @@ extern enum lip_app_states app_current_state;
 char msg[100];
 typedef struct {
         // Main prompt string
-        char *promptStr;
+        char *prompt_str;
         // Preprompt string while in alternate prompt mode
-        char *prePromptStr;
-        // altPromptActive can be changed in command callback function or inside
+        char *preprompt_str;
+        // alt_prompt_active can be changed in command callback function or inside
         // resumed task to indicate current program state, eg. controller used
-        uint8_t altPromptActive;
+        uint8_t alt_prompt_active;
         uint8_t pausePrompt;
 } prompt_t;
 
 // Prompt instance
 prompt_t prompt;
 // Main prompt
-char promptStr[] = ">>> ";
+char prompt_str[] = ">>> ";
 // Each state has its own preprompt
-char no_prePrompt[] = "[       ?       ]";
-char uninitState_prePrompt[] = "[ uninitialzied ]";
-char defaultState_prePrompt[] = "[    default    ]";
-char dpcState_prePrompt[] = "[      dpc      ]";
-char upcState_prePrompt[] = "[      upc      ]";
-char swingupState_prePrompt[] = "[    swingup    ]";
-char testState_prePrompt[] = "[     tests     ]";
+char no_prePrompt[]     = "[       ?       ]";
+char uninit_state_pp[]  = "[ uninitialzied ]";
+char default_state_pp[] = "[    default    ]";
+char DPC_state_pp[]     = "[      dpc      ]";
+char UPC_state_pp[]     = "[      upc      ]";
+char swingup_state_pp[] = "[    swingup    ]";
+char test_state_pp[]    = "[     tests     ]";
 
 // Function to print full prompt with preprompt string which indicates current
 // app state
@@ -47,58 +46,59 @@ void show_prompt(void)
 {
         switch (app_current_state) {
         case UNINITIALIZED:
-                prompt.prePromptStr = uninitState_prePrompt;
+                prompt.preprompt_str = uninit_state_pp;
                 break;
         case DEFAULT:
-                prompt.prePromptStr = defaultState_prePrompt;
+                prompt.preprompt_str = default_state_pp;
                 break;
         case DPC:
-                prompt.prePromptStr = dpcState_prePrompt;
+                prompt.preprompt_str = DPC_state_pp;
                 break;
         case UPC:
-                prompt.prePromptStr = upcState_prePrompt;
+                prompt.preprompt_str = UPC_state_pp;
                 break;
         case SWINGUP:
-                prompt.prePromptStr = swingupState_prePrompt;
+                prompt.preprompt_str = swingup_state_pp;
                 break;
         case TEST:
-                prompt.prePromptStr = testState_prePrompt;
+                prompt.preprompt_str = test_state_pp;
                 break;
         default:
-                prompt.prePromptStr = no_prePrompt;
+                prompt.preprompt_str = no_prePrompt;
                 break;
         }
 
-        sprintf(msg, "\r\n%s %s", prompt.prePromptStr, prompt.promptStr);
+        sprintf(msg, "\r\n%s %s", prompt.preprompt_str, prompt.prompt_str);
         com_send(msg, strlen(msg));
-        // printf( "\r\n%s %s", prompt.prePromptStr, prompt.promptStr );
+        // printf( "\r\n%s %s", prompt.preprompt_str, prompt.prompt_str );
         // fflush( stdout );
 }
 
 // CLI escape sequences to perform backspace operation in console. backspace,
 // print blank and backspace again
 // uint8_t backspace[] = "\x08 \x08";
-uint8_t backspaceDeleteAction[] = "\b \b";
+uint8_t bs_delete_action[] = "\b \b";
 
-void console_task(void *pvParameters)
+void console_task(void *params)
 {
         // Keeps track of the number of input characters
-        int8_t cInputIndex = 0;
-        BaseType_t xMoreDataToFollow;
+        int8_t     inp_idx = 0;
+        BaseType_t more_data;
 
         // The input and output buffers are declared static to keep
         // them off the stack
-        static int8_t pcOutputString[MAX_OUTPUT_LENGTH],
-                pcInputString[MAX_INPUT_LENGTH];
+        static int8_t output_str[MAX_OUTPUT_LENGTH];
+        static int8_t input_string[MAX_INPUT_LENGTH];
 
-        TickType_t xLastWakeTime = xTaskGetTickCount();
+        TickType_t last_wake_time = xTaskGetTickCount();
 
-        vRegisterCLICommands();
+        register_CLI_commands();
 
         vTaskDelay(1000);
 
         // Clear screen before cli start
-        com_send("\e[1;1H\e[2J", 10);
+        // com_send("\e[1;1H\e[2J", 10);
+        com_send("\033[1;1H\033[2J", 10);
         sprintf(msg, "\r\n******************************************\r\n");
         com_send(msg, strlen(msg));
         sprintf(msg, "*********** FreeRTOS based CLI ***********\r\n");
@@ -109,13 +109,13 @@ void console_task(void *pvParameters)
         // printf(     "*********** FreeRTOS based CLI ***********\r\n" );
         // printf(     "******************************************\r\n" );
 
-        prompt.promptStr = promptStr;
+        prompt.prompt_str = prompt_str;
         show_prompt();
 
         for (;;) {
-                if (cRxedChar != 0x00) // better to use notification here
+                if (rx_char != 0x00) // better to use notification here
                 {
-                        if (cRxedChar == '\n' || cRxedChar == '\r') {
+                        if (rx_char == '\n' || rx_char == '\r') {
                                 com_send("\r\n", 2);
                                 // printf("\r\n");
                                 // fflush(stdout);
@@ -128,67 +128,64 @@ void console_task(void *pvParameters)
                                         // Send the command string to the
                                         // command interpreter. Any output
                                         // generated by the command interpreter
-                                        // will be placed in the pcOutputString
+                                        // will be placed in the output_str
                                         // buffer
-                                        xMoreDataToFollow =
-                                                FreeRTOS_CLIProcessCommand(
-                                                        // The command string
-                                                        pcInputString,
-                                                        // The output buffer
-                                                        pcOutputString,
-                                                        // The size of the
-                                                        // output buffer
-                                                        MAX_OUTPUT_LENGTH);
+                                        more_data = FreeRTOS_CLIProcessCommand(
+                                                // The command string
+                                                input_string,
+                                                // The output buffer
+                                                output_str,
+                                                // The size of the
+                                                // output buffer
+                                                MAX_OUTPUT_LENGTH);
 
                                         int limit;
-                                        if (xMoreDataToFollow == pdTRUE)
+                                        if (more_data == pdTRUE)
                                                 limit = MAX_OUTPUT_LENGTH;
                                         else
-                                                limit = strlen(
-                                                        (const char *)
-                                                                pcOutputString);
+                                                limit = strlen((
+                                                        const char *)output_str);
 
                                         for (int i = 0; i < limit; i++) {
                                                 sprintf(msg, "%c",
-                                                        *(pcOutputString + i));
+                                                        *(output_str + i));
                                                 com_send(msg, strlen(msg));
 
-                                                // printf( "%c", *(pcOutputString + i) );
+                                                // printf( "%c", *(output_str + i) );
                                                 // fflush(stdout);
                                         }
 
-                                } while (xMoreDataToFollow != pdFALSE);
+                                } while (more_data != pdFALSE);
 
-                                cInputIndex = 0;
-                                memset(pcInputString, 0x00, MAX_INPUT_LENGTH);
-                                memset(pcOutputString, 0x00, MAX_INPUT_LENGTH);
+                                inp_idx = 0;
+                                memset(input_string, 0x00, MAX_INPUT_LENGTH);
+                                memset(output_str, 0x00, MAX_INPUT_LENGTH);
                                 show_prompt();
                         } else {
                                 // The if() clause performs the processing after
                                 // a newline character is received.  This else
                                 // clause performs the processing if any other
                                 // character is received
-                                if (cRxedChar == '\b') {
+                                if (rx_char == '\b') {
                                         //  Backspace was pressed. Erase the
                                         // last character in the input buffer
                                         // - if there are any
-                                        if (cInputIndex > 0) {
-                                                cInputIndex--;
-                                                // pcInputString[ cInputIndex ] = '\0';
+                                        if (inp_idx > 0) {
+                                                inp_idx--;
+                                                // input_string[ inp_idx ] = '\0';
                                                 // The deleted character is set
                                                 // to zero in case the user
                                                 // won't type anything else
                                                 // after backspace
-                                                memset(&pcInputString
-                                                               [cInputIndex],
+                                                memset(&input_string[inp_idx],
                                                        0x00, 1);
 
                                                 sprintf(msg, "%s",
                                                         (const uint8_t *)
-                                                                backspaceDeleteAction);
+                                                                bs_delete_action);
                                                 com_send(msg, strlen(msg));
 
-                                                // printf("%s", (const uint8_t *) backspaceDeleteAction );
+                                                // printf("%s", (const uint8_t *) bs_delete_action );
                                         }
                                         // fflush(stdout);
                                 } else {
@@ -199,20 +196,19 @@ void console_task(void *pvParameters)
                                         // buffer. When a n is entered the
                                         // complete string will be passed to the
                                         // command interpreter
-                                        if (cInputIndex < MAX_INPUT_LENGTH) {
-                                                pcInputString[cInputIndex] =
-                                                        cRxedChar;
-                                                cInputIndex++;
+                                        if (inp_idx < MAX_INPUT_LENGTH) {
+                                                input_string[inp_idx] = rx_char;
+                                                inp_idx++;
 
-                                                sprintf(msg, "%c", cRxedChar);
+                                                sprintf(msg, "%c", rx_char);
                                                 com_send(msg, strlen(msg));
-                                                // printf( "%c", cRxedChar );
+                                                // printf( "%c", rx_char );
                                         }
                                 }
                         }
-                        cRxedChar = 0x00;
+                        rx_char = 0x00;
                         // fflush( stdout );
-                } // if (cRxedChar != 0x00)
-                vTaskDelayUntil(&xLastWakeTime, dt_console);
+                } // if (rx_char != 0x00)
+                vTaskDelayUntil(&last_wake_time, dt_console);
         } // for( ;; )
 } // console_task

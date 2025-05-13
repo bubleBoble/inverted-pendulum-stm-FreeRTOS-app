@@ -1,6 +1,5 @@
-/* =============================================================================
- * main.c
- * =============================================================================
+/*
+ * main_LIP.c
  */
 #include "main_LIP.h"
 
@@ -17,7 +16,7 @@
 
 extern ADC_HandleTypeDef hadc3;
 extern volatile uint16_t adc_data_pot;
-extern float pend_init_angle_offset;
+extern float             pend_init_ang_offset;
 
 // =============================================================================
 // LIP INIT & RUN
@@ -38,7 +37,7 @@ void main_LIP_init(void)
         enc_init(); // Initialize encoder timer
         pend_enc_init(); // Initialize AS5600 encoder
 
-        pend_init_angle_offset =
+        pend_init_ang_offset =
                 (float)pend_enc_get_cumulative_count() / 4096.0f * PI2 - PI;
 }
 void main_LIP_run(void)
@@ -46,7 +45,8 @@ void main_LIP_run(void)
         LIP_create_Tasks();
         vTaskStartScheduler();
 
-        for (;;) { /* void */
+        for (;;) {
+                /* void */
         }
 }
 
@@ -63,28 +63,28 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 }
 
 // Needed for freeeros objects static allocation
-void vApplicationGetIdleTaskMemory(StaticTask_t **ppxIdleTaskTCBBuffer,
-                                   StackType_t **ppxIdleTaskStackBuffer,
-                                   uint32_t *pulIdleTaskStackSize)
+void vApplicationGetIdleTaskMemory(StaticTask_t **idle_task_TCB_buff,
+                                   StackType_t  **idle_task_stack_buff,
+                                   uint32_t      *idle_task_stack_size)
 {
         // If the buffers to be provided to the Idle task are declared inside
         // this function then they must be declared static - otherwise they
         // will be allocated on the stack and so not exists after this function
         // returns
-        static StaticTask_t xIdleTaskTCB;
-        static StackType_t uxIdleTaskStack[configMINIMAL_STACK_SIZE];
+        static StaticTask_t idle_task_TCB;
+        static StackType_t  idle_task_stack[configMINIMAL_STACK_SIZE];
 
         // Pass out a pointer to the StaticTask_t structure in which the Idle
         // task's state will be stored
-        *ppxIdleTaskTCBBuffer = &xIdleTaskTCB;
+        *idle_task_TCB_buff = &idle_task_TCB;
 
         // Pass out the array that will be used as the Idle task's stack
-        *ppxIdleTaskStackBuffer = uxIdleTaskStack;
+        *idle_task_stack_buff = idle_task_stack;
 
-        // Pass out the size of the array pointed to by *ppxIdleTaskStackBuffer.
+        // Pass out the size of the array pointed to by *idle_task_stack_buff.
         // Note that, as the array is necessarily of type StackType_t,
         // configMINIMAL_STACK_SIZE is specified in words, not bytes
-        *pulIdleTaskStackSize = configMINIMAL_STACK_SIZE;
+        *idle_task_stack_size = configMINIMAL_STACK_SIZE;
 }
 
 // void vApplicationStackOverflowHook( TaskHandle_t xTask, char *pcTaskName )

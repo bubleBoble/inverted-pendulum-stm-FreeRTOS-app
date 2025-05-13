@@ -56,9 +56,9 @@ void as5600_interface_delay_ms(uint32_t ms)
 
 void as5600_interface_debug_print(const char *const fmt, ...)
 {
-        char str[256];
+        char     str[256];
         uint16_t len;
-        va_list args;
+        va_list  args;
 
         memset((char *)str, 0, sizeof(char) * 256);
         va_start(args, fmt);

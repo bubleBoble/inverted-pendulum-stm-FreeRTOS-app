@@ -48,8 +48,8 @@ static as5600_handle_t gs_handle; /**< as5600 handle */
  */
 uint8_t as5600_read_test(uint32_t times)
 {
-        uint8_t res;
-        uint32_t i;
+        uint8_t       res;
+        uint32_t      i;
         as5600_info_t info;
 
         /* link interface function */
@@ -110,7 +110,7 @@ uint8_t as5600_read_test(uint32_t times)
 
         for (i = 0; i < times; i++) {
                 uint16_t angle_raw;
-                float deg;
+                float    deg;
 
                 /* read data */
                 res = as5600_read(&gs_handle, &angle_raw, &deg);

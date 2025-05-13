@@ -1,7 +1,6 @@
-/* =============================================================================
+/*
  * When cart is in freezing zone (see watchdog task), app should  instantly 
  * stop it. 
- * =============================================================================
  */
 #include "LIP_tasks_common.h"
 #include "math.h"
@@ -10,8 +9,8 @@
 // App globals defined in LIP_tasks_common.c
 // =============================================================================
 extern enum cart_position_zones cart_current_zone;
-extern float cart_position_setpoint_cm_cli_raw;
-extern uint32_t bounceoff_resumed;
+extern float                    cart_pos_setp_cm_cli_raw;
+extern uint32_t                 bounceoff_resumed;
 
 float voltage_step;
 
@@ -30,8 +29,7 @@ void bounceoff_task(void *pvParameters)
                         //     vTaskDelay( 5 );
                         // }
                         // dcm_set_output_volatage( 0.0f );
-                        cart_position_setpoint_cm_cli_raw =
-                                TRACK_LEN_MAX_CM / 2.0f;
+                        cart_pos_setp_cm_cli_raw = TRACK_LEN_MAX_CM / 2.0f;
                 } else if (cart_current_zone == FREEZING_ZONE_L) {
                         // dcm_set_output_volatage( 0.0f );
 
@@ -42,8 +40,7 @@ void bounceoff_task(void *pvParameters)
                         //     vTaskDelay( 30 );
                         // }
                         // dcm_set_output_volatage( 0.0f );
-                        cart_position_setpoint_cm_cli_raw =
-                                TRACK_LEN_MAX_CM / 2.0f;
+                        cart_pos_setp_cm_cli_raw = TRACK_LEN_MAX_CM / 2.0f;
                 }
 
                 bounceoff_resumed = 0;

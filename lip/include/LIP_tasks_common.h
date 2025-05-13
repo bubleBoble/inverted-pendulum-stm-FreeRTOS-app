@@ -1,7 +1,6 @@
-/* =============================================================================
+/*
  * This file provides function prototypes and #defines related to LIP app tasks.
  * Also provides prototype of LIP_create_Tasks fucntion
- * =============================================================================
  */
 #ifndef LIP_TASKS_COMMON
 #define LIP_TASKS_COMMON

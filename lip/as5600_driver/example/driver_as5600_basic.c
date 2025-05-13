@@ -34,7 +34,7 @@ uint8_t as5600_basic_init(void)
 
 uint8_t as5600_basic_read(float *angle)
 {
-        uint8_t res;
+        uint8_t  res;
         uint16_t angle_raw;
 
         /* read data */

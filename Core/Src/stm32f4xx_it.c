@@ -61,7 +61,7 @@ extern UART_HandleTypeDef huart3;
 extern TIM_HandleTypeDef htim1;
 
 /* USER CODE BEGIN EV */
-extern uint8_t cRxedChar;
+extern uint8_t rx_char;
 /* USER CODE END EV */
 
 /******************************************************************************/
@@ -196,7 +196,7 @@ void TIM4_IRQHandler(void)
 void USART3_IRQHandler(void)
 {
   /* USER CODE BEGIN USART3_IRQn 0 */
-  cRxedChar = USART3->DR;
+  rx_char = USART3->DR;
   /* USER CODE END USART3_IRQn 0 */
   HAL_UART_IRQHandler(&huart3);
   /* USER CODE BEGIN USART3_IRQn 1 */

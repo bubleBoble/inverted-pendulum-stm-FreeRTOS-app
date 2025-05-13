@@ -19,7 +19,7 @@ void FIR_init(FIR_filter *fir, float coeffs[FIR_BUFF_LEN])
         }
 
         fir->buf_index = 0;
-        fir->out = 0.0f;
+        fir->out       = 0.0f;
 }
 
 float FIR_update(FIR_filter *fir, float inp)
@@ -40,7 +40,7 @@ float FIR_update(FIR_filter *fir, float inp)
         // 2. mult. it by shifted samples inside circular buffer
         // iterate from the oldest to the most recent sample
         // can be the other way around, doesn't really matter for convolution
-        fir->out = 0.0f;
+        fir->out          = 0.0f;
         uint8_t sum_index = fir->buf_index;
         for (uint8_t i = 0; i < FIR_BUFF_LEN; i++) {
                 // increment index and wrap around if necessary

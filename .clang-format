@@ -1,4 +1,5 @@
-# SPDX-License-Identifier: GPL-2.0
+# Taken from Linux kernel repo
+#   https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/
 #
 # clang-format configuration file. Intended for clang-format >= 11.
 #
@@ -11,8 +12,8 @@
 ---
 AccessModifierOffset: -4
 AlignAfterOpenBracket: Align
-AlignConsecutiveAssignments: false
-AlignConsecutiveDeclarations: false
+AlignConsecutiveAssignments: true
+AlignConsecutiveDeclarations: true
 AlignEscapedNewlines: Left
 AlignOperands: true
 AlignTrailingComments: false
@@ -94,7 +95,6 @@ ObjCBlockIndentWidth: 8
 ObjCSpaceAfterProperty: true
 ObjCSpaceBeforeProtocolList: true
 
-# Taken from git's rules
 PenaltyBreakAssignment: 10
 PenaltyBreakBeforeFirstCallParameter: 30
 PenaltyBreakComment: 10

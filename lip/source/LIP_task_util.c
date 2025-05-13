@@ -1,4 +1,4 @@
-/* =============================================================================
+/*
  * This file contains task that implements full state feedback controller 
  * for linear inverted pendulum. Controller keeps pendulum in down position
  *
@@ -21,7 +21,7 @@
  * This task writes to the following global variables:
  *     state variable             | variable name in prog         | unit
  *     --------------------------------------------------------------------
- *     Cart position:             | cart_position[ 0 ]            | cm
+ *     Cart position:             | cart_pos[ 0 ]            | cm
  *     Cart speed:                | cart_speed (filtered)         | cm/sec
  *     Pendulum angle:            | angle[ 0 ]                    | rad
  *     Pendulum speed:            | pend_speed (filtered)         | rad/sec
@@ -37,40 +37,59 @@
  *    reading [0] : reading [n]     : current sample (n)
  *    reading [1] : reading [n - 1] : previous sample (n-1)
  *    etc.
- * =============================================================================
  */
-#include "LIP_tasks_common.h"
 #include <math.h>
+#include "LIP_tasks_common.h"
+
+// Angle setpoint for pendulum arm. Down position corresponds to
+// 180 degrees or pi radians. Controller works with angle in
+// radians. "BASE" postfix indicates that this setpoint is from
+// base angle range [0, 2PI]. Because pendulum arm can make many
+// full revolutions, angles PI, 3PI, 5PI and so on, all correspond
+// to the same down position, angle setpoint needs to be changed
+// accordingly
+#define PENDULUM_ANGLE_DOWN_SETPOINT_BASE PI
+
+// Angle setpoint for pendulum arm. Up position corresponds to
+// 0 degrees or 0 radians. Controller works with angle in radians.
+// "BASE" postfix indicates that this setpoint is from base angle
+// range [0, 2PI]. Because pendulum arm can make many full
+// revolutions, angles 0, 2PI, 4PI and so on, all correspond to
+// the same up position, angle setpoint needs to be changed
+// accordingly
+// non zero value because of pendulum encoder error
+// #define PENDULUM_ANGLE_UP_SETPOINT_BASE 0.0f
+#define PENDULUM_ANGLE_UP_SETPOINT_BASE -0.070563f // ??? remove it
 
 // These are defined in LIP_tasks_common.c
 extern volatile uint16_t adc_data_pot;
-extern float pend_angle[2];
-extern float pend_speed_raw[2];
-extern float pend_speed[2];
-extern float cart_position[2];
-extern float cart_speed_raw[2];
-extern float cart_speed[2];
+extern float             pend_angle[2];
+extern float             pend_speed_raw[2];
+extern float             pend_speed[2];
+extern float             cart_pos[2];
+extern float             cart_speed_raw[2];
+extern float             cart_speed[2];
 // extern IIR_filter LP_filter_pendulum;
 // extern IIR_filter LP_filter_cart;
-extern LP_filter LP_filter_pendulum;
-extern LP_filter LP_filter_cart;
-extern float cart_position_setpoint_cm_pot_raw;
-extern float cart_position_setpoint_cm_pot;
-extern float cart_position_setpoint_cm_cli_raw;
-extern float cart_position_setpoint_cm_cli;
-extern float pend_init_angle_offset;
+extern LP_filter           LP_filter_pendulum;
+extern LP_filter           LP_filter_cart;
+extern float               cart_pos_setp_cm_pot_raw;
+extern float               cart_pos_setp_cm_pot;
+extern float               cart_pos_setp_cm_cli_raw;
+extern float               cart_pos_setp_cm_cli;
+extern float               pend_init_ang_offset;
 extern enum lip_app_states app_current_state;
-extern float number_of_pendulumarm_revolutions_dpc;
-extern float pendulum_angle_in_base_range_dpc;
-extern float number_of_pendulumarm_revolutions_upc;
-extern float pendulum_angle_in_base_range_upc;
-extern float pendulum_arm_angle_setpoint_rad_upc;
-extern float pendulum_arm_angle_setpoint_rad_dpc;
+extern float               num_of_pend_revs_dpc;
+extern float               pendulum_angle_in_base_range_dpc;
+extern float               num_of_pend_revs_upc;
+extern float               pendulum_angle_in_base_range_upc;
+extern float               pend_arm_ang_setp_rad_upc;
+extern float               pend_arm_ang_setp_rad_dpc;
 
 void util_task(void *pvParameters)
 {
         // For RTOS vTaskDelayUntil()
-        TickType_t xLastWakeTime = xTaskGetTickCount();
+        TickType_t last_wake_time = xTaskGetTickCount();
 
         // =========================================================================
         // Low pass filters for derivatives. Pendulum and cart speed.
@@ -103,7 +122,7 @@ void util_task(void *pvParameters)
                 pend_angle[1] = pend_angle[0];
                 pend_angle[0] =
                         (float)pend_enc_get_cumulative_count() / 4096.0f * PI2 -
-                        pend_init_angle_offset;
+                        pend_init_ang_offset;
 
                 // ??? filter for pendulum angle ???
                 // IIR_update_fo( &LP_filter_pendulum, pend_angle[ 0 ] );
@@ -133,20 +152,19 @@ void util_task(void *pvParameters)
                 // =============================================================
                 // Cart position - DCM encoder reading
                 // =============================================================
-                cart_position[1] = cart_position[0];
-                cart_position[0] = dcm_enc_get_cart_position_cm();
+                cart_pos[1] = cart_pos[0];
+                cart_pos[0] = dcm_enc_get_cart_position_cm();
 
                 // IIR filter for cart position
-                // IIR_update_fo( &LP_filter_cart, cart_position[ 0 ] );
-                // cart_position[ 0 ] = LP_filter_cart.out;
+                // IIR_update_fo( &LP_filter_cart, cart_pos[ 0 ] );
+                // cart_pos[ 0 ] = LP_filter_cart.out;
 
                 // =============================================================
                 // Cart speed with Tustin method
                 // =============================================================
                 cart_speed_raw[1] = cart_speed_raw[0];
-                cart_speed_raw[0] =
-                        (cart_position[0] - cart_position[1]) * 2 * dt_inv -
-                        cart_speed_raw[1];
+                cart_speed_raw[0] = (cart_pos[0] - cart_pos[1]) * 2 * dt_inv -
+                                    cart_speed_raw[1];
 
                 // IIR filter for cart speed
                 // IIR_update_fo( &LP_filter_cart, cart_speed[ 0 ] );
@@ -160,33 +178,33 @@ void util_task(void *pvParameters)
                 // Cart position setpoint from potentiometer adc reading, global
                 // variable.
                 // =============================================================
-                cart_position_setpoint_cm_pot_raw =
+                cart_pos_setp_cm_pot_raw =
                         (float)adc_data_pot / 4096.0f * TRACK_LEN_MAX_CM;
 
                 // =============================================================
                 // Low pass filter for cart position setpoint (pot and cli),
                 // 0.2sec time constant, 0dc gain.
                 // =============================================================
-                // input is cart_position_setpoint_cm_pot_raw or
-                // cart_position_setpoint_cm_cli_raw, output samples are stored
+                // input is cart_pos_setp_cm_pot_raw or
+                // cart_pos_setp_cm_cli_raw, output samples are stored
                 // internally in sp_filter struct. The latest sample is assiged
-                // to cart_position_setpoint_cm_pot or
-                // cart_position_setpoint_cm_cli_raw
-                LP_update(&sp_filter_pot, cart_position_setpoint_cm_pot_raw);
-                cart_position_setpoint_cm_pot = sp_filter_pot.out[0];
+                // to cart_pos_setp_cm_pot or
+                // cart_pos_setp_cm_cli_raw
+                LP_update(&sp_filter_pot, cart_pos_setp_cm_pot_raw);
+                cart_pos_setp_cm_pot = sp_filter_pot.out[0];
 
-                LP_update(&sp_filter_cli, cart_position_setpoint_cm_cli_raw);
-                cart_position_setpoint_cm_cli = sp_filter_cli.out[0];
+                LP_update(&sp_filter_cli, cart_pos_setp_cm_cli_raw);
+                cart_pos_setp_cm_cli = sp_filter_cli.out[0];
 
                 if (app_current_state == DEFAULT) {
                         // While in DEFAULT state, cart setpoint is current
                         // position.
 
-                        // Value of cart_position_setpoint_cm_cli_raw should be
+                        // Value of cart_pos_setp_cm_cli_raw should be
                         // constantly updated to the value of current cart
                         // position to avoid discontinuity in cart position
                         // setpoint
-                        cart_position_setpoint_cm_cli_raw = cart_position[0];
+                        cart_pos_setp_cm_cli_raw = cart_pos[0];
                 }
 
                 // =============================================================
@@ -204,31 +222,19 @@ void util_task(void *pvParameters)
                 // =============================================================
 
                 // Calculate number of revolutions using floored division
-                number_of_pendulumarm_revolutions_dpc =
-                        floorf(pend_angle[0] / PI2);
+                num_of_pend_revs_dpc = floorf(pend_angle[0] / PI2);
 
                 // Calculate pendulum angle in base range [0, 2PI].
                 // This range stays the same as original range in the model, so
                 // that pendulum angle of 180 degree or PI radians still
                 // corresponds to down position
                 pendulum_angle_in_base_range_dpc =
-                        pend_angle[0] -
-                        PI2 * number_of_pendulumarm_revolutions_dpc;
-
-// Angle setpoint for pendulum arm. Down position corresponds to
-// 180 degrees or pi radians. Controller works with angle in
-// radians. "BASE" postfix indicates that this setpoint is from
-// base angle range [0, 2PI]. Because pendulum arm can make many
-// full revolutions, angles PI, 3PI, 5PI and so on, all correspond
-// to the same down position, angle setpoint needs to be changed
-// accordingly
-#define PENDULUM_ANGLE_DOWN_SETPOINT_BASE PI
+                        pend_angle[0] - PI2 * num_of_pend_revs_dpc;
 
                 // Calculate real pendulum angle setpoint from setpoint in base
                 // range [0, 2PI] for DPC
-                pendulum_arm_angle_setpoint_rad_dpc =
-                        PENDULUM_ANGLE_DOWN_SETPOINT_BASE +
-                        number_of_pendulumarm_revolutions_dpc * PI2;
+                pend_arm_ang_setp_rad_dpc = PENDULUM_ANGLE_DOWN_SETPOINT_BASE +
+                                            num_of_pend_revs_dpc * PI2;
 
                 // =============================================================
                 // For UPC - Angle switching in down position - switching on top
@@ -239,36 +245,21 @@ void util_task(void *pvParameters)
                 // Note: +1 because when pendulum starts in down position,
                 // transition to up position in CCW direction counts as negative
                 // revolution adding one compensates for that
-                number_of_pendulumarm_revolutions_upc =
-                        floorf((pend_angle[0] - PI) / PI2) + 1;
+                num_of_pend_revs_upc = floorf((pend_angle[0] - PI) / PI2) + 1;
 
                 // Calculate pendulum angle in base range [-PI, PI].
                 // This range is changed to [-PI, PI], so that pendulum angle of
                 // zero degree corresponds to up position and there is no
                 // discontinuity around zero degree angle
                 pendulum_angle_in_base_range_upc =
-                        pend_angle[0] -
-                        PI2 * number_of_pendulumarm_revolutions_upc;
-
-// Angle setpoint for pendulum arm. Up position corresponds to
-// 0 degrees or 0 radians. Controller works with angle in radians.
-// "BASE" postfix indicates that this setpoint is from base angle
-// range [0, 2PI]. Because pendulum arm can make many full
-// revolutions, angles 0, 2PI, 4PI and so on, all correspond to
-// the same up position, angle setpoint needs to be changed
-// accordingly
-
-// non zero value because of pendulum encoder error
-// #define PENDULUM_ANGLE_UP_SETPOINT_BASE 0.0f
-#define PENDULUM_ANGLE_UP_SETPOINT_BASE -0.070563f // ??? remove it
+                        pend_angle[0] - PI2 * num_of_pend_revs_upc;
 
                 // Calculate real pendulum angle setpoint from setpoint in base
                 // range [-PI, PI] for UPC
-                pendulum_arm_angle_setpoint_rad_upc =
-                        PENDULUM_ANGLE_UP_SETPOINT_BASE +
-                        number_of_pendulumarm_revolutions_upc * PI2;
+                pend_arm_ang_setp_rad_upc = PENDULUM_ANGLE_UP_SETPOINT_BASE +
+                                            num_of_pend_revs_upc * PI2;
 
                 // Task delay
-                vTaskDelayUntil(&xLastWakeTime, dt);
+                vTaskDelayUntil(&last_wake_time, dt);
         } // for (;;)
 }

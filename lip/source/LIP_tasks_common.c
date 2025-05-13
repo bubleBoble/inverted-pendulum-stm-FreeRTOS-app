@@ -1,8 +1,7 @@
-/* =============================================================================
+/*
  * This file provides global variables used by more than one task,
  * All handles to tasks, its stackbuffers and its taskbuffers TCBs,
  * definition of LIP_create_Tasks function, which creates all app tasks.
- * =============================================================================
  */
 #include "LIP_tasks_common.h"
 
@@ -14,49 +13,49 @@
 volatile uint16_t adc_data_pot;
 
 // holds each byte received from console (uart3)
-uint8_t cRxedChar = 0x00;
+uint8_t rx_char = 0x00;
 
 // These are made global but only basic_test_task will write to these
 // Only controller_task should read these Pendulum magnetic encoder
 // reading
-float pend_angle[2] = { 0.0f }; // Angle current & previous sample
+float pend_angle[2]     = { 0.0f }; // Angle current & previous sample
 float pend_speed_raw[2] = { 0.0f }; // Angle derivative
-float pend_speed[2] = { 0.0f };
+float pend_speed[2]     = { 0.0f };
 // IIR_filter low_pass_IIR_pend;
 LP_filter LP_filter_pendulum;
 
 // These are made global but only basic_test_task will write to them Only
 // controller_task should read them DCM encoder reading
-float cart_position[2] = { 0.0f };
+float cart_pos[2]       = { 0.0f };
 float cart_speed_raw[2] = { 0.0f };
-float cart_speed[2] = { 0.0f };
+float cart_speed[2]     = { 0.0f };
 // IIR_filter low_pass_IIR_cart;
 LP_filter LP_filter_cart;
 
 // Cart position setpoint from adc reading, converetd to [0, 40.7] range in cm.
 // [ 0 ] is current, [ 1 ] is previous sample
-float cart_position_setpoint_cm_pot_raw; // raw read
-float cart_position_setpoint_cm_pot; // low pass filtered
+float cart_pos_setp_cm_pot_raw; // raw read
+float cart_pos_setp_cm_pot; // low pass filtered
 
 // Cart position setpoint set by cli command, range [0, 47] in cm.
 // [ 0 ] is current, [ 1 ] is previous sample
-float cart_position_setpoint_cm_cli_raw = TRACK_LEN_MAX_CM / 2.0f;
-float cart_position_setpoint_cm_cli = TRACK_LEN_MAX_CM / 2.0f; // after filter
+float cart_pos_setp_cm_cli_raw = TRACK_LEN_MAX_CM / 2.0f;
+float cart_pos_setp_cm_cli     = TRACK_LEN_MAX_CM / 2.0f; // after filter
 
 // This variable points to cart position setpoint from selected source, so
-// either cart_position_setpoint_cm_pot or cart_position_setpoint_cm_cli. This
+// either cart_pos_setp_cm_pot or cart_pos_setp_cm_cli. This
 // setpoint is used by controllers. By default it points to setpoint set from
 // cli by "spcli" command
-float *cart_position_setpoint_cm = &cart_position_setpoint_cm_cli;
+float *cart_pos_setp_cm = &cart_pos_setp_cm_cli;
 
 // Setpoint for pendulum arm angle for DPC and UPC
-float pendulum_arm_angle_setpoint_rad_upc;
-float pendulum_arm_angle_setpoint_rad_dpc;
+float pend_arm_ang_setp_rad_upc;
+float pend_arm_ang_setp_rad_dpc;
 
 // Holds number of pendulum full revolutions, negative number indicates
 // full revolution in counter clockwise direction
-float number_of_pendulumarm_revolutions_dpc; // for dpc
-float number_of_pendulumarm_revolutions_upc; // for upc
+float num_of_pend_revs_dpc; // for dpc
+float num_of_pend_revs_upc; // for upc
 
 // Pendulum arm angle in base range [0, 2pi]
 float pendulum_angle_in_base_range_dpc; // for dpc
@@ -67,7 +66,7 @@ float pendulum_angle_in_base_range_upc; // for upc
 // position corresponds to PI radians, so PI has to be subtracted from initial
 // reading and resultant value is offset that has to subtracted from each angle
 // reading
-float pend_init_angle_offset;
+float pend_init_ang_offset;
 
 // lip_app_states enum instance, which indicates current LIP app state
 enum lip_app_states app_current_state;
@@ -76,7 +75,7 @@ enum lip_app_states app_current_state;
 // cart sensor reading
 //     1 - calibrated
 //     0 - not calibrated
-uint8_t cart_position_calibrated = 0;
+uint8_t cart_pos_calibrated = 0;
 
 // cart_position_zones enum instance, which indicates current cart position
 // zone
@@ -122,152 +121,154 @@ float ctrl_Dt = 0.0f;
 
 // Watchdog task - protection for cart min and max positions and default always
 // running task
-TaskHandle_t watchdog_task_handle = NULL;
-StackType_t WATCHDOG_STACKBUFFER[WATCHDOG_STACK_DEPTH];
+TaskHandle_t watchdog_task_h = NULL;
+StackType_t  WATCHDOG_STACKBUFFER[WATCHDOG_STACK_DEPTH];
 StaticTask_t WATCHDOG_TASKBUFFER_TCB;
 
 // Console task
-TaskHandle_t console_task_handle;
-StackType_t console_STACKBUFFER[CONSOLE_STACKDEPTH];
+TaskHandle_t console_task_h;
+StackType_t  console_STACKBUFFER[CONSOLE_STACKDEPTH];
 StaticTask_t console_TASKBUFFER_TCB;
-TickType_t time_at_which_consoleMutex_was_taken;
+TickType_t   time_at_which_consoleMutex_was_taken;
 
 // State estimation task
-TaskHandle_t util_task_handle = NULL;
-StackType_t utilTask_STACKBUFFER[UTIL_STACK_DEPTH];
+TaskHandle_t util_task_h = NULL;
+StackType_t  utilTask_STACKBUFFER[UTIL_STACK_DEPTH];
 StaticTask_t utilTask_TASKBUFFER_TCB;
 
 // Communication task
-TaskHandle_t com_task_handle = NULL;
-StackType_t COM_STACKBUFFER[COM_STACK_DEPTH];
+TaskHandle_t com_task_h = NULL;
+StackType_t  COM_STACKBUFFER[COM_STACK_DEPTH];
 StaticTask_t COM_TASKBUFFER_TCB;
 
 // Communication task - for raw bytes transmission
-TaskHandle_t rawcom_task_handle = NULL;
-StackType_t RAWCOM_STACKBUFFER[RAWCOM_STACK_DEPTH];
+TaskHandle_t rawcom_task_h = NULL;
+StackType_t  RAWCOM_STACKBUFFER[RAWCOM_STACK_DEPTH];
 StaticTask_t RAWCOM_TASKBUFFER_TCB;
 
 // Worker task - this task is only active when command "zero" or "home"
 // is called. Its purpose is to move the cart without any controller
-TaskHandle_t cartworker_TaskHandle = NULL;
-StackType_t CARTWORKER_STACKBUFFER[CARTWORKER_STACK_DEPTH];
+TaskHandle_t cartworker_task_h = NULL;
+StackType_t  CARTWORKER_STACKBUFFER[CARTWORKER_STACK_DEPTH];
 StaticTask_t CARTWORKER_TASKBUFFER_TCB;
 
 // Down-position controller
 // Full state feedback down position with deadzone compensation
-TaskHandle_t ctrl_downposition_task_handle = NULL;
-StackType_t ctrl_downposition_STACKBUFFER[CTRL_3_FSF_DOWNPOS_STACK_DEPTH];
+TaskHandle_t ctrl_downpos_task_h = NULL;
+StackType_t  ctrl_downposition_STACKBUFFER[CTRL_3_FSF_DOWNPOS_STACK_DEPTH];
 StaticTask_t ctrl_downposition_TASKBUFFER_TCB;
 
 // Up-position controller
 // Full state feedback up position with deadzone compensation
-TaskHandle_t ctrl_upposition_task_handle = NULL;
-StackType_t ctrl_upposition_STACKBUFFER[CTRL_5_FSF_UPPOS_STACK_DEPTH];
+TaskHandle_t ctrl_uppos_task_h = NULL;
+StackType_t  ctrl_upposition_STACKBUFFER[CTRL_5_FSF_UPPOS_STACK_DEPTH];
 StaticTask_t ctrl_upposition_TASKBUFFER_TCB;
 
 // Swingup
-TaskHandle_t swingup_task_handle = NULL;
-StackType_t swingup_STACKBUFFER[SWINGUP_STACK_DEPTH];
+TaskHandle_t swingup_task_h = NULL;
+StackType_t  swingup_STACKBUFFER[SWINGUP_STACK_DEPTH];
 StaticTask_t swingup_TASKBUFFER_TCB;
 
 // Swingdown
-TaskHandle_t swingdown_task_handle = NULL;
-StackType_t swingdown_STACKBUFFER[SWINGDOWN_STACK_DEPTH];
+TaskHandle_t swingdown_task_h = NULL;
+StackType_t  swingdown_STACKBUFFER[SWINGDOWN_STACK_DEPTH];
 StaticTask_t swingdown_TASKBUFFER_TCB;
 
 // Bounce off task
-TaskHandle_t bounceoff_task_handle = NULL;
-StackType_t bounceoff_STACKBUFFER[BOUNCEOFF_STACK_DEPTH];
+TaskHandle_t bounceoff_task_h = NULL;
+StackType_t  bounceoff_STACKBUFFER[BOUNCEOFF_STACK_DEPTH];
 StaticTask_t bounceoff_TASKBUFFER_TCB;
 
 // Test task
-TaskHandle_t test_task_handle = NULL;
-StackType_t test_STACKBUFFER[TEST_STACK_DEPTH];
+TaskHandle_t test_task_h = NULL;
+StackType_t  test_STACKBUFFER[TEST_STACK_DEPTH];
 StaticTask_t test_TASKBUFFER_TCB;
 
 // Create tasks
 void LIP_create_Tasks()
 {
-        watchdog_task_handle = xTaskCreateStatic(
+        watchdog_task_h = xTaskCreateStatic(
                 watchdog_task, (const char *)"Watchdog", WATCHDOG_STACK_DEPTH,
                 (void *)0, tskIDLE_PRIORITY + PRIORITY_WATCHDOG,
                 WATCHDOG_STACKBUFFER, &WATCHDOG_TASKBUFFER_TCB);
 
         // Implements FreeRTOS console functionality
-        console_task_handle = xTaskCreateStatic(
+        console_task_h = xTaskCreateStatic(
                 console_task, (const char *)"Console", CONSOLE_STACKDEPTH,
                 (void *)0, tskIDLE_PRIORITY + PRIORITY_CONSOLE,
                 console_STACKBUFFER, &console_TASKBUFFER_TCB);
 
         // State variables are calculated here
-        util_task_handle = xTaskCreateStatic(util_task, (const char *)"Util",
-                                             UTIL_STACK_DEPTH, (void *)0,
-                                             tskIDLE_PRIORITY + PRIORITY_UTIL,
-                                             utilTask_STACKBUFFER,
-                                             &utilTask_TASKBUFFER_TCB);
+        util_task_h = xTaskCreateStatic(util_task, (const char *)"Util",
+                                        UTIL_STACK_DEPTH, (void *)0,
+                                        tskIDLE_PRIORITY + PRIORITY_UTIL,
+                                        utilTask_STACKBUFFER,
+                                        &utilTask_TASKBUFFER_TCB);
 
         // Human readable communication - for serialoscilloscope
-        com_task_handle = xTaskCreateStatic(
-                com_task, (const char *)"Communication", COM_STACK_DEPTH,
-                (void *)0, tskIDLE_PRIORITY + PRIORITY_COM, COM_STACKBUFFER,
-                &COM_TASKBUFFER_TCB);
+        com_task_h = xTaskCreateStatic(com_task, (const char *)"Communication",
+                                       COM_STACK_DEPTH, (void *)0,
+                                       tskIDLE_PRIORITY + PRIORITY_COM,
+                                       COM_STACKBUFFER, &COM_TASKBUFFER_TCB);
 
         // Data streaming is suspended right after task creation
-        vTaskSuspend(com_task_handle);
+        vTaskSuspend(com_task_h);
 
         // Worker task - this tas is only active when command "zero" or "home"
         // are called Its purpose is to move the cart without any controller
-        cartworker_TaskHandle = xTaskCreateStatic(
+        cartworker_task_h = xTaskCreateStatic(
                 cart_worker_task, (const char *)"CartWorker",
                 CARTWORKER_STACK_DEPTH, (void *)0,
                 tskIDLE_PRIORITY + PRIORITY_CARTWORKER, CARTWORKER_STACKBUFFER,
                 &CARTWORKER_TASKBUFFER_TCB);
 
-        swingup_task_handle =
+        swingup_task_h =
                 xTaskCreateStatic(swingup_task, (const char *)"Swingup",
                                   SWINGUP_STACK_DEPTH, (void *)0,
                                   //  tskIDLE_PRIORITY+PRIORITY_CTRL,
                                   tskIDLE_PRIORITY + PRIORITY_CTRL,
                                   swingup_STACKBUFFER, &swingup_TASKBUFFER_TCB);
-        vTaskSuspend(swingup_task_handle);
+        vTaskSuspend(swingup_task_h);
 
-        swingdown_task_handle = xTaskCreateStatic(
-                swingdown_task, (const char *)"Swingdown",
-                SWINGDOWN_STACK_DEPTH, (void *)0,
-                //  tskIDLE_PRIORITY+PRIORITY_CTRL,
-                tskIDLE_PRIORITY + PRIORITY_CTRL, swingdown_STACKBUFFER,
-                &swingdown_TASKBUFFER_TCB);
-        vTaskSuspend(swingdown_task_handle);
+        swingdown_task_h = xTaskCreateStatic(swingdown_task,
+                                             (const char *)"Swingdown",
+                                             SWINGDOWN_STACK_DEPTH, (void *)0,
+                                             //  tskIDLE_PRIORITY+PRIORITY_CTRL,
+                                             tskIDLE_PRIORITY + PRIORITY_CTRL,
+                                             swingdown_STACKBUFFER,
+                                             &swingdown_TASKBUFFER_TCB);
+        vTaskSuspend(swingdown_task_h);
 
-        bounceoff_task_handle = xTaskCreateStatic(
-                bounceoff_task, (const char *)"BounceOff",
-                BOUNCEOFF_STACK_DEPTH, (void *)0,
-                tskIDLE_PRIORITY + PRIORITY_CTRL, bounceoff_STACKBUFFER,
-                &bounceoff_TASKBUFFER_TCB);
-        vTaskSuspend(bounceoff_task_handle);
+        bounceoff_task_h = xTaskCreateStatic(bounceoff_task,
+                                             (const char *)"BounceOff",
+                                             BOUNCEOFF_STACK_DEPTH, (void *)0,
+                                             tskIDLE_PRIORITY + PRIORITY_CTRL,
+                                             bounceoff_STACKBUFFER,
+                                             &bounceoff_TASKBUFFER_TCB);
+        vTaskSuspend(bounceoff_task_h);
 
         // Down position controller
         // Full state feedback down position ctrl-er with non-linear
         // deadzone compensation (nonlinear cart position gain)
-        ctrl_downposition_task_handle = xTaskCreateStatic(
+        ctrl_downpos_task_h = xTaskCreateStatic(
                 ctrl_3_FSF_downpos_task, (const char *)"DownPosCtrl",
                 CTRL_3_FSF_DOWNPOS_STACK_DEPTH, (void *)0,
                 tskIDLE_PRIORITY + PRIORITY_CTRL, ctrl_downposition_STACKBUFFER,
                 &ctrl_downposition_TASKBUFFER_TCB);
-        vTaskSuspend(ctrl_downposition_task_handle);
+        vTaskSuspend(ctrl_downpos_task_h);
 
         // Up position controller
         // Full state feedback up position ctrl-er with non-linear
         // deadzone compensation (nonlinear cart position gain)
-        ctrl_upposition_task_handle = xTaskCreateStatic(
+        ctrl_uppos_task_h = xTaskCreateStatic(
                 ctrl_5_FSF_uppos_task, (const char *)"UpPosCtrl",
                 CTRL_5_FSF_UPPOS_STACK_DEPTH, (void *)0,
                 tskIDLE_PRIORITY + PRIORITY_CTRL, ctrl_upposition_STACKBUFFER,
                 &ctrl_upposition_TASKBUFFER_TCB);
-        vTaskSuspend(ctrl_upposition_task_handle);
+        vTaskSuspend(ctrl_uppos_task_h);
 
         // Raw byte communication task
-        // rawcom_task_handle = xTaskCreateStatic(
+        // rawcom_task_h = xTaskCreateStatic(
         //     raw_com_task,
         //     (const char*) "RawCommunicationTask",
         //     RAWCOM_STACK_DEPTH,
@@ -277,9 +278,8 @@ void LIP_create_Tasks()
         //     &RAWCOM_TASKBUFFER_TCB
         // );
 
-        test_task_handle = xTaskCreateStatic(test_task, (const char *)"Test",
-                                             TEST_STACK_DEPTH, (void *)0,
-                                             tskIDLE_PRIORITY + PRIORITY_TEST,
-                                             test_STACKBUFFER,
-                                             &test_TASKBUFFER_TCB);
+        test_task_h = xTaskCreateStatic(test_task, (const char *)"Test",
+                                        TEST_STACK_DEPTH, (void *)0,
+                                        tskIDLE_PRIORITY + PRIORITY_TEST,
+                                        test_STACKBUFFER, &test_TASKBUFFER_TCB);
 }

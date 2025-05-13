@@ -1,4 +1,4 @@
-/* =============================================================================
+/*
  * Description: Wrapper for AS5600 magnetic encoder driver functionality
  *
  * Created at: 07/10/2023
@@ -9,17 +9,16 @@
  *             PB9 for i2c1 sda (alias I2C1_SDA)
  *
  * The code is almost the same as in driver_as5600_basic.c/h
- * =============================================================================
  */
 
 #include "pend_enc_driver.h"
 
 static as5600_handle_t gs_handle;
 
-static uint16_t angle_raw = 0;
-static int32_t cumulative_count = 0;
-static uint16_t last_count = 0;
-static int32_t num_of_revolutions = 0;
+static uint16_t angle_raw          = 0;
+static int32_t  cumulative_count   = 0;
+static uint16_t last_count         = 0;
+static int32_t  num_of_revolutions = 0;
 
 uint8_t pend_enc_init(void)
 {

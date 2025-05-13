@@ -1,13 +1,11 @@
-/* =============================================================================
+/*
  * Description: Wrapper for AS5600 magnetic encoder driver functionality
  * 
  * Main driver source: https://github.com/hepingood/as5600
  * 
  * GPIOs used: PB8 for i2c1 scl (alias I2C1_SCL) 
  *             PB9 for i2c1 sda (alias I2C1_SDA)
- * =============================================================================
  */
-
 #include "driver_as5600_interface.h"
 
 #ifndef PEND_ENC_DRIVER
