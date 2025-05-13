@@ -5,9 +5,9 @@
 #include "LIP_tasks_common.h"
 #include "math.h"
 
-// =============================================================================
-// App globals defined in LIP_tasks_common.c
-// =============================================================================
+/*
+ * App globals defined in LIP_tasks_common.c
+ */
 extern enum cart_position_zones cart_current_zone;
 extern float                    cart_pos_setp_cm_cli_raw;
 extern uint32_t                 bounceoff_resumed;

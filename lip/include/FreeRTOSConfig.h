@@ -6,7 +6,6 @@
 #define configSPI_7_SEG_WRITE_TASK_PRIORITY      (2U)
 #define configUART_COMMAND_CONSOLE_STACK_SIZE    (configMINIMAL_STACK_SIZE * 2)
 /* 
- * =============================================================================
  * Application specific definitions.
  * 
  * These definitions should be adjusted for your particular hardware and
@@ -16,7 +15,6 @@
  * of the FreeRTOS API documentation available on the FreeRTOS.org web site.
  * 
  * See http://www.freertos.org/a00110.html
- * =============================================================================
  */
 /* 
  * Ensure definitions are only used by the compiler, and not by the assembler 

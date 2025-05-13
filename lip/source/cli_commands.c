@@ -12,7 +12,7 @@
  * All variables related to LIP app state are defined in LIP_tasks_common.c
  */
 #include <stdlib.h> /* strtof() */
-#include <errno.h> /* error codes */
+#include <errno.h>  /* error codes */
 #include "math.h"
 
 #include "main_LIP.h"
@@ -241,7 +241,7 @@ static portBASE_TYPE taskstats_cmd(int8_t *write_buff, size_t write_buff_len,
         (void)write_buff_len;
         configASSERT(write_buff);
 
-        // Generate a table of task stats
+        /* Generate a table of task stats */
         // strcpy((char *)write_buff, (const char *)pcTaskTableHeader);
         // vTaskList((char *)write_buff +
         //           strlen((const char *)pcTaskTableHeader));
@@ -455,10 +455,9 @@ static portBASE_TYPE dpci_cmd(int8_t *write_buff, size_t write_buff_len,
         /* terminate arguemnt string */
         param1[param1_str_len] = 0x00;
 
-        const char *param = (const char *)param1;
+        const char *param        = (const char *)param1;
         uint8_t     is_param_off = !strcmp(param, "off") || !strcmp(param, "0");
         uint8_t     is_param_on  = !strcmp(param, "on") || !strcmp(param, "1");
-
 
         if (is_param_off) {
                 vTaskSuspend(ctrl_downpos_task_h);
@@ -537,7 +536,7 @@ static portBASE_TYPE upc_cmd(int8_t *write_buff, size_t write_buff_len,
         /* terminate arguemnt string */
         param1[param1_str_len] = 0x00;
 
-        const char *param = (const char *)param1;
+        const char *param        = (const char *)param1;
         uint8_t     is_param_off = !strcmp(param, "off") || !strcmp(param, "0");
         uint8_t     is_param_on  = !strcmp(param, "on") || !strcmp(param, "1");
 
@@ -628,7 +627,7 @@ static portBASE_TYPE upci_cmd(int8_t *write_buff, size_t write_buff_len,
         /* terminate arguemnt string */
         param1[param1_str_len] = 0x00;
 
-        const char *param = (const char *)param1;
+        const char *param        = (const char *)param1;
         uint8_t     is_param_off = !strcmp(param, "off") || !strcmp(param, "0");
         uint8_t     is_param_on  = !strcmp(param, "on") || !strcmp(param, "1");
 
@@ -851,7 +850,7 @@ static portBASE_TYPE swingup_cmd(int8_t *write_buff, size_t write_buff_len,
                  * switch between swingup and up position controller
                  */
                 swingup_task_resumed = 1;
-                app_current_state = SWINGUP;
+                app_current_state    = SWINGUP;
                 vTaskResume(swingup_task_h);
         } else {
                 strcpy((char *)write_buff,
@@ -870,7 +869,7 @@ static portBASE_TYPE swingdown_cmd(int8_t *write_buff, size_t write_buff_len,
 
         if (app_current_state == UPC) {
                 /* Reset lookup_index in swingup task for loop */
-                reset_swingdown = 1;
+                reset_swingdown   = 1;
                 app_current_state = DPC;
                 vTaskResume(swingdown_task_h);
         } else {
@@ -911,7 +910,6 @@ static portBASE_TYPE vol_cmd(int8_t *write_buff, size_t write_buff_len,
 
         if (app_current_state == UNINITIALIZED ||
             app_current_state == DEFAULT) {
-                /* Command available only in this two states */
                 param1 = (int8_t *)FreeRTOS_CLIGetParameter(cmd_string, 1,
                                                             &param1_str_len);
 

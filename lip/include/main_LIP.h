@@ -94,4 +94,4 @@ void LIP_create_Tasks(void);
  */
 void register_CLI_commands(void);
 
-#endif // LIP_MAIN
+#endif /* LIP_MAIN */
