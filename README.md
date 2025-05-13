@@ -2,6 +2,13 @@
 This is an application for the STM32F4 microcontroller with FreeRTOS + CLI over
 UART, designed to control a linear inverted pendulum.
 
+
+Python/matlab part that includes more theoretical parts of the project:
+  - [github/bubleBoble/LIPMatlab](https://github.com/bubleBoble/inverted-pendulum-python-matlab-optimization-math)
+
+Videos of real device and simulation:
+  - https://www.youtube.com/playlist?list=PLLyk_frqcOGw6XyiyMOqAa3b0tapfJQMq
+
 # Tools, Project Structure, Compilation
 ## Target platfom
 Project was compiled for STM32F429ZI MCU. Tested on STM32F429ZI Nucleo board.
@@ -107,12 +114,6 @@ project's root directory, which acts as a wrapper for CMake commands.
 This makefile is based on the
 [github/prtzl/stm32](https://github.com/prtzl/stm32/tree/master)
 template project.
-
-Python/matlab part that includes more theoretical parts of the project:
-  - [github/bubleBoble/LIPMatlab](https://github.com/bubleBoble/inverted-pendulum-python-matlab-optimization-math)
-
-Videos of real device and simulation:
-  - https://www.youtube.com/playlist?list=PLLyk_frqcOGw6XyiyMOqAa3b0tapfJQMq
 
 ## Hardware setup:
 <img title="Finished pendulum" alt="" src="./images/allallinone.png">
