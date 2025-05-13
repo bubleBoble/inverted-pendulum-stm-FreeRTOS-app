@@ -41,27 +41,32 @@
 #include <math.h>
 #include "LIP_tasks_common.h"
 
-// Angle setpoint for pendulum arm. Down position corresponds to
-// 180 degrees or pi radians. Controller works with angle in
-// radians. "BASE" postfix indicates that this setpoint is from
-// base angle range [0, 2PI]. Because pendulum arm can make many
-// full revolutions, angles PI, 3PI, 5PI and so on, all correspond
-// to the same down position, angle setpoint needs to be changed
-// accordingly
+/* 
+ * Angle setpoint for pendulum arm. Down position corresponds to
+ * 180 degrees or pi radians. Controller works with angle in
+ * radians. "BASE" postfix indicates that this setpoint is from
+ * base angle range [0, 2PI]. Because pendulum arm can make many
+ * full revolutions, angles PI, 3PI, 5PI and so on, all correspond
+ * to the same down position, angle setpoint needs to be changed
+ * accordingly
+ */
 #define PENDULUM_ANGLE_DOWN_SETPOINT_BASE PI
 
-// Angle setpoint for pendulum arm. Up position corresponds to
-// 0 degrees or 0 radians. Controller works with angle in radians.
-// "BASE" postfix indicates that this setpoint is from base angle
-// range [0, 2PI]. Because pendulum arm can make many full
-// revolutions, angles 0, 2PI, 4PI and so on, all correspond to
-// the same up position, angle setpoint needs to be changed
-// accordingly
-// non zero value because of pendulum encoder error
-// #define PENDULUM_ANGLE_UP_SETPOINT_BASE 0.0f
-#define PENDULUM_ANGLE_UP_SETPOINT_BASE -0.070563f // ??? remove it
+/* 
+ * Angle setpoint for pendulum arm. Up position corresponds to
+ * 0 degrees or 0 radians. Controller works with angle in radians.
+ * "BASE" postfix indicates that this setpoint is from base angle
+ * range [0, 2PI]. Because pendulum arm can make many full
+ * revolutions, angles 0, 2PI, 4PI and so on, all correspond to
+ * the same up position, angle setpoint needs to be changed
+ * accordingly
+ * non zero value because of pendulum encoder error
+ */
+#define PENDULUM_ANGLE_UP_SETPOINT_BASE -0.070563f
 
-// These are defined in LIP_tasks_common.c
+/*
+ * App globals defined in LIP_tasks_common.c
+ */
 extern volatile uint16_t adc_data_pot;
 extern float             pend_angle[2];
 extern float             pend_speed_raw[2];
@@ -69,8 +74,6 @@ extern float             pend_speed[2];
 extern float             cart_pos[2];
 extern float             cart_speed_raw[2];
 extern float             cart_speed[2];
-// extern IIR_filter LP_filter_pendulum;
-// extern IIR_filter LP_filter_cart;
 extern LP_filter           LP_filter_pendulum;
 extern LP_filter           LP_filter_cart;
 extern float               cart_pos_setp_cm_pot_raw;
@@ -88,27 +91,25 @@ extern float               pend_arm_ang_setp_rad_dpc;
 
 void util_task(void *pvParameters)
 {
-        // For RTOS vTaskDelayUntil()
+        /* For RTOS vTaskDelayUntil() */
         TickType_t last_wake_time = xTaskGetTickCount();
 
-        // =========================================================================
-        // Low pass filters for derivatives. Pendulum and cart speed.
-        // =========================================================================
-        // IIR for pendulum position
-        // float alpha_pend = 0.65;
-        // IIR_init_fo( &LP_filter_pendulum, alpha_pend );
+        /* 
+         * Low pass filters for derivatives. Pendulum and cart speed.
+         */
+
+        /* For pendulum position */
         LP_init(&LP_filter_pendulum, 0.025f, dt * 0.001f);
 
-        // DCM encoder reading, IIR
-        // float alpha_cart = 0.54;
-        // IIR_init_fo( &LP_filter_cart, alpha_cart );
+        /* For DCM encoder reading*/
         LP_init(&LP_filter_cart, 0.025f, dt * 0.001f);
 
-        // =====================================================================
-        // Low pass filters for setpoints - cli and pot.
-        // =====================================================================
-        // Low pass filter for cart position setpoint (pot and cli), 0.2sec
-        // time constant, 0dc gain
+        
+        /* 
+         * Low pass filters for setpoints - cli and pot. 
+         */
+
+        /* for cart position setpoint (pot and cli)*/
         LP_filter sp_filter_pot;
         LP_init(&sp_filter_pot, 0.2f, dt * 0.001f);
 
@@ -116,80 +117,65 @@ void util_task(void *pvParameters)
         LP_init(&sp_filter_cli, 0.05f, dt * 0.001f);
 
         for (;;) {
-                // =============================================================
-                // Pendulum angular position - magnetic encoder reading
-                // =============================================================
+                /*
+                 * Pendulum angular position - magnetic encoder reading 
+                 */
                 pend_angle[1] = pend_angle[0];
                 pend_angle[0] =
                         (float)pend_enc_get_cumulative_count() / 4096.0f * PI2 -
                         pend_init_ang_offset;
-
-                // ??? filter for pendulum angle ???
-                // IIR_update_fo( &LP_filter_pendulum, pend_angle[ 0 ] );
-                // pend_angle[ 0 ] = LP_filter_pendulum.out;
-
-                // =============================================================
-                // Pendulum angular speed calculation with Tustin method
-                // =============================================================
+                /* 
+                 * Pendulum angular speed calculation with Tustin method
+                 */
                 pend_speed_raw[1] = pend_speed_raw[0];
                 pend_speed_raw[0] =
                         (pend_angle[0] - pend_angle[1]) * 2 * dt_inv -
                         pend_speed_raw[1];
 
-                //  IIR filter for pendulum speed
-                // IIR_update_fo( &LP_filter_pendulum, pend_speed[ 0 ] );
-                // pend_speed[ 0 ] = LP_filter_pendulum.out;
-
-                // Low-pass filter for pendulum angle derivative
+                /* Low-pass filter for pendulum angle derivative */
                 LP_update(&LP_filter_pendulum, pend_speed_raw[0]);
                 pend_speed[0] = LP_filter_pendulum.out[0];
 
-                // Dead zone for calculated pendulum speed, about +-10 deg/sec
+                /* Deadzone for calculated pendulum speed, about +-10 deg/sec */
                 if ((pend_speed[0] < 0.2) && (pend_speed[0] > -0.2)) {
                         pend_speed[0] = 0;
                 }
 
-                // =============================================================
-                // Cart position - DCM encoder reading
-                // =============================================================
+                /* 
+                 * Cart position - DCM encoder reading
+                 */
                 cart_pos[1] = cart_pos[0];
                 cart_pos[0] = dcm_enc_get_cart_position_cm();
 
-                // IIR filter for cart position
-                // IIR_update_fo( &LP_filter_cart, cart_pos[ 0 ] );
-                // cart_pos[ 0 ] = LP_filter_cart.out;
-
-                // =============================================================
-                // Cart speed with Tustin method
-                // =============================================================
+                /* 
+                 * Cart speed with Tustin method 
+                 */
                 cart_speed_raw[1] = cart_speed_raw[0];
                 cart_speed_raw[0] = (cart_pos[0] - cart_pos[1]) * 2 * dt_inv -
                                     cart_speed_raw[1];
 
-                // IIR filter for cart speed
-                // IIR_update_fo( &LP_filter_cart, cart_speed[ 0 ] );
-                // cart_speed[ 0 ] = LP_filter_cart.out;
-
-                // Low-pass filter for cart speed
+                /* Low-pass filter for cart speed */
                 LP_update(&LP_filter_cart, cart_speed_raw[0]);
                 cart_speed[0] = LP_filter_cart.out[0];
-
-                // =============================================================
-                // Cart position setpoint from potentiometer adc reading, global
-                // variable.
-                // =============================================================
+                /* 
+                 * Cart position setpoint from potentiometer adc reading, global
+                 * variable.
+                 */
                 cart_pos_setp_cm_pot_raw =
                         (float)adc_data_pot / 4096.0f * TRACK_LEN_MAX_CM;
 
-                // =============================================================
-                // Low pass filter for cart position setpoint (pot and cli),
-                // 0.2sec time constant, 0dc gain.
-                // =============================================================
-                // input is cart_pos_setp_cm_pot_raw or
-                // cart_pos_setp_cm_cli_raw, output samples are stored
-                // internally in sp_filter struct. The latest sample is assiged
-                // to cart_pos_setp_cm_pot or
-                // cart_pos_setp_cm_cli_raw
+                /* 
+                 * Low pass filter for cart position setpoint (pot and cli),
+                 * 0.2sec time constant, 0dc gain. 
+                 */
+
+                /* 
+                 * input is cart_pos_setp_cm_pot_raw or
+                 * cart_pos_setp_cm_cli_raw, output samples are stored
+                 * internally in sp_filter struct. The latest sample is assiged
+                 * to cart_pos_setp_cm_pot or
+                 * cart_pos_setp_cm_cli_raw
+                 */
                 LP_update(&sp_filter_pot, cart_pos_setp_cm_pot_raw);
                 cart_pos_setp_cm_pot = sp_filter_pot.out[0];
 
@@ -197,69 +183,70 @@ void util_task(void *pvParameters)
                 cart_pos_setp_cm_cli = sp_filter_cli.out[0];
 
                 if (app_current_state == DEFAULT) {
-                        // While in DEFAULT state, cart setpoint is current
-                        // position.
+                        /* 
+                         * While in DEFAULT state, cart setpoint is current
+                         * position.
+                         */
 
-                        // Value of cart_pos_setp_cm_cli_raw should be
-                        // constantly updated to the value of current cart
-                        // position to avoid discontinuity in cart position
-                        // setpoint
+                        /* 
+                         * Value of cart_pos_setp_cm_cli_raw should be
+                         * constantly updated to the value of current cart
+                         * position to avoid discontinuity in cart position
+                         * setpoint
+                         */
                         cart_pos_setp_cm_cli_raw = cart_pos[0];
                 }
 
-                // =============================================================
-                // For DPC - Angle switching in up position - switching in down
-                // position would generate discontinuities in values of angle
-                // setpoint.
-                //
-                // This method uses modulus operation but implemented as
-                // "floored division" rather than "truncated division"
-                // implemented in math.h in mod, fmod, fmodf etc.
-                // More info about modulus operation:
-                //     https://en.wikipedia.org/wiki/Modulo#In_programming_languages
-                // Graph:
-                //     https://www.desmos.com/calculator/qaacl2m3cu
-                // =============================================================
+                /* 
+                 * For DPC - Angle switching in up position - switching in down
+                 * position would generate discontinuities in values of angle
+                 * setpoint.
+                 * 
+                 * This method uses modulus operation but implemented as
+                 * "floored division" rather than "truncated division"
+                 * implemented in math.h in mod, fmod, fmodf etc.
+                 * More info about modulus operation:
+                 * https://en.wikipedia.org/wiki/Modulo#In_programming_languages
+                 * Graph:
+                 * https://www.desmos.com/calculator/qaacl2m3cu
+                 */
 
-                // Calculate number of revolutions using floored division
+                /* Calculate number of revolutions using floored division */
                 num_of_pend_revs_dpc = floorf(pend_angle[0] / PI2);
 
-                // Calculate pendulum angle in base range [0, 2PI].
-                // This range stays the same as original range in the model, so
-                // that pendulum angle of 180 degree or PI radians still
-                // corresponds to down position
+                /* Calculate pendulum angle in base range [0, 2PI].
+                This range stays the same as original range in the model, so
+                that pendulum angle of 180 degree or PI radians still
+                corresponds to down position */
                 pendulum_angle_in_base_range_dpc =
                         pend_angle[0] - PI2 * num_of_pend_revs_dpc;
 
-                // Calculate real pendulum angle setpoint from setpoint in base
-                // range [0, 2PI] for DPC
+                /* Calculate real pendulum angle setpoint from setpoint in base
+                range [0, 2PI] for DPC */
                 pend_arm_ang_setp_rad_dpc = PENDULUM_ANGLE_DOWN_SETPOINT_BASE +
                                             num_of_pend_revs_dpc * PI2;
 
-                // =============================================================
-                // For UPC - Angle switching in down position - switching on top
-                // would generate discontinuities in values of angle setpoint.
-                // =============================================================
+                /* For UPC - Angle switching in down position - switching on top
+                would generate discontinuities in values of angle setpoint. */
 
-                // Calculate number of revolutions using floored division.
-                // Note: +1 because when pendulum starts in down position,
-                // transition to up position in CCW direction counts as negative
-                // revolution adding one compensates for that
+                /* Calculate number of revolutions using floored division.
+                Note: +1 because when pendulum starts in down position,
+                transition to up position in CCW direction counts as negative
+                revolution adding one compensates for that */
                 num_of_pend_revs_upc = floorf((pend_angle[0] - PI) / PI2) + 1;
 
-                // Calculate pendulum angle in base range [-PI, PI].
-                // This range is changed to [-PI, PI], so that pendulum angle of
-                // zero degree corresponds to up position and there is no
-                // discontinuity around zero degree angle
+                /* Calculate pendulum angle in base range [-PI, PI].
+                This range is changed to [-PI, PI], so that pendulum angle of
+                zero degree corresponds to up position and there is no
+                discontinuity around zero degree angle */
                 pendulum_angle_in_base_range_upc =
                         pend_angle[0] - PI2 * num_of_pend_revs_upc;
 
-                // Calculate real pendulum angle setpoint from setpoint in base
-                // range [-PI, PI] for UPC
+                /* Calculate real pendulum angle setpoint from setpoint in base
+                range [-PI, PI] for UPC */
                 pend_arm_ang_setp_rad_upc = PENDULUM_ANGLE_UP_SETPOINT_BASE +
                                             num_of_pend_revs_upc * PI2;
 
-                // Task delay
                 vTaskDelayUntil(&last_wake_time, dt);
-        } // for (;;)
+        } /* for (;;) */
 }

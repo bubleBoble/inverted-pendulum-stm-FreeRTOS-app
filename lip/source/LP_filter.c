@@ -2,7 +2,7 @@
 
 void LP_init(LP_filter *lp, float time_constant, float sampling_time)
 {
-        // This function initizalies lp low-pass filter
+        /* This function initizalies lp low-pass filter */
         if (time_constant < 0.0f) {
                 lp->time_constant = 0.0f;
         } else {
@@ -22,7 +22,7 @@ void LP_init(LP_filter *lp, float time_constant, float sampling_time)
 
 float LP_update(LP_filter *lp, float in)
 {
-        // This function calculates low-pass filter output
+        /* This function calculates low-pass filter output */
         lp->out[1] = lp->out[0];
         lp->in[1]  = lp->in[0];
         lp->in[0]  = in;
@@ -38,8 +38,8 @@ float LP_update(LP_filter *lp, float in)
 
 void LP_update_time_Constant(LP_filter *lp, float new_time_constant)
 {
-        // Updates time constant of low-pass filter lp,
-        // new_time_constant should be >0
+        /* Updates time constant of low-pass filter lp,
+        new_time_constant should be >0 */
         if (new_time_constant < 0.0f) {
                 lp->time_constant = 0.0f;
         } else {

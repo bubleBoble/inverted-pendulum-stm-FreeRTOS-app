@@ -19,9 +19,9 @@
  */
 #include "LIP_tasks_common.h"
 
-// =============================================================================
-// App globals defined in LIP_tasks_common.c
-// =============================================================================
+/*
+ * App globals defined in LIP_tasks_common.c
+ */
 extern float  pend_angle[2];
 extern float  pend_speed[2];
 extern float  cart_pos[2];
@@ -30,27 +30,25 @@ extern float *cart_pos_setp_cm;
 
 void raw_com_task(void *pvParameters)
 {
-        // For RTOS vTaskDelayUntil()
+        /* For RTOS vTaskDelayUntil() */
         TickType_t last_wake_time = xTaskGetTickCount();
 
-        // =====================================================================
-        // Raw data transmission for matlab/simulink com
-        // =====================================================================
-        // Message structure
+        /* 
+         * Raw data transmission for matlab/simulink com
+         */
         typedef struct {
-                float cart_pos; // float has 4 Bytes
+                float cart_pos; /* float is 4 Bytes */
                 float cart_speed;
                 float angle;
                 float pend_speed;
                 float volt_setting;
                 float cart_setpoint;
-        } tx_data; // sum: 24 Bytes
+        } tx_data; /* sum: 24 Bytes */
         tx_data data;
         char    tx_buff[24];
 
-        // Task mainloop
         for (;;) {
-                // Message content
+                /* Message content */
                 data.cart_pos      = cart_pos[0];
                 data.cart_speed    = cart_speed[0];
                 data.angle         = pend_angle[0];
@@ -59,7 +57,7 @@ void raw_com_task(void *pvParameters)
                 data.cart_setpoint = *cart_pos_setp_cm;
                 memcpy(tx_buff, &data, 24);
 
-                // Serial send
+                /* Serial send */
                 com_send(tx_buff, 24);
 
                 vTaskDelayUntil(&last_wake_time, dt);

@@ -24,7 +24,7 @@ uint8_t pend_enc_init(void)
 {
         uint8_t res;
 
-        // link interface function
+        /* link interface function */
         DRIVER_AS5600_LINK_INIT(&gs_handle, as5600_handle_t);
         DRIVER_AS5600_LINK_IIC_INIT(&gs_handle, as5600_interface_iic_init);
         DRIVER_AS5600_LINK_IIC_DEINIT(&gs_handle, as5600_interface_iic_deinit);
@@ -45,7 +45,7 @@ uint8_t pend_enc_init(void)
 
 uint8_t pend_enc_read_angle_deg(float *angle)
 {
-        // Writes angle value in degree into &angle
+        /* Writes angle value in degree into &angle */
         as5600_read(&gs_handle, &angle_raw, angle);
 
         return 0;
@@ -53,10 +53,10 @@ uint8_t pend_enc_read_angle_deg(float *angle)
 
 uint8_t pend_enc_read_angle_rad(float *angle)
 {
-        // Writes raw angle value into &angle_raw
+        /* Writes raw angle value into &angle_raw */
         as5600_get_raw_angle(&gs_handle, &angle_raw);
 
-        // 0.001533980788 = 1 / 4096.0f * PI2;
+        /* 0.001533980788 = 1 / 4096.0f * PI2; */
         *angle = (float)angle_raw * 0.001533980788;
 
         return 0;
@@ -71,8 +71,10 @@ uint8_t pend_enc_deinit(void)
         }
 }
 
-// Have to be called often enough, at least 3 times per revolution
-// (from some arduino library)
+/* 
+ * Have to be called often enough, at least 3 times per revolution (from some 
+ * arduino library) 
+ */
 int32_t pend_enc_get_cumulative_count(void)
 {
         // as5600_read_raw_fast(&gs_handle, &angle_raw);
@@ -99,8 +101,6 @@ int32_t pend_enc_get_base_count(void)
         return angle_raw;
 }
 
-// Get number of full pendulum revolutions, negative number indicates
-// negative revolution
 int32_t get_num_of_revolutions(void)
 {
         return num_of_revolutions;

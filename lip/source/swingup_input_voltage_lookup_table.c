@@ -1,7 +1,9 @@
-// Input voltage lookup table from matlab (trajopt).
-// duration: 3.1sec (301*10ms = 301*0.01 = 3.1)
-// Cart start position : 0.2033 m
-// Sampling time : 10ms
+/* 
+ * Input voltage lookup table from matlab (trajopt).
+ * duration: 3.1sec (301*10ms = 301*0.01 = 3.1)
+ * Cart start position : 0.2033 m
+ * Sampling time : 10ms
+ */
 float swingup_control_1[301] = {
         -9.590118,  -0.298315,  8.993488,   10.530248,  11.961498,  11.999790,
         11.999656,  11.236299,  10.440918,  9.770241,   9.106639,   8.763989,
@@ -55,11 +57,12 @@ float swingup_control_1[301] = {
         -0.293543,  -0.127740,  0.033084,   0.013460,   -0.005491,  0.025076,
         0.055643
 };
-
-// Input voltage lookup table from matlab (trajopt).
-// duration : 2.2sec (220*10ms = 220*0.01 = 2.2)
-// Cart start position : 0.06 m
-// Sampling time : 10ms
+/* 
+ * Input voltage lookup table from matlab (trajopt).
+ * duration : 2.2sec (220*10ms = 220*0.01 = 2.2)
+ * Cart start position : 0.06 m
+ * Sampling time : 10ms 
+ */
 float swingup_control_2[220] = {
         0.000000,   0.000000,   0.000000,   0.000000,   0.000000,   0.000000,
         0.000000,   0.000000,   0.000000,   0.000000,   -1.013993,  -1.621211,

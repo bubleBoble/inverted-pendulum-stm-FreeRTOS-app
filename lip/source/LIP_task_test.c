@@ -18,15 +18,15 @@ extern TaskHandle_t             swingdown_task_h;
 
 void test_task(void *pvParameters)
 {
-        // Holds value retrieved from task notification
+        /* Holds value retrieved from task notification */
         uint32_t notifValueReceived;
 
         for (;;) {
-                // Wait for notification at index 0
+                /* Wait for notification at index 0 */
                 xTaskNotifyWaitIndexed(0, 0x00, ULONG_MAX, &notifValueReceived,
                                        portMAX_DELAY);
                 if (notifValueReceived == TEST_1) {
-                        // Test procedure nr. 1 selected
+                        /* Test procedure nr. 1 selected */
                         test_procedure_1();
                 }
         }
@@ -34,9 +34,9 @@ void test_task(void *pvParameters)
 
 void test_procedure_1(void)
 {
-        // If this function is run, it means that the app is in TEST state
+        /* If this function is run, it means that the app is in TEST state */
 
-        // For RTOS vTaskDelayUntil()
+        /* For RTOS vTaskDelayUntil() */
         TickType_t last_wake_time = xTaskGetTickCount();
 
         // char msg[128];
@@ -128,66 +128,66 @@ void test_procedure_1(void)
         // App is in DEFAULT STATE and cart position is at position 20cm pm 1cm.
         // Swingup can be started.
 
-        // Reset lookup_index in swingup task for loop
+        /* Reset lookup_index in swingup task for loop */
         reset_lookup_index = 1;
 
-        // Global flag to indicate that swingup is running and to tell watchdog
-        // task to start keeping track of pendulum angle to switch between
-        // swingup and up position controller
+        /* Global flag to indicate that swingup is running and to tell watchdog
+        task to start keeping track of pendulum angle to switch between
+        swingup and up position controller */
         swingup_task_resumed = 1;
 
-        // Change app state to swingup
+        /* Change app state to swingup */
         app_current_state = SWINGUP;
 
-        // Resume swingup task
+        /* Resume swingup task */
         vTaskResume(swingup_task_h);
 
-        // [ 20 ] wait 6 sec
+        /* [ 20 ] wait 6 sec */
         vTaskDelayUntil(&last_wake_time, 6000);
 
-        // [ 21 ] home
+        /* [ 21 ] home */
         cart_pos_setp_cm_cli_raw = 20.0f;
 
-        // [ 22 ] wait 2 sec
+        /* [ 22 ] wait 2 sec */
         vTaskDelayUntil(&last_wake_time, 3000);
 
-        // [ 23 ] sp 10
+        /* [ 23 ] sp 10 */
         cart_pos_setp_cm_cli_raw = 10.0f;
 
-        // [ 24 ] wait 2 sec
+        /* [ 24 ] wait 2 sec */
         vTaskDelayUntil(&last_wake_time, 3000);
 
-        // [ 25 ] sp 30
+        /* [ 25 ] sp 30 */
         cart_pos_setp_cm_cli_raw = 30.0f;
 
-        // [ 26 ] wait 2 sec
+        /* [ 26 ] wait 2 sec */
         vTaskDelayUntil(&last_wake_time, 3000);
 
-        // [ 27 ] sp 10
+        /* [ 27 ] sp 10 */
         cart_pos_setp_cm_cli_raw = 10.0f;
 
-        // [ 28 ] wait 2 sec
+        /* [ 28 ] wait 2 sec */
         vTaskDelayUntil(&last_wake_time, 3000);
 
-        // [ 29 ] sp 30
+        /* [ 29 ] sp 30 */
         cart_pos_setp_cm_cli_raw = 30.0f;
 
-        // [ 30 ] wait 2 sec
+        /* [ 30 ] wait 2 sec */
         vTaskDelayUntil(&last_wake_time, 3000);
 
-        // [ 31 ] sp 10
+        /* [ 31 ] sp 10 */
         cart_pos_setp_cm_cli_raw = 10.0f;
 
-        // [ 32 ] wait 2 sec
+        /* [ 32 ] wait 2 sec */
         vTaskDelayUntil(&last_wake_time, 3000);
 
-        // [ 32 ] sp 30
+        /* [ 32 ] sp 30 */
         cart_pos_setp_cm_cli_raw = 30.0f;
 
-        // [ 33 ] wait 2 sec
+        /* [ 33 ] wait 2 sec */
         vTaskDelayUntil(&last_wake_time, 3000);
 
-        // [ 34 ] home
+        /* [ 34 ] home */
         cart_pos_setp_cm_cli_raw = 20.0f;
 
         // /* [ 35 ] swingdown */

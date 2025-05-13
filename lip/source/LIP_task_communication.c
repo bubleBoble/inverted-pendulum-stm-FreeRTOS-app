@@ -38,7 +38,7 @@ extern float ctrl_Dt;
 
 void com_task(void *pvParameters)
 {
-        // for RTOS vTaskDelayUntil()
+        /* for RTOS vTaskDelayUntil() */
         TickType_t last_wake_time = xTaskGetTickCount();
 
         /*
