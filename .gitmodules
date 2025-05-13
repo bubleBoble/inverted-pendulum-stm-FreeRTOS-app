@@ -1,0 +1,6 @@
+[submodule "drivers/stm32f4xx-hal-driver"]
+	path = drivers/stm32f4xx-hal-driver
+	url = https://github.com/STMicroelectronics/stm32f4xx-hal-driver.git
+[submodule "drivers/CMSIS"]
+	path = drivers/CMSIS
+	url = https://github.com/ARM-software/CMSIS_5.git
