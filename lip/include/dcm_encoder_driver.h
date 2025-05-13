@@ -23,25 +23,25 @@
 #ifndef DCM_ENC_DRIVER
 #define DCM_ENC_DRIVER
 
-// handle to timer
+/* handle to timer */
 #define ENC_TIMER_HANDLE htim4
 
-// Max encoder timer count
+/* Max encoder timer count */
 #define ENC_MAX_CNT 6488
-// #define TRACK_LEN_MAX_CM 47.0f
+/* #define TRACK_LEN_MAX_CM 47.0f */
 #define TRACK_LEN_MAX_CM   40.7f
 #define ENCODER_MULTIPLIER 40.7f / 6488.0f
 
-// Start encoder timer in encoder mode
+/* Start encoder timer in encoder mode */
 void enc_init(void);
 
-// Return: raw encoder timer count (uint16_t)
+/* Return: raw encoder timer count (uint16_t) */
 uint16_t enc_get_count(void);
 
-// Zero the encoder counter value
+/* Zero the encoder counter value */
 void dcm_enc_zero_counter(void);
 
-// Returns cart position in cm
+/* Returns cart position in cm */
 float dcm_enc_get_cart_position_cm(void);
 
-#endif // DCM_ENC_DRIVER
+#endif /* DCM_ENC_DRIVER */

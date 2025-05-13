@@ -24,7 +24,7 @@
 #define MAX_INPUT_VOLTAGE_POSITIVE 12.0f
 #define MAX_INPUT_VOLTAGE_NEGATIVE -12.0f
 
-// from precalculated value from PSC & ARR(autoreload register)
+/* from precalculated value from PSC & ARR(autoreload register) */
 #define DCM_PWM_FREQ 1000
 
 void  dcm_init(void);

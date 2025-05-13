@@ -25,7 +25,7 @@ int32_t pend_enc_get_cumulative_count(void);
 
 int32_t pend_enc_get_base_count(void);
 
-// Get number of full pendulum revolutions
+/* Get number of full pendulum revolutions */
 int32_t get_num_of_revolutions(void);
 
-#endif // PEND_ENC_DRIVER
+#endif /* PEND_ENC_DRIVER */

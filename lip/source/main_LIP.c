@@ -18,28 +18,35 @@ extern ADC_HandleTypeDef hadc3;
 extern volatile uint16_t adc_data_pot;
 extern float             pend_init_ang_offset;
 
-// =============================================================================
-// LIP INIT & RUN
-// =============================================================================
+/*
+ * LIP init
+ */
 void main_LIP_init(void)
 {
-        // FPU initialization - FPU must be enabled before any FPU instruction
-        // is executed, otherwise hardware exception will be raised
+
+        /*
+         * FPU initialization - FPU must be enabled before any FPU instruction
+         * is executed, otherwise hardware exception will be raised
+         */
         SCB->CPACR |= ((3 << 10 * 2) | (3 << 11 * 2));
 
-        // Start timer for ADC3 pot read
+        /* Start timer for ADC3 pot read */
         HAL_TIM_Base_Start(&htim2);
 
-        // init dma for adc
+        /* init dma for adc */
         HAL_ADC_Start_DMA(&hadc3, (uint32_t *)&adc_data_pot, 1);
 
-        dcm_init(); // Initialize PWM timer and zero its PWM output
-        enc_init(); // Initialize encoder timer
-        pend_enc_init(); // Initialize AS5600 encoder
+        dcm_init();      /* Initialize PWM timer and zero its PWM output */
+        enc_init();      /* Initialize encoder timer */
+        pend_enc_init(); /* Initialize AS5600 encoder */
 
         pend_init_ang_offset =
                 (float)pend_enc_get_cumulative_count() / 4096.0f * PI2 - PI;
 }
+
+/*
+ * LIP run
+ */
 void main_LIP_run(void)
 {
         LIP_create_Tasks();
@@ -50,40 +57,52 @@ void main_LIP_run(void)
         }
 }
 
-// Built in button interrupt callback function
+/*
+ * Built-in button (stm32 discovery) interrupt callback function
+ */
 // uint8_t ZERO_POSITION_REACHED = 0; // 1 only if left limit switch activated
 // uint8_t MAX_POSITION_REACHED = 0;  // 1 only if right limit switch activated
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
 }
 
-// Uart receive interrupt
+/* 
+ * Uart receive interrupt
+ */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
 }
 
-// Needed for freeeros objects static allocation
+/* 
+ * Needed for freeeros objects static allocation
+ */
 void vApplicationGetIdleTaskMemory(StaticTask_t **idle_task_TCB_buff,
                                    StackType_t  **idle_task_stack_buff,
                                    uint32_t      *idle_task_stack_size)
 {
-        // If the buffers to be provided to the Idle task are declared inside
-        // this function then they must be declared static - otherwise they
-        // will be allocated on the stack and so not exists after this function
-        // returns
+        /* 
+         * If the buffers to be provided to the Idle task are declared inside
+         * this function then they must be declared static - otherwise they
+         * will be allocated on the stack and so not exists after this function
+         * returns 
+         */
         static StaticTask_t idle_task_TCB;
         static StackType_t  idle_task_stack[configMINIMAL_STACK_SIZE];
 
-        // Pass out a pointer to the StaticTask_t structure in which the Idle
-        // task's state will be stored
+        /*
+         * Pass out a pointer to the StaticTask_t structure in which the Idle
+         * task's state will be stored
+         */
         *idle_task_TCB_buff = &idle_task_TCB;
 
-        // Pass out the array that will be used as the Idle task's stack
+        /* Pass out the array that will be used as the Idle task's stack */
         *idle_task_stack_buff = idle_task_stack;
 
-        // Pass out the size of the array pointed to by *idle_task_stack_buff.
-        // Note that, as the array is necessarily of type StackType_t,
-        // configMINIMAL_STACK_SIZE is specified in words, not bytes
+        /* 
+         * Pass out the size of the array pointed to by *idle_task_stack_buff.
+         * Note that, as the array is necessarily of type StackType_t,
+         * configMINIMAL_STACK_SIZE is specified in words, not bytes
+         */
         *idle_task_stack_size = configMINIMAL_STACK_SIZE;
 }
 

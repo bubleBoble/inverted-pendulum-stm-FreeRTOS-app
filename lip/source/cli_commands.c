@@ -11,16 +11,16 @@
  *
  * All variables related to LIP app state are defined in LIP_tasks_common.c
  */
-#include <stdlib.h> // strtof()
-#include <errno.h> // error codes
+#include <stdlib.h> /* strtof() */
+#include <errno.h> /* error codes */
 #include "math.h"
 
 #include "main_LIP.h"
 #include "cli_commands.h"
 
-// =============================================================================
-// App globals defined in LIP_tasks_common.c
-// =============================================================================
+/*
+ * App globals defined in LIP_tasks_common.c
+ */
 extern float                    cart_pos[2];
 extern float                    pend_angle[2];
 extern float                    cart_pos_setp_cm_cli_raw;
@@ -49,103 +49,84 @@ extern TaskHandle_t swingup_task_h;
 extern TaskHandle_t swingdown_task_h;
 extern TaskHandle_t test_task_h;
 
-// =============================================================================
-// CLI commands prototypes
-// =============================================================================
-// command: task-stats
-static portBASE_TYPE taskStats_cmd(int8_t *write_buff, size_t write_buff_len,
+/*
+ * CLI commands prototypes
+ */
+static portBASE_TYPE taskstats_cmd(int8_t *write_buff, size_t write_buff_len,
                                    const int8_t *cmd_string);
 
-// command: ENTER_KEY
-static portBASE_TYPE comOnOff_cmd(int8_t *write_buff, size_t write_buff_len,
+static portBASE_TYPE comonoff_cmd(int8_t *write_buff, size_t write_buff_len,
                                   const int8_t *cmd_string);
 
-// command: home
 static portBASE_TYPE home_cmd(int8_t *write_buff, size_t write_buff_len,
                               const int8_t *cmd_string);
 
-// command: dpc
 static portBASE_TYPE dpc_cmd(int8_t *write_buff, size_t write_buff_len,
                              const int8_t *cmd_string);
 
-// command: dpci
 static portBASE_TYPE dpci_cmd(int8_t *write_buff, size_t write_buff_len,
                               const int8_t *cmd_string);
 
-// command: upc
 static portBASE_TYPE upc_cmd(int8_t *write_buff, size_t write_buff_len,
                              const int8_t *cmd_string);
-// command: upci
+
 static portBASE_TYPE upci_cmd(int8_t *write_buff, size_t write_buff_len,
                               const int8_t *cmd_string);
 
-// command: clc
 static portBASE_TYPE clc_cmd(int8_t *write_buff, size_t write_buff_len,
                              const int8_t *cmd_string);
 
-// command: sppot
 static portBASE_TYPE sppot_cmd(int8_t *write_buff, size_t write_buff_len,
                                const int8_t *cmd_string);
 
-// command: spcli
 static portBASE_TYPE spcli_cmd(int8_t *write_buff, size_t write_buff_len,
                                const int8_t *cmd_string);
 
-// command: sp
 static portBASE_TYPE sp_cmd(int8_t *write_buff, size_t write_buff_len,
                             const int8_t *cmd_string);
 
-// command: swingup
 static portBASE_TYPE swingup_cmd(int8_t *write_buff, size_t write_buff_len,
                                  const int8_t *cmd_string);
 
-// command: swingdown
 static portBASE_TYPE swingdown_cmd(int8_t *write_buff, size_t write_buff_len,
                                    const int8_t *cmd_string);
 
-// command: reset
 static portBASE_TYPE reset_cmd(int8_t *write_buff, size_t write_buff_len,
                                const int8_t *cmd_string);
 
-// command: vol <voltage_setting>
 static portBASE_TYPE vol_cmd(int8_t *write_buff, size_t write_buff_len,
                              const int8_t *cmd_string);
 
-// command: br
 static portBASE_TYPE br_cmd(int8_t *write_buff, size_t write_buff_len,
                             const int8_t *cmd_string);
 
-// command: bounceoff
 static portBASE_TYPE bounceoff_cmd(int8_t *write_buff, size_t write_buff_len,
                                    const int8_t *cmd_string);
 
-// command: test
 static portBASE_TYPE test_cmd(int8_t *write_buff, size_t write_buff_len,
                               const int8_t *cmd_string);
 
-// command: tcc
 static portBASE_TYPE tcc_cmd(int8_t *write_buff, size_t write_buff_len,
                              const int8_t *cmd_string);
 
-// command: tcp
 static portBASE_TYPE tcp_cmd(int8_t *write_buff, size_t write_buff_len,
                              const int8_t *cmd_string);
 
-// =============================================================================
-// CLI commands definition structures & registration
-// =============================================================================
+/*
+ * CLI commands definition structures & registration
+ */
 static const CLI_Command_Definition_t commands_list[] = {
         { .pcCommand                   = (const int8_t *const)"task-stats",
           .pcHelpString                = (const int8_t *const)TASKSTATS_HELPSTR,
-          .pxCommandInterpreter        = taskStats_cmd,
+          .pxCommandInterpreter        = taskstats_cmd,
           .cExpectedNumberOfParameters = 0 },
         { .pcCommand                   = (const int8_t *const)"",
           .pcHelpString                = (const int8_t *const)COMONOFF_HELPSTR,
-          .pxCommandInterpreter        = comOnOff_cmd,
+          .pxCommandInterpreter        = comonoff_cmd,
           .cExpectedNumberOfParameters = 0 },
         { .pcCommand                   = (const int8_t *const)"q",
           .pcHelpString                = (const int8_t *const)COMONOFFQ_HELPSTR,
-          .pxCommandInterpreter        = comOnOff_cmd,
+          .pxCommandInterpreter        = comonoff_cmd,
           .cExpectedNumberOfParameters = 0 },
         { .pcCommand                   = (const int8_t *const)"home",
           .pcHelpString                = (const int8_t *const)HELP_HELPSTR,
@@ -246,11 +227,10 @@ void register_CLI_commands(void)
         }
 }
 
-// =============================================================================
-// CLI commands callback functions definitions
-// =============================================================================
-// command: task-stats
-static portBASE_TYPE taskStats_cmd(int8_t *write_buff, size_t write_buff_len,
+/*
+ * CLI commands callback functions definitions
+ */
+static portBASE_TYPE taskstats_cmd(int8_t *write_buff, size_t write_buff_len,
                                    const int8_t *cmd_string)
 {
         // const int8_t *const pcTaskTableHeader = ( int8_t * )
@@ -270,8 +250,7 @@ static portBASE_TYPE taskStats_cmd(int8_t *write_buff, size_t write_buff_len,
         return pdFALSE;
 }
 
-// command: <enter_key> (data logging on/off)
-static portBASE_TYPE comOnOff_cmd(int8_t *write_buff, size_t write_buff_len,
+static portBASE_TYPE comonoff_cmd(int8_t *write_buff, size_t write_buff_len,
                                   const int8_t *cmd_string)
 {
         (void)cmd_string;
@@ -287,74 +266,86 @@ static portBASE_TYPE comOnOff_cmd(int8_t *write_buff, size_t write_buff_len,
         return pdFALSE;
 }
 
-// command: home
 static portBASE_TYPE home_cmd(int8_t *write_buff, size_t write_buff_len,
                               const int8_t *cmd_string)
 {
-        // this command sends notification to worker task that will take action
-        // based on notification value
         (void)cmd_string;
         (void)write_buff_len;
         configASSERT(write_buff);
 
-        // set reset_home flag to 1, it should be reset to 0 in cart_worker task
+        /* 
+         * set reset_home flag to 1, it should be reset to 0 in cart_worker 
+         * task 
+         */
         reset_home = 1;
 
         if (app_current_state == UNINITIALIZED) {
-                // App is in UNINITIALIZED state (right after uC powerup). Cart
-                // position can be arbitrary - so it has to be calibrated. First
-                // the cart goes to min left position, then moves to the track
-                // center
+                /* 
+                 * App is in UNINITIALIZED state (right after uC powerup). Cart
+                 * position can be arbitrary - so it has to be calibrated. First
+                 * the cart goes to min left position, then moves to the track
+                 * center 
+                 */
                 if (READ_ZERO_POSITION_REACHED) {
-                        // Cart is already in zero position. Send notification
-                        // to worker_task, set notification bit 0 - go to the
-                        // right until cart is in the middle
+                        /*
+                        * Cart is already in zero position. Send notification
+                        * to worker_task, set notification bit 0 - go to the
+                        * right until cart is in the middle
+                        */
                         xTaskNotifyIndexed(cartworker_task_h, 0, GO_RIGHT,
                                            eSetValueWithOverwrite);
                 } else {
-                        // CALIBRATION - Cart position is arbitrary. Send
-                        // notification to worker_task, set notification bit
-                        // 1 - go left until min position reached, then go right
-                        // to track center
+                        /*
+                         * CALIBRATION - Cart position is arbitrary. Send
+                         * notification to worker_task, set notification bit
+                         * 1 - go left until min position reached, then go right
+                         * to track center
+                         */
                         xTaskNotifyIndexed(cartworker_task_h, 0,
                                            GO_LEFT + GO_RIGHT,
                                            eSetValueWithOverwrite);
                 }
         } else if (app_current_state == DEFAULT) {
-                // App is not in DEFAULT state - cart position should be
-                // calibrated
+                /*
+                 * App is not in DEFAULT state - cart position should be
+                 * calibrated
+                 */
                 if (cart_pos[0] < TRACK_LEN_MAX_CM / 2) {
                         // Cart is to the left of track center
                         xTaskNotifyIndexed(cartworker_task_h, 0, GO_RIGHT,
                                            eSetValueWithOverwrite);
                 } else {
-                        // Cart is to the right of track center
+                        /* Cart is to the right of track center */
                         xTaskNotifyIndexed(cartworker_task_h, 0, GO_LEFT,
                                            eSetValueWithOverwrite);
                 }
         } else if (app_current_state == DPC || app_current_state == UPC) {
-                // App is not in DEFAULT or UNINITIALIZED state, its either in
-                // DOWN_POS_CONTROL(DPC) or UP_POSITION_CONTROL(UPC) state.
-                // While in either one of these two control states, calling
-                // "home" command should change cart position setpoint to home
-                // position (center of the track). Command not avaliable in
-                // swinggup state.
+                /* 
+                 * App is not in DEFAULT or UNINITIALIZED state, its either in
+                 * DOWN_POS_CONTROL(DPC) or UP_POSITION_CONTROL(UPC) state.
+                 * While in either one of these two control states, calling
+                 * "home" command should change cart position setpoint to home
+                 * position (center of the track). Command not avaliable in
+                 * swinggup state.
+                 */
                 uint8_t is_pos_from_cli = cart_pos_setp_cm ==
                                           &cart_pos_setp_cm_cli;
                 if (is_pos_from_cli) {
-                        // This command should only make changes to cart
-                        // position setpoint value - if and only if - the source
-                        // of setpoint is set to setpoint from cli command
-                        // "spcli", otherwise if the source of setpoint is
-                        // external potentiometer, which reading can't be
-                        // overwritten, value of this setpoint will be
-                        // arbitrary - the same as physical pot setting, and the
-                        // behaviour of cart will be less predictable
+                        /* 
+                         * This command should only make changes to cart
+                         * position setpoint value - if and only if - the source
+                         * of setpoint is set to setpoint from cli command
+                         * "spcli", otherwise if the source of setpoint is
+                         * external potentiometer, which reading can't be
+                         * overwritten, value of this setpoint will be
+                         * arbitrary - the same as physical pot setting, and the
+                         * behaviour of cart will be less predictable
+                         */
                         xTaskNotifyIndexed(cartworker_task_h, 0, SP_HOME,
                                            eSetValueWithOverwrite);
                 }
         } else {
-                // App is in swingup state
+                /* App is in swingup state */
                 strcpy((char *)write_buff,
                        "\r\nERROR: COMMAND NOT AVAILABLE IN SWINGUP STATE.\r\n");
         }
@@ -362,7 +353,6 @@ static portBASE_TYPE home_cmd(int8_t *write_buff, size_t write_buff_len,
         return pdFALSE;
 }
 
-// command: dpc
 static portBASE_TYPE dpc_cmd(int8_t *write_buff, size_t write_buff_len,
                              const int8_t *cmd_string)
 {
@@ -373,11 +363,11 @@ static portBASE_TYPE dpc_cmd(int8_t *write_buff, size_t write_buff_len,
         int8_t    *param1;
         BaseType_t param1_str_len;
 
-        // get first command arguemnt
+        /* get first command arguemnt */
         param1 = (int8_t *)FreeRTOS_CLIGetParameter(cmd_string, 1,
                                                     &param1_str_len);
 
-        // terminate arguemnt string
+        /* terminate arguemnt string */
         param1[param1_str_len] = 0x00;
 
         const char *param        = (const char *)param1;
@@ -385,82 +375,69 @@ static portBASE_TYPE dpc_cmd(int8_t *write_buff, size_t write_buff_len,
         uint8_t     is_param_on  = !strcmp(param, "on") || !strcmp(param, "1");
 
         if (is_param_off) {
-                // turn off down position controller, "dcp off" / "dpc 0"
-                // are both valid commands
                 vTaskSuspend(ctrl_downpos_task_h);
                 dcm_set_output_volatage(0.0f);
-
-                // change current app state back to DEFAULT
                 app_current_state = DEFAULT;
+
         } else if (is_param_on) {
                 uint8_t in_freeze_zone = cart_current_zone != FREEZING_ZONE_L ||
                                          cart_current_zone != FREEZING_ZONE_R;
                 if (in_freeze_zone) {
-                        // controller turn on case, even if controller is turned
-                        // on, it will only work if the pendulum angle is in
-                        // range [switch_angle_low, switch_angle_high].
-
-                        // ensure that setpoint for cart postion from cli is the
-                        // same as the setpoint used by controller tasks. If
-                        // it's not true, this means that the user changed
-                        // source of cart pos. setpoint for controllers. ALL
-                        // CONTROLLER TASKS SHOULD BE TURNING ON WITH CART POS.
-                        // SETPOINT SOURCE SET TO CLI, OTHERWISE DON'T TURN ON
-                        // CONTROLLER
+                        /* 
+                         * controller turn on case, even if controller is turned
+                         * on, it will only work if the pendulum angle is in
+                         * range [switch_angle_low, switch_angle_high].
+                         *
+                         * ensure that setpoint for cart postion from cli is the
+                         * same as the setpoint used by controller tasks. If
+                         * it's not true, this means that the user changed
+                         * source of cart pos. setpoint for controllers. ALL
+                         * CONTROLLER TASKS SHOULD BE TURNING ON WITH CART POS.
+                         * SETPOINT SOURCE SET TO CLI, OTHERWISE DON'T TURN ON
+                         * CONTROLLER
+                         */
                         uint8_t pos_from_cli = cart_pos_setp_cm ==
                                                &cart_pos_setp_cm_cli;
                         if (pos_from_cli) {
-                                // set starting setpoint for cart position to
-                                // its current position, so that the cart won't
-                                // instantly jump when the controller is turned
-                                // on. Main cart position setpoint used by any
-                                // controller task has to be the same as cart
-                                // position set point from cli
-                                // cart_pos_setp_cm_cli_raw = cart_pos[ 0 ];
-
+                                /* 
+                                 * set starting setpoint for cart position to
+                                 * its current position, so that the cart won't
+                                 * instantly jump when the controller is turned
+                                 * on. Main cart position setpoint used by any
+                                 * controller task has to be the same as cart
+                                 * position set point from cli
+                                 * cart_pos_setp_cm_cli_raw = cart_pos[ 0 ];
+                                 */
                                 if (app_current_state == DEFAULT) {
-                                        // this command should only turn on
-                                        // "down position controller" when
-                                        // app/pendulum is in the DEFAULT state.
-                                        // This means that it's not possible to
-                                        // use this command while app is in
-                                        // UNINITIALIZED, SWINGUP or UPPOSITION
-                                        // CONTROLLER state
-
-                                        // Turn on down position controller,
-                                        // "dcp on" / "dpc 1" are both valid
-                                        // commands.
+                                        /* 
+                                         * this command should only turn on
+                                         * "down position controller" when
+                                         * app/pendulum is in the DEFAULT state.
+                                         * This means that it's not possible to
+                                         * use this command while app is in
+                                         * UNINITIALIZED, SWINGUP or UPPOSITION
+                                         * CONTROLLER state
+                                         */
                                         vTaskResume(ctrl_downpos_task_h);
-
-                                        // change app state to "down position
-                                        // controller" state. This will ensure
-                                        // that some cli commands can't be
-                                        // called
                                         app_current_state = DPC;
                                 }
                         } else {
-                                // prompt the user to change setpoint source to
-                                // cli with "spcli" command
                                 strcpy((char *)write_buff,
-                                       "\r\nERROR: SET CART POSITION SETPOINT "
-                                       "SOURCE TO CLI WITH COMMAND: spcli\r\n");
+                                       "\r\nERROR: SET CART POSITION SETPOINT SOURCE TO CLI WITH COMMAND: spcli\r\n");
                         }
                 } else {
                         strcpy((char *)write_buff,
-                               "\r\nERROR: CAN'T TURN ON DPC, CART TOO CLOSE "
-                               "TO TRACK LIMITS\r\n");
+                               "\r\nERROR: CAN'T TURN ON DPC, CART TOO CLOSE TO TRACK LIMITS\r\n");
                 }
         } else {
-                // command parameters were neither "on", "1", "off" or "0"
+                /* command parameters were neither "on", "1", "off" or "0" */
                 strcpy((char *)write_buff,
-                       "ERROR: INVALID PARAMETER VALUE, SHOULD BE: on, 1, "
-                       "off, 0\r\n");
+                       "ERROR: INVALID PARAMETER VALUE, SHOULD BE: on, 1, off, 0\r\n");
         }
 
         return pdFALSE;
 }
 
-// command: dpci
 static portBASE_TYPE dpci_cmd(int8_t *write_buff, size_t write_buff_len,
                               const int8_t *cmd_string)
 {
@@ -471,89 +448,78 @@ static portBASE_TYPE dpci_cmd(int8_t *write_buff, size_t write_buff_len,
         int8_t    *param1;
         BaseType_t param1_str_len;
 
-        // get first command arguemnt
+        /* get first command arguemnt */
         param1 = (int8_t *)FreeRTOS_CLIGetParameter(cmd_string, 1,
                                                     &param1_str_len);
 
-        // terminate arguemnt string
+        /* terminate arguemnt string */
         param1[param1_str_len] = 0x00;
 
-        if (!strcmp((const char *)param1, "off") ||
-            !strcmp((const char *)param1, "0")) {
-                // turn off down position controller, "dcp off" / "dpc 0" are
-                // both valid
+        const char *param = (const char *)param1;
+        uint8_t     is_param_off = !strcmp(param, "off") || !strcmp(param, "0");
+        uint8_t     is_param_on  = !strcmp(param, "on") || !strcmp(param, "1");
+
+
+        if (is_param_off) {
                 vTaskSuspend(ctrl_downpos_task_h);
                 dcm_set_output_volatage(0.0f);
-
-                // change current app state back to DEFAULT
                 app_current_state = DEFAULT;
-        } else if (!strcmp((const char *)param1, "on") ||
-                   !strcmp((const char *)param1, "1")) {
+        } else if (is_param_on) {
                 if ((cart_current_zone != FREEZING_ZONE_L) ||
                     (cart_current_zone != FREEZING_ZONE_R)) {
-                        // controller turn on case. Even if controller is turned
-                        // on, it will only work if the pendulum angle is in
-                        // range [switch_angle_low, switch_angle_high]
-
-                        // ensure that setpoint for cart postion from cli is the
-                        // same as the setpoint used by controller tasks. If
-                        // it's not true, this means that the user changed
-                        // source of cart pos. setpoint for controllers. ALL
-                        // CONTROLLER TASKS SHOULD BE TURNING ON WITH CART POS.
-                        // SETPOINT SOURCE SET TO CLI, OTHERWISE DON'T TURN ON
-                        // CONTROLLER
+                        /* 
+                         * controller turn on case. Even if controller is turned
+                         * on, it will only work if the pendulum angle is in
+                         * range [switch_angle_low, switch_angle_high]
+                         * 
+                         * ensure that setpoint for cart postion from cli is the
+                         * same as the setpoint used by controller tasks. If
+                         * it's not true, this means that the user changed
+                         * source of cart pos. setpoint for controllers. ALL
+                         * CONTROLLER TASKS SHOULD BE TURNING ON WITH CART POS.
+                         * SETPOINT SOURCE SET TO CLI, OTHERWISE DON'T TURN ON
+                         * CONTROLLER
+                         */
                         if (cart_pos_setp_cm == &cart_pos_setp_cm_cli) {
-                                // set starting setpoint for cart position to
-                                // its current position, so that the cart won't
-                                // instantly jump when the controller is turned
-                                // on. Main cart position setpoint used by any
-                                // controller task has to be the same as cart
-                                // position set point from cli
-                                // cart_pos_setp_cm_cli_raw = cart_pos[ 0 ];
-
+                                /* 
+                                 * set starting setpoint for cart position to
+                                 * its current position, so that the cart won't
+                                 * instantly jump when the controller is turned
+                                 * on. Main cart position setpoint used by any
+                                 * controller task has to be the same as cart
+                                 * position set point from cli
+                                 * cart_pos_setp_cm_cli_raw = cart_pos[ 0 ];
+                                 */
                                 if (app_current_state == DEFAULT) {
-                                        // this command should only turn on
-                                        // "down position controller" when
-                                        // app/pendulum is in the DEFAULT state.
-                                        // This means that it's not possible to
-                                        // use this command while app is in
-                                        // UNINITIALIZED, SWINGUP or UPPOSITION
-                                        // CONTROLLER state
-
-                                        // turn on down position controller,
-                                        // "dcp on" / "dpc 1" are both valid
-                                        // commands
+                                        /* 
+                                         * this command should only turn on
+                                         * "down position controller" when
+                                         * app/pendulum is in the DEFAULT state.
+                                         * This means that it's not possible to
+                                         * use this command while app is in
+                                         * UNINITIALIZED, SWINGUP or UPPOSITION
+                                         * CONTROLLER state
+                                         */
                                         vTaskResume(ctrl_downpos_task_h);
-
-                                        // change app state to "down position
-                                        // controller" state. This will ensure
-                                        // that some cli commands can't be
-                                        // called
                                         app_current_state = DPC;
                                 }
                         } else {
-                                // prompt the use to change setpoint source to
-                                // cli with "spcli" command
                                 strcpy((char *)write_buff,
-                                       "\r\nERROR: SET CART POSITION SETPOINT "
-                                       "SOURCE TO CLI WITH COMMAND: spcli\r\n");
+                                       "\r\nERROR: SET CART POSITION SETPOINT SOURCE TO CLI WITH COMMAND: spcli\r\n");
                         }
                 } else {
                         strcpy((char *)write_buff,
-                               "\r\nERROR: CAN'T TURN ON DPC, CART TOO CLOSE "
-                               "TO TRACK LIMITS\r\n");
+                               "\r\nERROR: CAN'T TURN ON DPC, CART TOO CLOSE TO TRACK LIMITS\r\n");
                 }
         } else {
-                // command parameters were neither "on", "1", "off" or "0"
+                /* command parameters were neither "on", "1", "off" or "0" */
                 strcpy((char *)write_buff,
-                       "ERROR: INVALID PARAMETER VALUE, SHOULD BE: on, 1, "
-                       "off, 0\r\n");
+                       "ERROR: INVALID PARAMETER VALUE, SHOULD BE: on, 1, off, 0\r\n");
         }
 
         return pdFALSE;
 }
 
-// command: upc
 static portBASE_TYPE upc_cmd(int8_t *write_buff, size_t write_buff_len,
                              const int8_t *cmd_string)
 {
@@ -564,92 +530,87 @@ static portBASE_TYPE upc_cmd(int8_t *write_buff, size_t write_buff_len,
         int8_t    *param1;
         BaseType_t param1_str_len;
 
-        // get first command arguemnt
+        /* get first command arguemnt */
         param1 = (int8_t *)FreeRTOS_CLIGetParameter(cmd_string, 1,
                                                     &param1_str_len);
 
-        // terminate arguemnt string
+        /* terminate arguemnt string */
         param1[param1_str_len] = 0x00;
 
         const char *param = (const char *)param1;
+        uint8_t     is_param_off = !strcmp(param, "off") || !strcmp(param, "0");
+        uint8_t     is_param_on  = !strcmp(param, "on") || !strcmp(param, "1");
 
-        if (!strcmp(param, "off") || !strcmp(param, "0")) {
-                // turn off controller, "upc off" / "upc 0" are both valid
-                // commands
+        if (is_param_off) {
                 vTaskSuspend(ctrl_uppos_task_h);
                 dcm_set_output_volatage(0.0f);
-
-                // change current app state back to DEFAULT
                 app_current_state = DEFAULT;
-        } else if (!strcmp(param, "on") || !strcmp(param, "1")) {
+        } else if (is_param_on) {
                 uint8_t is_in_freezing_zone =
                         cart_current_zone != FREEZING_ZONE_L ||
                         cart_current_zone != FREEZING_ZONE_R;
 
                 if (is_in_freezing_zone) {
-                        // controller turn on case. Even if controller is
-                        // turned on, it will only work if the pendulum angle
-                        // is in range [switch_angle_low, switch_angle_high].
-
-                        // ensure that setpoint for cart postion from cli is
-                        // the same as the setpoint used by controller tasks.
-                        // If it's not true, this means that the user changed
-                        // source of cart pos. setpoint for controllers. ALL
-                        // CONTROLLERS TASKS SHOULD BE TURNING ON WITH CART POS.
-                        // SETPOINT SOURCE SET TO CLI, OTHERWISE DON'T TURN ON
-                        // CONTROLLER
+                        /* 
+                         * controller turn on case. Even if controller is
+                         * turned on, it will only work if the pendulum angle
+                         * is in range [switch_angle_low, switch_angle_high].
+                         * 
+                         * ensure that setpoint for cart postion from cli is
+                         * the same as the setpoint used by controller tasks.
+                         * If it's not true, this means that the user changed
+                         * source of cart pos. setpoint for controllers. ALL
+                         * CONTROLLERS TASKS SHOULD BE TURNING ON WITH CART POS.
+                         * SETPOINT SOURCE SET TO CLI, OTHERWISE DON'T TURN ON
+                         * CONTROLLER
+                         */
                         if (cart_pos_setp_cm == &cart_pos_setp_cm_cli) {
-                                // set starting setpoint for cart position to
-                                // its current position, so that the cart won't
-                                // instantly jump when the controller is turned
-                                // on. Main cart position setpoint used by any
-                                // controller task has to be the same as cart
-                                // position set point from cli
-                                // cart_pos_setp_cm_cli_raw = cart_pos[ 0 ];
-
+                                /* 
+                                 * set starting setpoint for cart position to
+                                 * its current position, so that the cart won't
+                                 * instantly jump when the controller is turned
+                                 * on. Main cart position setpoint used by any
+                                 * controller task has to be the same as cart
+                                 * position set point from cli
+                                 * cart_pos_setp_cm_cli_raw = cart_pos[ 0 ];
+                                 */
                                 if (app_current_state == DEFAULT) {
-                                        // this command should only turn on "up
-                                        // position controller" when app is in
-                                        // the DEFAULT state. This means that
-                                        // it's not possible to use this command
-                                        // while app is in UNINITIALIZED,
-                                        // SWINGUP or DOWN POSITION CONTROLLER
-                                        // state
-
-                                        // turn on up position controller,
-                                        // "upc on" / "upc 1" are both valid
-                                        // commands
+                                        /* 
+                                         * this command should only turn on "up
+                                         * position controller" when app is in
+                                         * the DEFAULT state. This means that
+                                         * it's not possible to use this command
+                                         * while app is in UNINITIALIZED,
+                                         * SWINGUP or DOWN POSITION CONTROLLER
+                                         * state
+                                         */
                                         vTaskResume(ctrl_uppos_task_h);
 
-                                        // change app state to "down position
-                                        // controller" state. This will ensure
-                                        // that some cli commands can't be
-                                        // called
+                                        /* 
+                                         * change app state to "down position
+                                         * controller" state. This will ensure
+                                         * that some cli commands can't be
+                                         * called
+                                         */
                                         app_current_state = UPC;
                                 }
                         } else {
-                                // prompt the use to change setpoint source to
-                                // cli with "spcli" command
                                 strcpy((char *)write_buff,
-                                       "\r\nERROR: SET CART POSITION SETPOINT "
-                                       "SOURCE TO CLI WITH COMMAND: spcli\r\n");
+                                       "\r\nERROR: SET CART POSITION SETPOINT SOURCE TO CLI WITH COMMAND: spcli\r\n");
                         }
                 } else {
                         strcpy((char *)write_buff,
-                               "\r\nERROR: CAN'T TURN ON UPC, CART TOO CLOSE "
-                               "TO TRACK LIMITS\r\n");
+                               "\r\nERROR: CAN'T TURN ON UPC, CART TOO CLOSE TO TRACK LIMITS\r\n");
                 }
         } else {
-                // command parameters were neither "on", "1", "off" or "0"
+                /* command parameters were neither "on", "1", "off" or "0" */
                 strcpy((char *)write_buff,
-                       "ERROR: INVALID PARAMETER VALUE, SHOULD BE: on, 1, "
-                       "off, 0\r\n");
+                       "ERROR: INVALID PARAMETER VALUE, SHOULD BE: on, 1, off, 0\r\n");
         }
 
         return pdFALSE;
 }
 
-// command: upci
 static portBASE_TYPE upci_cmd(int8_t *write_buff, size_t write_buff_len,
                               const int8_t *cmd_string)
 {
@@ -660,89 +621,78 @@ static portBASE_TYPE upci_cmd(int8_t *write_buff, size_t write_buff_len,
         int8_t    *param1;
         BaseType_t param1_str_len;
 
-        // get first command arguemnt
+        /* get first command arguemnt */
         param1 = (int8_t *)FreeRTOS_CLIGetParameter(cmd_string, 1,
                                                     &param1_str_len);
 
-        // terminate arguemnt string
+        /* terminate arguemnt string */
         param1[param1_str_len] = 0x00;
 
         const char *param = (const char *)param1;
+        uint8_t     is_param_off = !strcmp(param, "off") || !strcmp(param, "0");
+        uint8_t     is_param_on  = !strcmp(param, "on") || !strcmp(param, "1");
 
-        if (!strcmp(param, "off") || !strcmp(param, "0")) {
-                // turn off controller, "upc off" / "upc 0" are both valid
-                // commands
+        if (is_param_off) {
                 vTaskSuspend(ctrl_uppos_task_h);
                 dcm_set_output_volatage(0.0f);
-
-                // change current app state back to DEFAULT
                 app_current_state = DEFAULT;
-        } else if (!strcmp(param, "on") || !strcmp(param, "1")) {
+        } else if (is_param_on) {
                 uint8_t is_in_freezing_zone =
                         cart_current_zone != FREEZING_ZONE_L ||
                         cart_current_zone != FREEZING_ZONE_R;
                 if (is_in_freezing_zone) {
-                        // controller turn on case. Even if controller is turned
-                        // on, it will only work if the pendulum angle is in
-                        // range [switch_angle_low, switch_angle_high]
-
-                        // ensure that setpoint for cart postion from cli is the
-                        // same as the setpoint used by controller tasks. If
-                        // it's not true, this means that the user changed
-                        // source of cart pos. setpoint for controllers. ALL
-                        // CONTROLLERS TASKS SHOULD BE TURNING ON WITH CART POS.
-                        // SETPOINT SOURCE SET TO CLI, OTHERWISE DON'T TURN ON
-                        // CONTROLLER
+                        /*  
+                         * controller turn on case. Even if controller is turned
+                         * on, it will only work if the pendulum angle is in
+                         * range [switch_angle_low, switch_angle_high]
+                         * 
+                         * ensure that setpoint for cart postion from cli is the
+                         * same as the setpoint used by controller tasks. If
+                         * it's not true, this means that the user changed
+                         * source of cart pos. setpoint for controllers. ALL
+                         * CONTROLLERS TASKS SHOULD BE TURNING ON WITH CART POS.
+                         * SETPOINT SOURCE SET TO CLI, OTHERWISE DON'T TURN ON
+                         * CONTROLLER
+                         */
                         if (cart_pos_setp_cm == &cart_pos_setp_cm_cli) {
-                                // set starting setpoint for cart position to
-                                // its current position, so that the cart won't
-                                // instantly jump when the controller is turned
-                                // on. Main cart position setpoint used by any
-                                // controller task has to be the same as cart
-                                // position set point from cli
-                                // cart_pos_setp_cm_cli_raw = cart_pos[ 0 ];
+                                /* 
+                                 * set starting setpoint for cart position to
+                                 * its current position, so that the cart won't
+                                 * instantly jump when the controller is turned
+                                 * on. Main cart position setpoint used by any
+                                 * controller task has to be the same as cart
+                                 * position set point from cli
+                                 * cart_pos_setp_cm_cli_raw = cart_pos[ 0 ]; 
+                                 */
                                 if (app_current_state == DEFAULT) {
-                                        // this command should only turn on "up
-                                        // position controller" when app is in
-                                        // the DEFAULT state. This means that
-                                        // it's not possible to use this command
-                                        // while app is in UNINITIALIZED,
-                                        // SWINGUP or DOWN POSITION CONTROLLER
-                                        // state
-
-                                        // turn on up position controller,
-                                        // "upc on" / "upc 1" are both valid
-                                        // commands
+                                        /* 
+                                         * this command should only turn on "up
+                                         * position controller" when app is in
+                                         * the DEFAULT state. This means that
+                                         * it's not possible to use this command
+                                         * while app is in UNINITIALIZED,
+                                         * SWINGUP or DOWN POSITION CONTROLLER
+                                         * state
+                                         */
                                         vTaskResume(ctrl_uppos_task_h);
-
-                                        // change app state to "down position
-                                        // controller" state. This will ensure
-                                        // that some cli commands can't be
-                                        // called
                                         app_current_state = UPC;
                                 }
                         } else {
-                                // prompt the use to change setpoint source to
-                                // cli with "spcli" command
                                 strcpy((char *)write_buff,
-                                       "\r\nERROR: SET CART POSITION SETPOINT "
-                                       "SOURCE TO CLI WITH COMMAND: spcli\r\n");
+                                       "\r\nERROR: SET CART POSITION SETPOINT SOURCE TO CLI WITH COMMAND: spcli\r\n");
                         }
                 } else {
                         strcpy((char *)write_buff,
-                               "\r\nERROR: CAN'T TURN ON UPC, CART TOO CLOSE "
-                               "TO TRACK LIMITS\r\n");
+                               "\r\nERROR: CAN'T TURN ON UPC, CART TOO CLOSE TO TRACK LIMITS\r\n");
                 }
         } else {
-                // command parameters were neither "on", "1", "off" or "0"
+                /* command parameters were neither "on", "1", "off" or "0" */
                 strcpy((char *)write_buff,
-                       "ERROR: INVALID PARAMETER VALUE, SHOULD BE: on, 1, "
-                       "off, 0\r\n");
+                       "ERROR: INVALID PARAMETER VALUE, SHOULD BE: on, 1, off, 0\r\n");
         }
         return pdFALSE;
 }
 
-// command: clc
 static portBASE_TYPE clc_cmd(int8_t *write_buff, size_t write_buff_len,
                              const int8_t *cmd_string)
 {
@@ -750,15 +700,13 @@ static portBASE_TYPE clc_cmd(int8_t *write_buff, size_t write_buff_len,
         (void)write_buff_len;
         configASSERT(write_buff);
 
-        // send clear screen char sequence
+        /* send clear screen char sequence */
         // com_send("\e[1;1H\e[2J", 10);
         com_send("\033[1;1H\033[2J", 10);
-        // printf("\e[1;1H\e[2J");
 
         return pdFALSE;
 }
 
-// command: sppot
 static portBASE_TYPE sppot_cmd(int8_t *write_buff, size_t write_buff_len,
                                const int8_t *cmd_string)
 {
@@ -766,13 +714,12 @@ static portBASE_TYPE sppot_cmd(int8_t *write_buff, size_t write_buff_len,
         (void)write_buff_len;
         configASSERT(write_buff);
 
-        // set cart position setpoint source to external potentiometer
+        /* set cart position setpoint source to external potentiometer */
         cart_pos_setp_cm = &cart_pos_setp_cm_pot;
 
         return pdFALSE;
 }
 
-// command: spcli
 static portBASE_TYPE spcli_cmd(int8_t *write_buff, size_t write_buff_len,
                                const int8_t *cmd_string)
 {
@@ -780,13 +727,12 @@ static portBASE_TYPE spcli_cmd(int8_t *write_buff, size_t write_buff_len,
         (void)write_buff_len;
         configASSERT(write_buff);
 
-        // set cart position setpoint source to external potentiometer
+        /* set cart position setpoint source to external potentiometer */
         cart_pos_setp_cm = &cart_pos_setp_cm_cli;
 
         return pdFALSE;
 }
 
-// command: sp
 static portBASE_TYPE sp_cmd(int8_t *write_buff, size_t write_buff_len,
                             const int8_t *cmd_string)
 {
@@ -798,21 +744,23 @@ static portBASE_TYPE sp_cmd(int8_t *write_buff, size_t write_buff_len,
         BaseType_t param1_str_len;
         char      *errCheck;
 
-        // new setpoint for cart position
+        /* new setpoint for cart position */
         float new_setpoint;
 
-        // get first command parameter
+        /* get first command parameter */
         param1 = (int8_t *)FreeRTOS_CLIGetParameter(cmd_string, 1,
                                                     &param1_str_len);
 
-        // terminate arguemnt string
+        /* terminate arguemnt string */
         param1[param1_str_len] = 0x00;
 
         const char *param = (const char *)param1;
 
         if (!strcmp(param, ".")) {
-                // Command "setpoint" was called with "." argument - Display
-                // current setpoint
+                /* 
+                 * Command "setpoint" was called with "." argument - Display
+                 * current setpoint
+                 */
                 if (cart_pos_setp_cm == &cart_pos_setp_cm_cli) {
                         sprintf((char *)write_buff,
                                 "\r\nCurrent setpoint is: %f\r\nSource: CLI\r\n",
@@ -824,53 +772,57 @@ static portBASE_TYPE sp_cmd(int8_t *write_buff, size_t write_buff_len,
                 }
         } else {
                 if (app_current_state == DPC || app_current_state == UPC) {
-                        // User should be able to change cart position setpoint
-                        // only while in DPC or UPC control states. In any other
-                        // state, calling "sp" command with numeric argument
-                        // should not be allowed. While in default state, the
-                        // value of cart position setpoint is constantly updated
-                        // in LIP_util_task.c to current cart position, so that
-                        // when the down controller is turned on there won't be
-                        // a jump in setpoint value.
-                        // (cart_pos_setp_cm_cli_raw)
-
-                        // Parameter passed to "sp" command was not "."
+                        /* 
+                         * User should be able to change cart position setpoint
+                         * only while in DPC or UPC control states. In any other
+                         * state, calling "sp" command with numeric argument
+                         * should not be allowed. While in default state, the
+                         * value of cart position setpoint is constantly updated
+                         * in LIP_util_task.c to current cart position, so that
+                         * when the down controller is turned on there won't be
+                         * a jump in setpoint value.
+                         * (cart_pos_setp_cm_cli_raw)
+                         * 
+                         * Parameter passed to "sp" command was not "."
+                         */
                         if (cart_pos_setp_cm == &cart_pos_setp_cm_cli) {
-                                // Cart position setpoint source for controllers
-                                // is setpoint from cli
-
-                                // Parameter string to float
+                                /* 
+                                 * Cart position setpoint source for controllers
+                                 * is setpoint from cli
+                                 */
                                 new_setpoint =
                                         strtof((const char *)param1, &errCheck);
 
                                 if ((int8_t *)errCheck == param1) {
                                         const char *msg =
-                                                "\r\nERROR: sp PARAMETER HAS "
-                                                "TO BE A NUMBER OR \".\"\r\n";
-                                        // Parameter passed is not a number
+                                                "\r\nERROR: sp PARAMETER HAS TO BE A NUMBER OR \".\"\r\n";
+                                        /* Parameter passed is not a number */
                                         strcpy((char *)write_buff,
                                                (const char *)msg);
                                 } else {
-                                        // Parameter passed is a number, display
-                                        // new setpoint
-
-                                        // Write new setpoint to _raw cli
-                                        // setpoint (unfiltered).
-                                        // cart_pos_setp_cm_cli_raw
-                                        // acts as input to
-                                        // cart_pos_setp_cm_cli
-                                        // low-pass filter. Low-pass filter is
-                                        // used for both setpoint sources to
-                                        // smooth out discontinous input
+                                        /* 
+                                         * Parameter passed is a number, display
+                                         * new setpoint
+                                         * 
+                                         * Write new setpoint to _raw cli
+                                         * setpoint (unfiltered).
+                                         * cart_pos_setp_cm_cli_raw
+                                         * acts as input to
+                                         * cart_pos_setp_cm_cli
+                                         * low-pass filter. Low-pass filter is
+                                         * used for both setpoint sources to
+                                         * smooth out discontinous input
+                                         */
                                         cart_pos_setp_cm_cli_raw = new_setpoint;
                                 }
                         } else {
-                                // Main cart position setpoint source for
-                                // controllers isn't setpoint from cli, command
-                                // should throw an error
+                                /* 
+                                 * Main cart position setpoint source for
+                                 * controllers isn't setpoint from cli, command
+                                 * should throw an error
+                                 */
                                 strcpy((char *)write_buff,
-                                       "\r\nERROR: TO USE THIS COMMAND, SET "
-                                       "SETPOINT SOURCE TO CLI.\r\n");
+                                       "\r\nERROR: TO USE THIS COMMAND, SET SETPOINT SOURCE TO CLI.\r\n");
                         }
                 }
         }
@@ -878,7 +830,6 @@ static portBASE_TYPE sp_cmd(int8_t *write_buff, size_t write_buff_len,
         return pdFALSE;
 }
 
-// command: swingup
 static portBASE_TYPE swingup_cmd(int8_t *write_buff, size_t write_buff_len,
                                  const int8_t *cmd_string)
 {
@@ -887,32 +838,29 @@ static portBASE_TYPE swingup_cmd(int8_t *write_buff, size_t write_buff_len,
         configASSERT(write_buff);
 
         if (app_current_state == DEFAULT) {
-                // App is in DEFAULT STATE and cart position is at position
-                // 20cm pm 1cm. Swingup can be started
+                /* 
+                 * App is in DEFAULT STATE and cart position is at position
+                 * 20cm pm 1cm. Swingup can be started
+                 */
 
-                // Reset lookup_index in swingup task for loop
+                /* Reset lookup_index in swingup task for loop */
                 reset_lookup_index = 1;
-
-                // Global flag to indicate that swingup is running and to tell
-                // watchdog task to start keeping track of pendulum angle to
-                // switch between swingup and up position controller
+                /* 
+                 * Global flag to indicate that swingup is running and to tell
+                 * watchdog task to start keeping track of pendulum angle to
+                 * switch between swingup and up position controller
+                 */
                 swingup_task_resumed = 1;
-
-                // Change app state to swingup
                 app_current_state = SWINGUP;
-
-                // Resume swingup task
                 vTaskResume(swingup_task_h);
         } else {
                 strcpy((char *)write_buff,
-                       "ERROR: APP NOT IN DEFAULT STATE OR CART POSITION "
-                       "NOT 20cm\r\n");
+                       "ERROR: APP NOT IN DEFAULT STATE OR CART POSITION NOT 20cm\r\n");
         }
 
         return pdFALSE;
 }
 
-// command: swingdown
 static portBASE_TYPE swingdown_cmd(int8_t *write_buff, size_t write_buff_len,
                                    const int8_t *cmd_string)
 {
@@ -921,24 +869,18 @@ static portBASE_TYPE swingdown_cmd(int8_t *write_buff, size_t write_buff_len,
         configASSERT(write_buff);
 
         if (app_current_state == UPC) {
-                // Reset lookup_index in swingup task for loop
+                /* Reset lookup_index in swingup task for loop */
                 reset_swingdown = 1;
-
-                // Change app state to swingup
                 app_current_state = DPC;
-
-                // Resume swingup task
                 vTaskResume(swingdown_task_h);
         } else {
                 strcpy((char *)write_buff,
-                       "ERROR: APP NOT IN DEFAULT STATE OR CART POSITION "
-                       "NOT 20cm\r\n");
+                       "ERROR: APP NOT IN DEFAULT STATE OR CART POSITION NOT 20cm\r\n");
         }
 
         return pdFALSE;
 }
 
-// command: reset
 static portBASE_TYPE reset_cmd(int8_t *write_buff, size_t write_buff_len,
                                const int8_t *cmd_string)
 {
@@ -947,14 +889,15 @@ static portBASE_TYPE reset_cmd(int8_t *write_buff, size_t write_buff_len,
         configASSERT(write_buff);
 
         dcm_set_output_volatage(0.0f);
-        // Resets whole micro controller. The same function is used in hard
-        // fault interrupt handler
+        /* 
+         * Resets whole micro controller. The same function is used in hard
+         * fault interrupt handler
+         */
         NVIC_SystemReset();
 
         return pdFALSE;
 }
 
-// command: vol
 static portBASE_TYPE vol_cmd(int8_t *write_buff, size_t write_buff_len,
                              const int8_t *cmd_string)
 {
@@ -968,11 +911,11 @@ static portBASE_TYPE vol_cmd(int8_t *write_buff, size_t write_buff_len,
 
         if (app_current_state == UNINITIALIZED ||
             app_current_state == DEFAULT) {
-                // Command available only in this two states
+                /* Command available only in this two states */
                 param1 = (int8_t *)FreeRTOS_CLIGetParameter(cmd_string, 1,
                                                             &param1_str_len);
 
-                // Terminate command string
+                /* Terminate command string */
                 param1[param1_str_len] = 0x00;
 
                 voltageSetting = strtof((const char *)param1, &errCheck);
@@ -987,17 +930,13 @@ static portBASE_TYPE vol_cmd(int8_t *write_buff, size_t write_buff_len,
                         dcm_set_output_volatage(voltageSetting);
                 }
         } else {
-                // Inform a user that they can't use this command in current
-                // state
                 strcpy((char *)write_buff,
-                       "\r\nERROR: This command is available in UNINITIALIZED "
-                       "and DEFAULT states\r\n");
+                       "\r\nERROR: This command is available in UNINITIALIZED and DEFAULT states\r\n");
         }
 
         return pdFALSE;
 }
 
-// command: br
 static portBASE_TYPE br_cmd(int8_t *write_buff, size_t write_buff_len,
                             const int8_t *cmd_string)
 {
@@ -1005,30 +944,32 @@ static portBASE_TYPE br_cmd(int8_t *write_buff, size_t write_buff_len,
         (void)write_buff_len;
         configASSERT(write_buff);
 
-        // Set dc motor input voltage to zero
+        /* Set dc motor input voltage to zero */
         dcm_set_output_volatage(0.0f);
 
-        // Change app state to DEFAULT or stay in UNINITIALIZED
-        // (if it was the last state)
+        /* 
+         * Change app state to DEFAULT or stay in UNINITIALIZED
+         * (if it was the last state)
+         */
         if (app_current_state != UNINITIALIZED) {
                 app_current_state = DEFAULT;
-
-                // Suspend any control task. Calls to vTaskSuspend are not
-                // cumulative so it can be used on task which is already
-                // suspended and one call to vTaskResume will be enoguh to bring
-                // that task back to work
+                /* 
+                 * Suspend any control task. Calls to vTaskSuspend are not
+                 * cumulative so it can be used on task which is already
+                 * suspended and one call to vTaskResume will be enoguh to bring
+                 * that task back to work
+                 */
                 vTaskSuspend(ctrl_downpos_task_h);
                 vTaskSuspend(ctrl_uppos_task_h);
                 vTaskSuspend(swingup_task_h);
         }
 
-        // Set dc motor input voltage to zero again :)
+        /* Set dc motor input voltage to zero again :) */
         dcm_set_output_volatage(0.0f);
 
         return pdFALSE;
 }
 
-// command: bo (bounceoff)
 static portBASE_TYPE bounceoff_cmd(int8_t *write_buff, size_t write_buff_len,
                                    const int8_t *cmd_string)
 {
@@ -1039,11 +980,11 @@ static portBASE_TYPE bounceoff_cmd(int8_t *write_buff, size_t write_buff_len,
         int8_t    *param1;
         BaseType_t param1_str_len;
 
-        // Get first command argument
+        /* Get first command argument */
         param1 = (int8_t *)FreeRTOS_CLIGetParameter(cmd_string, 1,
                                                     &param1_str_len);
 
-        // Terminate argumesnt string
+        /* Terminate argumesnt string */
         param1[param1_str_len] = 0x00;
 
         const char *param        = (const char *)param1;
@@ -1059,18 +1000,19 @@ static portBASE_TYPE bounceoff_cmd(int8_t *write_buff, size_t write_buff_len,
         return pdFALSE;
 }
 
-// command: test
 static portBASE_TYPE test_cmd(int8_t *write_buff, size_t write_buff_len,
                               const int8_t *cmd_string)
 {
-        // This command will send notification to test task that will performe
-        // selected test procedure
+        /* 
+         * This command will send notification to test task that will performe
+         * selected test procedure 
+         */
 
         (void)cmd_string;
         (void)write_buff_len;
         configASSERT(write_buff);
 
-        // Set reset_test flag to 1, it should be reset to 0 in test task
+        /* Set reset_test flag to 1, it should be reset to 0 in test task */
         // reset_test = 1;
 
         if (app_current_state == UNINITIALIZED) {
@@ -1080,7 +1022,6 @@ static portBASE_TYPE test_cmd(int8_t *write_buff, size_t write_buff_len,
                 strcpy((char *)write_buff,
                        "\r\nApp state not DEFAULT. Run \"break\" command\r\n");
         } else if (app_current_state == DEFAULT) {
-                // Change app state to TEST
                 app_current_state = TEST;
 
                 xTaskNotifyIndexed(test_task_h, 0, TEST_1,
@@ -1089,7 +1030,6 @@ static portBASE_TYPE test_cmd(int8_t *write_buff, size_t write_buff_len,
                 strcpy((char *)write_buff,
                        "\r\nStarting test procedure nr. 1\r\n");
         } else {
-                // App not in any known state
                 strcpy((char *)write_buff,
                        "\r\nApp not in valid state. Run \"reset\" command\r\n");
         }
@@ -1097,11 +1037,10 @@ static portBASE_TYPE test_cmd(int8_t *write_buff, size_t write_buff_len,
         return pdFALSE;
 }
 
-// command: tcc
 static portBASE_TYPE tcc_cmd(int8_t *write_buff, size_t write_buff_len,
                              const int8_t *cmd_string)
 {
-        // tcc - time constant cart
+        /* tcc - time constant cart */
         // ( void ) cmd_string;
         // ( void ) write_buff_len;
         // configASSERT( write_buff );
@@ -1113,13 +1052,13 @@ static portBASE_TYPE tcc_cmd(int8_t *write_buff, size_t write_buff_len,
 
         float new_time_constant;
 
-        // Get command arguemnts
+        /* Get command arguemnts */
         command_param_1 = (int8_t *)FreeRTOS_CLIGetParameter(
                 cmd_string, 1, &command_param_str_len_1);
         command_param_2 = (int8_t *)FreeRTOS_CLIGetParameter(
                 cmd_string, 2, &command_param_str_len_2);
 
-        // Terminate arguemnt string
+        /* Terminate arguemnt string */
         command_param_1[command_param_str_len_1] = 0x00;
         command_param_2[command_param_str_len_2] = 0x00;
 
@@ -1134,11 +1073,10 @@ static portBASE_TYPE tcc_cmd(int8_t *write_buff, size_t write_buff_len,
         return pdFALSE;
 }
 
-// command: tcp
 static portBASE_TYPE tcp_cmd(int8_t *write_buff, size_t write_buff_len,
                              const int8_t *cmd_string)
 {
-        // tcp - time constant pendulum
+        /* tcp - time constant pendulum */
         // ( void ) cmd_string;
         // ( void ) write_buff_len;
         // configASSERT( write_buff );
@@ -1150,13 +1088,13 @@ static portBASE_TYPE tcp_cmd(int8_t *write_buff, size_t write_buff_len,
 
         float new_time_constant;
 
-        // Get command arguemnts
+        /* Get command arguemnts */
         command_param_1 = (int8_t *)FreeRTOS_CLIGetParameter(
                 cmd_string, 1, &command_param_str_len_1);
         command_param_2 = (int8_t *)FreeRTOS_CLIGetParameter(
                 cmd_string, 2, &command_param_str_len_2);
 
-        // Terminate arguemnt string
+        /* Terminate arguemnt string */
         command_param_1[command_param_str_len_1] = 0x00;
         command_param_2[command_param_str_len_2] = 0x00;
 
