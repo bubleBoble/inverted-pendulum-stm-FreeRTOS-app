@@ -20,10 +20,9 @@ This project was compiled using the following tools with respective versions:
   - **arm-none-eabi toolchain** version **10.3.2021.10-x86_64** - [download here](https://developer.arm.com/downloads/-/gnu-rm)
   - **podman** - **5.3.2**
 
-ST Drivers - [repositories on github](https://github.com/STMicroelectronics/STM32CubeF4)
-:
-  - **CMSIS**
-  - **STM32F4xx_HAL_Driver**
+ST/ARM Drivers:
+  - **CMSIS** - 5.6.0 (`cmsis_version.h`) - [github repo](https://github.com/ARM-software/CMSIS_5)
+  - **STM32F4xx_HAL_Driver** - v1.8.2.0 (`stm32f4xx_hal.c`) - [github repo](https://github.com/STMicroelectronics/stm32f4xx-hal-driver)
 
 ## Project structure
 From the repository root:
