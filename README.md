@@ -23,6 +23,7 @@ This project was compiled using the following tools with respective versions:
 ST/ARM Drivers:
   - **CMSIS** - 5.6.0 (`cmsis_version.h`) - [github repo](https://github.com/ARM-software/CMSIS_5)
   - **STM32F4xx_HAL_Driver** - v1.8.2.0 (`stm32f4xx_hal.c`) - [github repo](https://github.com/STMicroelectronics/stm32f4xx-hal-driver)
+  - **CMSIS-device-f4**: - V2.6.9 - [github repo](https://github.com/STMicroelectronics/cmsis-device-f4.git)
 
 ## Project structure
 From the repository root:

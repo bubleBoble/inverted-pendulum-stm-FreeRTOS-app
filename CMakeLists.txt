@@ -18,7 +18,7 @@ endif()
 message("Build type: ${CMAKE_BUILD_TYPE}")
 
 # MCU info
-set(MCU_FAMILY STM32F4xx)
+set(MCU_FAMILY stm32f4xx)
 set(MCU_MODEL STM32F429xx)
 set(MCU_PARAMETERS
     -mcpu=cortex-m4
@@ -46,10 +46,10 @@ set(CMAKE_CXX_EXTENSIONS ON)
 # Includes
 set(STM32_CORE_INCLUDE_DIRECTORIES
     ${CMAKE_CURRENT_SOURCE_DIR}/Core/Inc
-    ${CMAKE_CURRENT_SOURCE_DIR}/Drivers/${MCU_FAMILY}_HAL_Driver/Inc
-    ${CMAKE_CURRENT_SOURCE_DIR}/Drivers/${MCU_FAMILY}_HAL_Driver/Inc/Legacy
-    ${CMAKE_CURRENT_SOURCE_DIR}/Drivers/CMSIS/Device/ST/${MCU_FAMILY}/Include
-    ${CMAKE_CURRENT_SOURCE_DIR}/Drivers/CMSIS/Include)
+    ${CMAKE_CURRENT_SOURCE_DIR}/drivers/${MCU_FAMILY}-hal-driver/Inc
+    ${CMAKE_CURRENT_SOURCE_DIR}/drivers/${MCU_FAMILY}-hal-driver/Inc/Legacy
+    ${CMAKE_CURRENT_SOURCE_DIR}/drivers/cmsis-device-f4/Include
+    ${CMAKE_CURRENT_SOURCE_DIR}/drivers/CMSIS/CMSIS/Core/Include)
 
 set(FREERTOS_INCLUDE_DIRECTORIES
     ${CMAKE_CURRENT_SOURCE_DIR}/FreeRTOS/Source/include
@@ -77,27 +77,27 @@ set(STM32_CORE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/Core/Src/sysmem.c
     ${CMAKE_CURRENT_SOURCE_DIR}/Core/Src/syscalls.c
     ${CMAKE_CURRENT_SOURCE_DIR}/Core/Src/system_stm32f4xx.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_adc.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_adc_ex.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_adc.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc_ex.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash_ex.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash_ramfunc.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_gpio.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma_ex.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pwr.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pwr_ex.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_cortex.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_i2c.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_i2c_ex.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim_ex.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.c)
+    ${CMAKE_CURRENT_SOURCE_DIR}/drivers/${MCU_FAMILY}-hal-driver/Src/stm32f4xx_hal_adc.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/drivers/${MCU_FAMILY}-hal-driver/Src/stm32f4xx_hal_adc_ex.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/drivers/${MCU_FAMILY}-hal-driver/Src/stm32f4xx_ll_adc.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/drivers/${MCU_FAMILY}-hal-driver/Src/stm32f4xx_hal_rcc.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/drivers/${MCU_FAMILY}-hal-driver/Src/stm32f4xx_hal_rcc_ex.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/drivers/${MCU_FAMILY}-hal-driver/Src/stm32f4xx_hal_flash.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/drivers/${MCU_FAMILY}-hal-driver/Src/stm32f4xx_hal_flash_ex.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/drivers/${MCU_FAMILY}-hal-driver/Src/stm32f4xx_hal_flash_ramfunc.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/drivers/${MCU_FAMILY}-hal-driver/Src/stm32f4xx_hal_gpio.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/drivers/${MCU_FAMILY}-hal-driver/Src/stm32f4xx_hal_dma_ex.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/drivers/${MCU_FAMILY}-hal-driver/Src/stm32f4xx_hal_dma.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/drivers/${MCU_FAMILY}-hal-driver/Src/stm32f4xx_hal_pwr.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/drivers/${MCU_FAMILY}-hal-driver/Src/stm32f4xx_hal_pwr_ex.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/drivers/${MCU_FAMILY}-hal-driver/Src/stm32f4xx_hal_cortex.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/drivers/${MCU_FAMILY}-hal-driver/Src/stm32f4xx_hal.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/drivers/${MCU_FAMILY}-hal-driver/Src/stm32f4xx_hal_exti.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/drivers/${MCU_FAMILY}-hal-driver/Src/stm32f4xx_hal_i2c.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/drivers/${MCU_FAMILY}-hal-driver/Src/stm32f4xx_hal_i2c_ex.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/drivers/${MCU_FAMILY}-hal-driver/Src/stm32f4xx_hal_tim.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/drivers/${MCU_FAMILY}-hal-driver/Src/stm32f4xx_hal_tim_ex.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/drivers/${MCU_FAMILY}-hal-driver/Src/stm32f4xx_hal_uart.c)
 
 set(FREERTOS_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/FreeRTOS/Source/croutine.c
