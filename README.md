@@ -25,6 +25,10 @@ ST/ARM Drivers:
   - **STM32F4xx_HAL_Driver** - v1.8.2.0 (`stm32f4xx_hal.c`) - [github repo](https://github.com/STMicroelectronics/stm32f4xx-hal-driver)
   - **CMSIS-device-f4**: - V2.6.9 - [github repo](https://github.com/STMicroelectronics/cmsis-device-f4.git)
 
+You can also get **CMSIS SVD** files from:
+  - official ST website: [link](https://www.st.com/en/microcontrollers-microprocessors/stm32f429zi.html#cad-resources) (CAD resources / system view description)
+  - or from this FOSS project on github: [link](https://github.com/cmsis-svd/cmsis-svd-data)
+
 ## Project structure
 From the repository root:
   - [Core](./core) - ST CubeMX generated code
