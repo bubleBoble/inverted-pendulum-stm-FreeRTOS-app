@@ -27,8 +27,9 @@ ST/ARM Drivers:
 
 You can also get **CMSIS SVD** files from:
   - official ST website: [link](https://www.st.com/en/microcontrollers-microprocessors/stm32f429zi.html#cad-resources) (CAD resources / system view description)
-  - or from this FOSS project on github: [link](https://github.com/cmsis-svd/cmsis-svd-data)
+  - or from this FOSS project on github (heavy): [link](https://github.com/cmsis-svd/cmsis-svd-data)
 
+TODO
 ## Project structure
 From the repository root:
   - [Core](./core) - ST CubeMX generated code
@@ -120,10 +121,10 @@ This makefile is based on the
 template project.
 
 ## Hardware setup:
-<img title="Finished pendulum" alt="" src="./images/allallinone.png">
+<img title="Finished pendulum" alt="" src="./docs/images/allallinone.png">
 
 ## Electronic modules connections:
-<img title="diagram" alt="" src="./images/modules_connections.jpg">
+<img title="diagram" alt="" src="./docs/images/modules_connections.jpg">
 
 
 # Board view
