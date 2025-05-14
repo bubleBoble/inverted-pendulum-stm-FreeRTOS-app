@@ -5,13 +5,13 @@
 
 SHELL := /bin/bash
 
-PROJECT_NAME ?= firmware
+PROJECT_NAME ?= LIP
 BUILD_TYPE ?= Debug
 BUILD_DIR ?= build_cmake
 FIRMWARE_DEBUG := $(BUILD_DIR)/debug/$(PROJECT_NAME).bin
 FIRMWARE_RELEASE := $(BUILD_DIR)/release/$(PROJECT_NAME).bin
 PLATFORM = $(if $(OS),$(OS),$(shell uname -s))
-PROJECT_DIR := lip
+PROJECT_DIR := application
 
 # STM32 Device
 DEVICE ?= STM32F429ZI
@@ -106,8 +106,9 @@ FOUND_HIDDEN_FILES := $(shell \
         fi; \
     done)
 
+# maybe add `drivers` directory as well?
 FORMAT_LINUX := $(shell \
-    find Core Drivers lip -name '*' -type f; \
+    find application -name '*' -type f; \
     find . -name '*.ioc') \
     $(FOUND_HIDDEN_FILES)
 

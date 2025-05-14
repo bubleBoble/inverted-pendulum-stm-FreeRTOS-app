@@ -1,0 +1,21 @@
+[submodule "drivers/stm32f4xx-hal-driver"]
+	path = drivers/stm32f4xx-hal-driver
+	url = https://github.com/STMicroelectronics/stm32f4xx-hal-driver.git
+[submodule "drivers/CMSIS"]
+	path = drivers/CMSIS
+	url = https://github.com/ARM-software/CMSIS_5.git
+[submodule "drivers/cmsis-device-f4"]
+	path = drivers/cmsis-device-f4
+	url = https://github.com/STMicroelectronics/cmsis-device-f4.git
+[submodule "application_framework/CMSIS_5"]
+	path = application_framework/CMSIS_5
+	url = https://github.com/ARM-software/CMSIS_5
+[submodule "stm32f4xx-hal-driver"]
+	path = stm32f4xx-hal-driver
+	url = https://github.com/STMicroelectronics/stm32f4xx-hal-driver
+[submodule "application_framework/stm32f4xx-hal-driver"]
+	path = application_framework/stm32f4xx-hal-driver
+	url = https://github.com/STMicroelectronics/stm32f4xx-hal-driver
+[submodule "application_framework/cmsis-device-f4"]
+	path = application_framework/cmsis-device-f4
+	url = https://github.com/STMicroelectronics/cmsis-device-f4.git
