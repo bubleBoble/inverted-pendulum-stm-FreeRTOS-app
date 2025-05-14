@@ -17,7 +17,7 @@ Project was compiled for STM32F429ZI MCU. Tested on STM32F429ZI Nucleo board.
 This project was compiled using the following tools with respective versions:
   - **cmake** - **3.12**
   - **make** - GNU Make **4.4.1**
-  - **arm-none-eabi toolchain** version **10.3.2021.10-x86_64** - [download here](https://developer.arm.com/downloads/-/gnu-rm)
+  - **arm-none-eabi toolchain** version **>12.2.1** - [download here](https://developer.arm.com/downloads/-/gnu-rm)
   - **podman** - **5.3.2**
 
 ST/ARM Drivers:
