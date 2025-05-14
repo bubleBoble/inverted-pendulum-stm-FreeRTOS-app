@@ -64,14 +64,6 @@ git submodule init
 git submodule update
 ```
 
-then checkout correct versions:
-```sh
-cd application_framework
-cd CMSIS_5 && git checkout 5.6.0
-cd ../cmsis-device-f4 && git checkout v2.6.9
-cd ../stm32f4xx-hal-driver && git checkout v1.8.2
-```
-
 ## Building
 Project can be built using cmake, make alone or using cmake inside a Linux
 container (based on this amazing template project
