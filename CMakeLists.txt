@@ -50,7 +50,7 @@ set(ST_DRIVERS_INCLUDES
 
 set(CMSIS_INCLUDES
     ${CMAKE_CURRENT_SOURCE_DIR}/application_framework/cmsis-device-f4/Include
-    ${CMAKE_CURRENT_SOURCE_DIR}/application_framework/CMSIS/CMSIS/Core/Include)
+    ${CMAKE_CURRENT_SOURCE_DIR}/application_framework/CMSIS_5/CMSIS/Core/Include)
 
 set(FREERTOS_INCLUDES
     ${CMAKE_CURRENT_SOURCE_DIR}/application_framework/RTOS/FreeRTOS/Source/include
