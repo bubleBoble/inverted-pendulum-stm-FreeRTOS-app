@@ -29,6 +29,9 @@ You can also get **CMSIS SVD** files from:
   - official ST website: [link](https://www.st.com/en/microcontrollers-microprocessors/stm32f429zi.html#cad-resources) (CAD resources / system view description)
   - or from this FOSS project on github (heavy): [link](https://github.com/cmsis-svd/cmsis-svd-data)
 
+RTOS:
+  - **FreeRTOS** - V10.5.1
+
 ## Project structure
 From the repository root:
   - [application](./application)
