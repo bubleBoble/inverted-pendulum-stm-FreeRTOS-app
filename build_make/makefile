@@ -79,54 +79,54 @@ BUILD_DIR = build
 ###############################################################################
 # C sources
 C_SOURCES =  \
-../Core/Src/main.c \
-../Core/Src/gpio.c \
-../Core/Src/adc.c \
-../Core/Src/dma.c \
-../Core/Src/i2c.c \
-../Core/Src/tim.c \
-../Core/Src/usart.c \
-../Core/Src/stm32f4xx_it.c \
-../Core/Src/stm32f4xx_hal_msp.c \
-../Core/Src/stm32f4xx_hal_timebase_tim.c \
-../Core/Src/sysmem.c \
-../Core/Src/syscalls.c \
-../Core/Src/system_stm32f4xx.c \
-../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_adc.c \
-../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_adc_ex.c \
-../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_adc.c \
-../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc.c \
-../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc_ex.c \
-../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash.c \
-../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash_ex.c \
-../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash_ramfunc.c \
-../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_gpio.c \
-../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma_ex.c \
-../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.c \
-../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pwr.c \
-../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pwr_ex.c \
-../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_cortex.c \
-../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal.c \
-../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c \
-../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_i2c.c \
-../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_i2c_ex.c \
-../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.c \
-../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim_ex.c \
-../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.c \
-../FreeRTOS/Source/croutine.c \
-../FreeRTOS/Source/event_groups.c \
-../FreeRTOS/Source/list.c \
-../FreeRTOS/Source/queue.c \
-../FreeRTOS/Source/stream_buffer.c \
-../FreeRTOS/Source/tasks.c \
-../FreeRTOS/Source/timers.c \
-../FreeRTOS/Source/portable/MemMang/heap_4.c \
-../FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c \
-$(wildcard ../FreeRTOS-CLI/*.c) \
-$(wildcard ../LIP/source/*.c) \
-$(wildcard ../LIP/as5600_driver/src/*.c) \
-$(wildcard ../LIP/as5600_driver/interface/*.c) \
-$(wildcard ../LIP/as5600_driver/example/*.c)
+../application/STCore/Src/main.c \
+../application/STCore/Src/gpio.c \
+../application/STCore/Src/adc.c \
+../application/STCore/Src/dma.c \
+../application/STCore/Src/i2c.c \
+../application/STCore/Src/tim.c \
+../application/STCore/Src/usart.c \
+../application/STCore/Src/stm32f4xx_it.c \
+../application/STCore/Src/stm32f4xx_hal_msp.c \
+../application/STCore/Src/stm32f4xx_hal_timebase_tim.c \
+../application/STCore/Src/sysmem.c \
+../application/STCore/Src/syscalls.c \
+../application/STCore/Src/system_stm32f4xx.c \
+../application_framework/stm32f4xx-hal-driver/Src/stm32f4xx_hal_adc.c \
+../application_framework/stm32f4xx-hal-driver/Src/stm32f4xx_hal_adc_ex.c \
+../application_framework/stm32f4xx-hal-driver/Src/stm32f4xx_ll_adc.c \
+../application_framework/stm32f4xx-hal-driver/Src/stm32f4xx_hal_rcc.c \
+../application_framework/stm32f4xx-hal-driver/Src/stm32f4xx_hal_rcc_ex.c \
+../application_framework/stm32f4xx-hal-driver/Src/stm32f4xx_hal_flash.c \
+../application_framework/stm32f4xx-hal-driver/Src/stm32f4xx_hal_flash_ex.c \
+../application_framework/stm32f4xx-hal-driver/Src/stm32f4xx_hal_flash_ramfunc.c \
+../application_framework/stm32f4xx-hal-driver/Src/stm32f4xx_hal_gpio.c \
+../application_framework/stm32f4xx-hal-driver/Src/stm32f4xx_hal_dma_ex.c \
+../application_framework/stm32f4xx-hal-driver/Src/stm32f4xx_hal_dma.c \
+../application_framework/stm32f4xx-hal-driver/Src/stm32f4xx_hal_pwr.c \
+../application_framework/stm32f4xx-hal-driver/Src/stm32f4xx_hal_pwr_ex.c \
+../application_framework/stm32f4xx-hal-driver/Src/stm32f4xx_hal_cortex.c \
+../application_framework/stm32f4xx-hal-driver/Src/stm32f4xx_hal.c \
+../application_framework/stm32f4xx-hal-driver/Src/stm32f4xx_hal_exti.c \
+../application_framework/stm32f4xx-hal-driver/Src/stm32f4xx_hal_i2c.c \
+../application_framework/stm32f4xx-hal-driver/Src/stm32f4xx_hal_i2c_ex.c \
+../application_framework/stm32f4xx-hal-driver/Src/stm32f4xx_hal_tim.c \
+../application_framework/stm32f4xx-hal-driver/Src/stm32f4xx_hal_tim_ex.c \
+../application_framework/stm32f4xx-hal-driver/Src/stm32f4xx_hal_uart.c \
+../application_framework/RTOS/FreeRTOS/Source/croutine.c \
+../application_framework/RTOS/FreeRTOS/Source/event_groups.c \
+../application_framework/RTOS/FreeRTOS/Source/list.c \
+../application_framework/RTOS/FreeRTOS/Source/queue.c \
+../application_framework/RTOS/FreeRTOS/Source/stream_buffer.c \
+../application_framework/RTOS/FreeRTOS/Source/tasks.c \
+../application_framework/RTOS/FreeRTOS/Source/timers.c \
+../application_framework/RTOS/FreeRTOS/Source/portable/MemMang/heap_4.c \
+../application_framework/RTOS/FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c \
+$(wildcard ../application_framework/RTOS/FreeRTOS-CLI/*.c) \
+$(wildcard ../application/LIP/source/*.c) \
+$(wildcard ../application_framework/project_drivers/as5600_driver/src/*.c) \
+$(wildcard ../application_framework/project_drivers/as5600_driver/interface/*.c) \
+$(wildcard ../application_framework/project_drivers/as5600_driver/example/*.c)
 
 # ASM sources for plain assembly files, these are fed to assembler without
 # preprocessing. These files doesn't support C preprocessor directives like
@@ -187,18 +187,18 @@ AS_INCLUDES =
 
 # C include paths
 C_INCLUDES =  \
--I../Core/Inc \
--I../Drivers/STM32F4xx_HAL_Driver/Inc \
--I../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy \
--I../Drivers/CMSIS/Device/ST/STM32F4xx/Include \
--I../Drivers/CMSIS/Include \
--I../FreeRTOS/Source/include \
--I../FreeRTOS/Source/portable/GCC/ARM_CM4F \
--I../FreeRTOS-CLI/ \
--I../LIP/include/ \
--I../LIP/as5600_driver/src/ \
--I../LIP/as5600_driver/interface/ \
--I../LIP/as5600_driver/example/
+-I../application/STCore/Inc \
+-I../application_framework/stm32f4xx-hal-driver/Inc \
+-I../application_framework/stm32f4xx-hal-driver/Inc/Legacy \
+-I../application_framework/cmsis-device-f4/Include \
+-I../application_framework/CMSIS_5/CMSIS/Core/Include \
+-I../application_framework/RTOS/FreeRTOS/Source/include \
+-I../application_framework/RTOS/FreeRTOS/Source/portable/GCC/ARM_CM4F \
+-I../application_framework/RTOS/FreeRTOS-CLI/ \
+-I../application/LIP/include/ \
+-I../application_framework/project_drivers/as5600_driver/src/ \
+-I../application_framework/project_drivers/as5600_driver/interface/ \
+-I../application_framework/project_drivers/as5600_driver/example/
 
 # GCC compile flags
 ASFLAGS = $(MCU) $(AS_DEFS) $(AS_INCLUDES) $(OPT) \
