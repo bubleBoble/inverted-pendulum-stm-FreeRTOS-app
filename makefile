@@ -106,8 +106,9 @@ FOUND_HIDDEN_FILES := $(shell \
         fi; \
     done)
 
+# maybe add `drivers` directory as well?
 FORMAT_LINUX := $(shell \
-    find Core drivers lip -name '*' -type f; \
+    find Core lip -name '*' -type f; \
     find . -name '*.ioc') \
     $(FOUND_HIDDEN_FILES)
 
