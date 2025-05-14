@@ -1,0 +1,88 @@
+{
+    "configurations": [
+        {
+            "name": "stm32 F4",
+            "includePath": [
+                "${workspaceFolder}",
+                "${workspaceFolder}/application_framework/stm32f4xx-hal-driver/Inc",
+                "${workspaceFolder}/application_framework/stm32f4xx-hal-driver/Inc/Legacy",
+                "${workspaceFolder}/application_framework/cmsis-device-f4/Include",
+                "${workspaceFolder}/application_framework/CMSIS_5/CMSIS/Core/Include",
+                "${workspaceFolder}/application_framework/RTOS/FreeRTOS/Source/include",
+                "${workspaceFolder}/application_framework/RTOS/FreeRTOS/Source/portable/GCC/ARM_CM4F",
+                "${workspaceFolder}/application_framework/RTOS/FreeRTOS-CLI",
+                "${workspaceFolder}/application_framework/project_drivers/as5600_driver/src",
+                "${workspaceFolder}/application_framework/project_drivers/as5600_driver/interface",
+                "${workspaceFolder}/application_framework/project_drivers/as5600_driver/example",
+                "${workspaceFolder}/application/STCore/Inc",
+                "${workspaceFolder}/application/LIP/include",
+                "/lib/arm-none-eabi/include",
+                "/lib/arm-none-eabi/include/c++/12.2.1",
+                "/lib/arm-none-eabi/include/machine",
+                "/lib/arm-none-eabi/include/nano",
+                "/lib/arm-none-eabi/include/sys",
+                "/lib/gcc/arm-none-eabi/12.2.1/include",
+                "/lib/gcc/arm-none-eabi/12.2.1/include-fixed"
+            ],
+            "defines": [
+                "_DEGUG",
+                "UNICODE",
+                "_UNICODE",
+                "USE_HAL_DRIVER",
+                "STM32F429xx"
+            ],
+            "intelliSenseMode": "gcc-arm", // linux-gcc-x64
+            "compilerPath": "/usr/bin/arm-none-eabi-gcc",
+            "compilerArgs": [
+                "-mcpu=cortex-m4",
+                "-mthumb",
+                "-mfpu=fpv4-sp-d16",
+                "-mfloat-abi=hard",
+                "-Wall",
+                "-fdata-sections",
+                "-ffunction-sections",
+                "-fsingle-precision-constant",
+                "-Wdouble-promotion",
+                "-ffast-math",
+                "-g",
+                "-gdwarf-2",
+                "-MMD -MP -MF\"$(@:%.o=%.d)\""
+            ],
+            "cStandard": "c11",
+            "cppStandard": "c++20",
+            "browse": {
+                "path": [
+                    "${workspaceFolder}",
+                    "${workspaceFolder}/application_framework/stm32f4xx-hal-driver/Inc",
+                    "${workspaceFolder}/application_framework/stm32f4xx-hal-driver/Src",
+                    "${workspaceFolder}/application_framework/stm32f4xx-hal-driver/Inc/Legacy",
+                    "${workspaceFolder}/application_framework/stm32f4xx-hal-driver/Src/Legacy",
+                    "${workspaceFolder}/application_framework/cmsis-device-f4/Include",
+                    "${workspaceFolder}/application_framework/CMSIS_5/CMSIS/Core/Include",
+                    "${workspaceFolder}/application_framework/RTOS/FreeRTOS/Source/include",
+                    "${workspaceFolder}/application_framework/RTOS/FreeRTOS/Source",
+                    "${workspaceFolder}/application_framework/RTOS/FreeRTOS/Source/portable/GCC/ARM_CM4F",
+                    "${workspaceFolder}/application_framework/RTOS/FreeRTOS/Source/portable/MemMang",
+                    "${workspaceFolder}/application_framework/RTOS/FreeRTOS-CLI",
+                    "${workspaceFolder}/application_framework/project_drivers/as5600_driver/src",
+                    "${workspaceFolder}/application_framework/project_drivers/as5600_driver/interface",
+                    "${workspaceFolder}/application_framework/project_drivers/as5600_driver/example",
+                    "${workspaceFolder}/application/STCore/Inc",
+                    "${workspaceFolder}/application/STCore/Src",
+                    "${workspaceFolder}/application/LIP/include",
+                    "${workspaceFolder}/application/LIP/source",
+                    "/lib/arm-none-eabi/include",
+                    "/lib/arm-none-eabi/include/c++/12.2.1",
+                    "/lib/arm-none-eabi/include/machine",
+                    "/lib/arm-none-eabi/include/nano",
+                    "/lib/arm-none-eabi/include/sys",
+                    "/lib/gcc/arm-none-eabi/12.2.1/include",
+                    "/lib/gcc/arm-none-eabi/12.2.1/include-fixed"
+                ],
+                "limitSymbolsToIncludedHeaders": true,
+                "databaseFilename": "${workspaceFolder}/.vscode/browse.vc.db"
+            }
+        }
+    ],
+    "version": 4
+}
